@@ -23,7 +23,7 @@ function rbox(w, h, d, r = 0.15, seg = 3) {
   s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r);
   s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
   const g = new THREE.ExtrudeGeometry(s, { depth: d - r * 2, bevelEnabled: true, bevelThickness: r, bevelSize: r * 0.6, bevelSegments: seg, curveSegments: 4 });
-  g.translate(0, 0, -(d - r * 2) / 2); g.rotateY(Math.PI / 2);
+  g.translate(0, 0, -(d - r * 2) / 2);   // 宽 → x，高 → y，深 → z（车长方向）
   g.computeVertexNormals();
   return g;
 }
@@ -34,6 +34,53 @@ function wheel(r = 0.5, w = 0.35) {
   const rim = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.62, r * 0.62, w + 0.02, 12), m.rim); rim.rotation.z = Math.PI / 2; g.add(rim);
   g.traverse(o => { o.castShadow = true; });
   return g;
+}
+
+// 车身侧面轮廓：点是 [沿车长方向的比例（-1 车尾 … 1 车头）, 高度（米）]
+// lower = 车身下半部分，glass = 车窗（比车身窄一点，形成内收），roof = 车顶薄板，extra = 额外部件
+const PROFILES = {
+  sedan: {
+    lower: [[-1, 0.32], [1, 0.32], [1, 0.62], [0.935, 0.82], [0.43, 0.98], [-0.72, 1.0], [-0.96, 0.98], [-1, 0.76]],
+    glass: [[0.44, 0.97], [0.07, 1.39], [-0.41, 1.41], [-0.72, 0.99]],
+    roof: [[0.1, 1.37], [0.06, 1.44], [-0.42, 1.46], [-0.46, 1.38]], roofY: 1.46, glassW: 0.88, headY: 0.72, tailY: 0.86,
+  },
+  van: {
+    lower: [[-1, 0.35], [1, 0.35], [1, 0.72], [0.94, 0.95], [0.64, 1.06], [-1, 1.06]],
+    glass: [[0.64, 1.05], [0.4, 1.93], [0.08, 1.95], [0.08, 1.05]],
+    roof: [[0.42, 1.9], [0.38, 1.99], [-1, 1.99], [-1, 1.9]], roofY: 1.99, glassW: 0.94, headY: 0.8, tailY: 0.95,
+    extra: [[0.09, 1.05], [0.09, 1.93], [-0.98, 1.93], [-1, 1.86], [-1, 1.05]], extraW: 0.97,
+  },
+  pickup: {
+    lower: [[-1, 0.42], [1, 0.42], [1, 0.78], [0.95, 1.0], [0.48, 1.1], [-1, 1.1]],
+    glass: [[0.48, 1.09], [0.23, 1.86], [-0.17, 1.88], [-0.22, 1.09]],
+    roof: [[0.25, 1.83], [0.22, 1.92], [-0.18, 1.94], [-0.23, 1.85]], roofY: 1.94, glassW: 0.9, headY: 0.85, tailY: 1.0,
+    extra: [[-0.26, 1.09], [-0.26, 1.42], [-1, 1.42], [-1, 1.09]], extraW: 0.98, extraMat: 'black',
+  },
+  bus: {
+    lower: [[-1, 0.35], [1, 0.35], [1, 1.25], [-1, 1.25]],
+    glass: [[0.995, 1.24], [0.985, 2.62], [-0.995, 2.62], [-1, 1.24]],
+    roof: [[0.985, 2.6], [0.95, 3.05], [-0.99, 3.05], [-1, 2.6]], roofY: 3.05, glassW: 1.0, headY: 0.75, tailY: 0.95,
+  },
+};
+const profCache = {};
+function extrudeProfile(pts, L, width, bevel = 0.05) {
+  const s = new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(z * L / 2, y)));
+  const g = new THREE.ExtrudeGeometry(s, { depth: width - bevel * 2, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: 2, curveSegments: 2 });
+  g.translate(0, 0, -(width - bevel * 2) / 2);
+  g.rotateY(-Math.PI / 2);      // 轮廓的 x（车长）→ 世界 z，挤出方向 → 世界 x（车宽）
+  g.computeVertexNormals();
+  return g;
+}
+function profileGeos(type, P, L, W) {
+  const key = type + L + W;
+  if (profCache[key]) return profCache[key];
+  const out = {
+    lower: extrudeProfile(P.lower, L, W, 0.08),
+    glass: extrudeProfile(P.glass, L, W * P.glassW, 0.03),
+    roof: extrudeProfile(P.roof, L, W * P.glassW + 0.02, 0.04),
+    extra: P.extra ? extrudeProfile(P.extra, L, W * P.extraW, 0.05) : null,
+  };
+  return (profCache[key] = out);
 }
 
 const TYPES = {
@@ -81,7 +128,7 @@ export class Vehicle {
     this.screens = [];
     for (const s of [-1, 1]) {
       const sc = new THREE.Mesh(new THREE.PlaneGeometry(boxL - 0.4, 2.5), m.screenOff.clone());
-      sc.position.set(s * 1.27, 2.35, box.position.z); sc.rotation.y = s * Math.PI / 2; this.body.add(sc); this.screens.push(sc);
+      sc.position.set(s * 1.33, 2.35, box.position.z); sc.rotation.y = s * Math.PI / 2; this.body.add(sc); this.screens.push(sc);   // 车厢有倒角，屏幕要放在倒角外面
     }
     const back = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.5), m.screenOff.clone()); back.position.set(0, 2.35, -L / 2 + 0.05); back.rotation.y = Math.PI; this.body.add(back); this.screens.push(back);
     for (const s of [-1, 1]) { const tl = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.06), m.tail); tl.position.set(s * 1.0, 0.75, -L / 2); this.body.add(tl); }
@@ -99,29 +146,29 @@ export class Vehicle {
     this.glow.color.set(color); this.glow.position.set(0, 2.5, 0); this.body.add(this.glow);
   }
 
+  // 轿车 / 出租车 / 面包车 / 皮卡 / 公交：用侧面轮廓挤出车身（引擎盖、挡风玻璃斜面、车顶、后备箱）
   buildCar(color, type) {
     const m = mats(), L = this.T.len, W = this.T.wid;
-    const lower = new THREE.Mesh(rbox(W, 0.8, L, 0.25), paint(color)); lower.position.y = 0.85; this.body.add(lower);
+    const P = PROFILES[type === 'taxi' ? 'sedan' : type] || PROFILES.sedan;
+    const geo = profileGeos(type === 'taxi' ? 'sedan' : type, P, L, W);
+    const pm = paint(color);
+    for (const [g, mat] of [[geo.lower, pm], [geo.roof, pm], [geo.glass, m.glass], ...(geo.extra ? [[geo.extra, P.extraMat === 'black' ? m.black : pm]] : [])]) {
+      const mesh = new THREE.Mesh(g, mat); this.body.add(mesh);
+    }
     const bus = type === 'bus';
-    const cabLen = bus ? L * 0.97 : type === 'van' ? L * 0.8 : type === 'pickup' ? L * 0.42 : L * 0.55;
-    const cabZ = bus ? 0 : type === 'van' ? -0.1 : type === 'pickup' ? 0.4 : -0.2;
-    const cabH = bus ? 1.75 : type === 'van' ? 1.3 : 0.75;
-    const upper = new THREE.Mesh(rbox(W * (bus ? 1 : 0.92), cabH, cabLen, bus ? 0.12 : 0.22), paint(color)); upper.position.set(0, 1.25 + cabH / 2, cabZ); this.body.add(upper);
-    const g1 = new THREE.Mesh(new THREE.BoxGeometry(W * (bus ? 1.01 : 0.93), cabH * 0.62, cabLen * 0.92), m.glass); g1.position.set(0, 1.3 + cabH * 0.5, cabZ); this.body.add(g1);
     if (bus) {   // 车内灯光 + 路线牌
-      const lit = new THREE.Mesh(new THREE.BoxGeometry(W * 1.012, cabH * 0.4, cabLen * 0.85), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 1.15, 1.0), toneMapped: false, transparent: true, opacity: 0.35 }));
-      lit.position.set(0, 1.35 + cabH * 0.5, cabZ); this.body.add(lit);
+      const lit = new THREE.Mesh(new THREE.BoxGeometry(W * 0.98, 0.9, L * 0.86), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 1.15, 1.0), toneMapped: false, transparent: true, opacity: 0.32 }));
+      lit.position.set(0, 1.95, 0); this.body.add(lit);
       const no = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.35), new THREE.MeshBasicMaterial({ map: textTex('472 신촌', { w: 512, h: 112, bg: '#000', fg: '#ffb020', size: 0.7 }), toneMapped: false }));
-      no.position.set(0, 1.25 + cabH - 0.25, L / 2 + 0.01); this.body.add(no);
+      no.position.set(0, 2.85, L / 2 + 0.02); this.body.add(no);
     }
     if (type === 'taxi') {   // 车顶灯
       const sign = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.22, 0.3), new THREE.MeshStandardMaterial({ map: textTex('TAXI', { w: 256, h: 96, bg: '#fff7d6', fg: '#c4161c', size: 0.7 }), emissive: 0xfff2c0, emissiveIntensity: 1.2 }));
-      sign.position.set(0, 1.25 + cabH + 0.12, cabZ); this.body.add(sign);
+      sign.position.set(0, P.roofY * 1 + 0.13, -L * 0.08); this.body.add(sign);
     }
-    if (type === 'pickup') { const bed = new THREE.Mesh(new THREE.BoxGeometry(W * 0.9, 0.5, L * 0.38), m.black); bed.position.set(0, 1.3, -L * 0.28); this.body.add(bed); }
     for (const s of [-1, 1]) {
-      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.06), m.head); hl.position.set(s * W * 0.33, 0.95, L / 2 + 0.02); this.body.add(hl);
-      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.06), m.tail); tl.position.set(s * W * 0.33, 1.0, -L / 2 - 0.02); this.body.add(tl);
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(bus ? 0.35 : 0.42, 0.13, 0.08), m.head); hl.position.set(s * W * 0.34, P.headY, L / 2 - 0.02); this.body.add(hl);
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(bus ? 0.3 : 0.38, 0.14, 0.08), m.tail); tl.position.set(s * W * 0.36, P.tailY, -L / 2 + 0.02); this.body.add(tl);
     }
     const wr = bus ? 0.52 : 0.38;
     this.addWheels([[-W * 0.45, L * 0.32], [W * 0.45, L * 0.32], [-W * 0.45, -L * 0.32], [W * 0.45, -L * 0.32]], wr, bus ? 0.36 : 0.28);
