@@ -34,6 +34,7 @@ export class Audio {
   coin() { this.tone(988, 0.08, { type: 'square', gain: 0.07 }); this.tone(1318, 0.25, { type: 'square', gain: 0.07, delay: 0.08 }); }
   bad() { this.tone(220, 0.3, { type: 'sawtooth', gain: 0.08, slide: 110 }); }
   notify() { this.tone(1046, 0.12, { gain: 0.15 }); this.tone(1568, 0.2, { gain: 0.12, delay: 0.1 }); }
+  splat() { this.noise(0.25, { f: 600, gain: 0.6, verb: false }); }
   whoosh() { this.noise(1.2, { f: 300, f2: 3000, type: 'bandpass', q: 3, gain: 0.5 }); }
   viral() { [523, 659, 784, 1046].forEach((f, i) => this.tone(f, 0.4, { type: 'triangle', gain: 0.15, delay: i * 0.09 })); }
 

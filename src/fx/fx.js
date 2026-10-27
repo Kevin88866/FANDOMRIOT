@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// 粒子特效：烟花、烟雾
+// 粒子特效：烟花、烟雾、蛋液
 function radialTex(stops) {
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
   const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); stops.forEach(([o, col]) => gr.addColorStop(o, col));
@@ -55,6 +55,16 @@ export class FX {
       this.game.audio?.pop();
     };
   }
+
+  splat(pos, normal, color = 0xe8c020) {
+    if (!this.splatTex) this.splatTex = radialTex([[0, 'rgba(255,240,180,1)'], [0.35, 'rgba(240,200,60,0.95)'], [0.6, 'rgba(220,180,40,0.6)'], [1, 'rgba(200,160,30,0)']]);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), new THREE.MeshStandardMaterial({ map: this.splatTex, color, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.2 }));
+    m.position.copy(pos).addScaledVector(normal, 0.05); m.lookAt(pos.clone().add(normal)); m.rotation.z = Math.random() * 6;
+    this.scene.add(m); (this.decals ||= []).push(m);
+    for (let i = 0; i < 10; i++) this.sprite(this.sparkTex, new THREE.Color(1, 0.85, 0.3), pos.clone(), 0.2, 0.5, normal.clone().multiplyScalar(3).add(new THREE.Vector3().randomDirection().multiplyScalar(2)), { gravity: -10, normal: true });
+  }
+
+  clearDecals() { for (const d of this.decals || []) { this.scene.remove(d); d.geometry.dispose(); } this.decals = []; }
 
   update(dt) {
     for (let i = this.parts.length - 1; i >= 0; i--) {

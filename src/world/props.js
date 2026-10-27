@@ -102,6 +102,20 @@ export class Props {
     this.place(g); return g;
   }
 
+  graffiti(hq, text) {
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 512; const g = c.getContext('2d');
+    g.font = '900 300px Impact, "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = 'rgba(255,0,60,.8)'; g.shadowBlur = 25; g.fillStyle = '#ff1e46';
+    g.save(); g.translate(512, 230); g.rotate(-0.08); g.fillText('OUT', 0, 0); g.restore();
+    g.shadowBlur = 0; g.font = '700 70px "Noto Sans KR",sans-serif'; g.fillStyle = '#ffffff'; g.fillText(text, 512, 440);
+    for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(255,30,70,.8)'; g.fillRect(200 + Math.random() * 600, 300 + Math.random() * 60, 4, 20 + Math.random() * 90); }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -4, emissive: 0x330008, emissiveMap: t }));
+    m.position.copy(hq.wallPos); m.position.x += 8; m.rotation.y = hq.faceRy;
+    m.position.z += hq.dir * 0.1;
+    this.place(m); return m;
+  }
+
   // 集会用的手举牌
   picket(pos, faceRy, text, kind) {
     const g = new THREE.Group();

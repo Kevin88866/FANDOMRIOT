@@ -199,6 +199,8 @@ export function endOfWeek(s, dayViews) {
     if (inc > 0) { s.money += inc; log.push({ t: `品牌商单收入 ₩${inc.toLocaleString()}`, c: 'good' }); }
     else log.push({ t: '关注度太高，品牌方暂停了合作', c: 'bad' });
   }
+  // 物业清洁费（臭鸡蛋 / 涂鸦）
+  if (s.cleanupDue) { s.money -= s.cleanupDue; log.push({ t: `物业清洁费 -₩${s.cleanupDue.toLocaleString()}`, c: 'bad' }); s.cleanupDue = 0; }
   // 生活费
   const rent = 250000 + s.week * 10000; s.money -= rent; log.push({ t: `房租和生活费 -₩${rent.toLocaleString()}`, c: '' });
   // 关注度后果

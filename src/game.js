@@ -141,7 +141,7 @@ export class Game {
     const s = this.state;
     this.day = { photos: [], events: [], startMin: 18 * 60 };
     this.clockMin = 18 * 60;
-    this.props.clearAll();
+    this.props.clearAll(); this.fx.clearDecals();
     for (const v of this.vehicles.slice()) this.removeVehicle(v);
     this.city.setBillboard(LEAGUE.billboard, '#27e1ff', `WEEK ${s.week}`);
     for (const id in this.city.hq) { const hq = this.city.hq[id]; hq.used = 0; hq.sign.position.copy(hq.signHome); hq.sign.rotation.set(0, hq.faceRy ?? hq.sign.rotation.y, 0); hq.sign.userData.vel = null; hq.sign.visible = true; }
@@ -258,6 +258,8 @@ export class Game {
   newEvent(order, hqId) {
     const ev = { id: 'e' + Math.random().toString(36).slice(2, 8), item: order.item, target: order.target, kind: order.kind, text: order.text, hq: hqId, time: this.clockMin };
     Sim.applyAction(this.state, ev);
+    const cost = ITEMS.find(i => i.id === order.item).cleanup;
+    if (cost) { this.state.cleanupDue = (this.state.cleanupDue || 0) + cost; setTimeout(() => this.toast(`物业会找你要清洁费 ₩${cost.toLocaleString()}（周结算扣除）`, 'bad'), 2500); }
     this.day.events.push(ev);
     if (ev.backfire) setTimeout(() => this.toast(`${order.target} 好像被激励了……（知耻后勇）`, ''), 1500);
     return ev;
@@ -290,6 +292,8 @@ export class Game {
         this.droneShowT = { obj: d, until: this.time + 40 };
         this.audio.whoosh(); break;
       }
+      case 'graffiti': { const g = this.props.graffiti(hq, order.text); this.props.addSubject(g, { eventId: ev.id, label, text: true, weight: 1.3 }); this.audio.noise(1.5, { f: 5000, type: 'highpass', gain: 0.25 }); break; }
+      case 'eggs': this.throwEggs(hq, ev, label); break;
       case 'rally': this.rally(hq, ev, label, order); break;
       case 'billboard': {
         this.props.billboardOrder(order.text);
@@ -308,6 +312,23 @@ export class Game {
     for (const a of this.anims || []) { a.t += dt; const k = THREE.MathUtils.clamp(a.t / 0.45, 0, 1); const e = 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2); a.obj.scale.copy(a.s).multiplyScalar(Math.max(0.001, k > 0 ? e : 0.001)); }
     this.anims = (this.anims || []).filter(a => a.t < 0.5);
     if (this.droneShowT && this.time < this.droneShowT.until && this.droneShowT.obj.userData.formed) this.lastSpectacle = { t: this.time, pos: this.droneShowT.obj.position.clone() };
+  }
+
+  throwEggs(hq, ev, label) {
+    let i = 0;
+    const throwOne = () => {
+      if (i++ >= 8) return;
+      const target = new THREE.Vector3(hq.cx + (Math.random() - 0.5) * 16, 2 + Math.random() * 6, hq.face);
+      const n = new THREE.Vector3(0, 0, hq.dir);
+      this.player.actor.play('agree', 0.1);
+      setTimeout(() => { this.fx.splat(target, n); this.audio.splat(); }, 350);
+      setTimeout(throwOne, 380);
+    };
+    throwOne();
+    // 用一个隐形对象当拍照主体（蛋液所在的墙面）
+    const dummy = new THREE.Mesh(new THREE.BoxGeometry(16, 8, 0.2), new THREE.MeshBasicMaterial({ visible: false }));
+    dummy.position.set(hq.cx, 6, hq.face); this.props.place(dummy);
+    this.props.addSubject(dummy, { eventId: ev.id, label, weight: 0.9 });
   }
 
   // 粉丝集会：一排举牌的人 + 围观
