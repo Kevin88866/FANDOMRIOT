@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Vehicle } from '../player/vehicle.js';
 import { textTex } from '../engine/textures.js';
+import { model as glbModel } from '../engine/assets.js';
 
 // 商店用的道具 3D 缩略图：用游戏里同一套模型，离屏渲染一次后缓存成图片。
 const cache = new Map();
@@ -32,7 +33,9 @@ function model(game, id) {
     }
     case 'fireworks': {
       const g = new THREE.Group();
-      const box = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.9), new THREE.MeshStandardMaterial({ color: 0xaa2222, roughness: 0.6 })); box.position.y = 0.25; g.add(box);
+      const fw = glbModel('pr_fireworks');
+      if (fw) { fw.scale.setScalar(0.75); g.add(fw); }
+      else { const box = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.9), new THREE.MeshStandardMaterial({ color: 0xaa2222, roughness: 0.6 })); box.position.y = 0.25; g.add(box); }
       const sp = new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2, 0.6), toneMapped: false });
       for (let i = 0; i < 26; i++) { const d = new THREE.Vector3().randomDirection(); d.y = Math.abs(d.y); const s = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 4), sp); s.position.copy(d.multiplyScalar(0.8).add(new THREE.Vector3(0, 1.4, 0))); g.add(s); }
       return g;

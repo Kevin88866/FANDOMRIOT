@@ -2,12 +2,26 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
+import { hasModel, instanced } from '../engine/assets.js';
 
 // 首尔街区：6x6 路网，中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
 export const ROADS = [-150, -90, -30, 30, 90, 150];
 export const AVENUE_Z = 30;
 export const roadWidth = (axis, v) => (axis === 'z' && v === AVENUE_Z ? 26 : 14);
 const BLOCK = 60, CURB = 0.18, HALF = 165;
+
+// 路灯杆上的竖旗：联赛标志
+function flagTex() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 360; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 360); gr.addColorStop(0, '#0d1b3d'); gr.addColorStop(1, '#1f4fbf'); g.fillStyle = gr; g.fillRect(0, 0, 128, 360);
+  g.fillStyle = '#27e1ff'; g.fillRect(0, 300, 128, 10);
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '900 46px "Noto Sans KR",sans-serif'; g.fillText(LEAGUE.name, 64, 70);
+  g.font = '800 30px "Noto Sans KR",sans-serif'; g.fillText('2026', 64, 130);
+  g.font = '700 22px "Noto Sans KR",sans-serif'; g.fillText('SPRING', 64, 168);
+  g.font = '700 26px "Noto Sans KR",sans-serif'; g.fillStyle = '#ffd34d'; g.fillText('파이팅!', 64, 250);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
 
 export class City {
   constructor(scene) {
@@ -341,9 +355,18 @@ export class City {
       for (let x = -HALF + 15; x < HALF; x += 24) if (!ROADS.some(r => Math.abs(x - r) < 10)) { pts.push([x, v - off, Math.PI / 2]); pts.push([x + 12, v + off, -Math.PI / 2]); }
     }
     const n = pts.length, m = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+    const useModel = hasModel('st_lamp');
     const poles = new THREE.InstancedMesh(pole, new THREE.MeshStandardMaterial({ color: 0x2c2f35, metalness: 0.6, roughness: 0.5 }), n);
     this.bulbMat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0xffd9a0, emissiveIntensity: 3 });
     const bulbs = new THREE.InstancedMesh(bulbGeo, this.bulbMat, n);
+    if (useModel) {   // Blender 路灯：每个部件一个 InstancedMesh；灯杆小旗印联赛标志
+      const mats = pts.map(([x, z, ry]) => new THREE.Matrix4().compose(new THREE.Vector3(x, 0, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), one));
+      const flag = new THREE.MeshStandardMaterial({ map: flagTex(), roughness: 0.8 });
+      for (const im of instanced('st_lamp', mats, this.group)) {
+        if (im.material.name === 'emit_lamp') this.bulbMat = im.material;
+        if (im.name.startsWith('sign_flag')) { im.material = flag; im.castShadow = false; }
+      }
+    }
     // 地面光斑（假的点光源，便宜又好看）
     const poolTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,214,150,0.55)'); gr.addColorStop(0.5, 'rgba(255,190,120,0.18)'); gr.addColorStop(1, 'rgba(255,180,100,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
     this.poolMat = new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 });
@@ -356,7 +379,7 @@ export class City {
       this.colliders.push({ minX: x - 0.2, maxX: x + 0.2, minZ: z - 0.2, maxZ: z + 0.2, small: true });
     });
     poles.castShadow = true;
-    this.group.add(poles, bulbs, pools);
+    if (useModel) this.group.add(pools); else this.group.add(poles, bulbs, pools);
   }
 
   // —— 总部 ——

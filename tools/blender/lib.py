@@ -136,6 +136,77 @@ def plane(name, w, h, loc=(0, 0, 0), material=None, normal='-Y', parent=None):
     return o
 
 
+def grid(name, w, h, nx, ny, loc=(0, 0, 0), material=None, normal='-Y', parent=None):
+    """细分的矩形面（横幅布料要做飘动动画），UV 0..1。"""
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    vs = []
+    for j in range(ny + 1):
+        row = []
+        for i in range(nx + 1):
+            u, v = i / nx, j / ny
+            x, z = (u - 0.5) * w, (v - 0.5) * h
+            row.append(bm.verts.new((x, 0, z) if normal == '-Y' else (-x, 0, z)))
+        vs.append(row)
+    for j in range(ny):
+        for i in range(nx):
+            f = bm.faces.new((vs[j][i], vs[j][i + 1], vs[j + 1][i + 1], vs[j + 1][i]))
+            for loop, (a, b) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                loop[uv].uv = (a / nx, b / ny)
+    o = link(name, bm, material, parent)
+    o.location = loc
+    return o
+
+
+def lathe(name, prof, loc=(0, 0, 0), material=None, seg=24, parent=None, smooth_angle=50):
+    """旋转体：prof 是 (半径, 高度) 点列，从下到上。"""
+    bm = bmesh.new()
+    vs = [bm.verts.new((r, 0, z)) for r, z in prof]
+    es = [bm.edges.new((vs[i], vs[i + 1])) for i in range(len(vs) - 1)]
+    bmesh.ops.spin(bm, geom=vs + es, angle=math.radians(360), steps=seg, axis=(0, 0, 1), cent=(0, 0, 0))
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    # 封口
+    for z in (prof[0][1], prof[-1][1]):
+        ring = [e for e in bm.edges if e.is_boundary and all(abs(v.co.z - z) < 1e-4 for v in e.verts)]
+        if ring:
+            try:
+                bmesh.ops.edgeloop_fill(bm, edges=ring)
+            except Exception:
+                pass
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    o = link(name, bm, material, parent, smooth_angle)
+    o.location = loc
+    return o
+
+
+def tube(name, pts, r, material=None, parent=None, res=8):
+    """沿折线/曲线扫一个圆截面（灯臂、栏杆扶手）。pts 为控制点，自动平滑。"""
+    cu = bpy.data.curves.new(name, 'CURVE')
+    cu.dimensions = '3D'
+    cu.bevel_depth = r
+    cu.bevel_resolution = 2
+    cu.resolution_u = res
+    cu.use_fill_caps = True
+    sp = cu.splines.new('BEZIER')
+    sp.bezier_points.add(len(pts) - 1)
+    for bp, p in zip(sp.bezier_points, pts):
+        bp.co = p
+        bp.handle_left_type = bp.handle_right_type = 'AUTO'
+    co = bpy.data.objects.new(name + '_c', cu)
+    bpy.context.scene.collection.objects.link(co)
+    dg = bpy.context.evaluated_depsgraph_get()
+    me = bpy.data.meshes.new_from_object(co.evaluated_get(dg), depsgraph=dg)
+    bpy.data.objects.remove(co, do_unlink=True)
+    o = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(o)
+    if material:
+        me.materials.append(material)
+    if parent:
+        o.parent = parent
+    smooth(o, 60)
+    return o
+
+
 def extrude_profile(name, pts, width, material, parent=None, bevel=0.0, seg=3, angle=35, x0=None):
     """侧面轮廓（y, z 点列）沿 X 方向挤出成实体，宽 width。"""
     bm = bmesh.new()
@@ -266,7 +337,7 @@ def optimize(max_len=0.45):
         else:
             j = objs[0]; j.name = nm
         out.append(j)
-    for o in [o for o in sc.objects if o.type == 'MESH']:
+    for o in out:
         if max_len:
             densify(o, max_len)
     return out

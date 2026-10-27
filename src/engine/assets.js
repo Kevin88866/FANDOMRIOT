@@ -5,6 +5,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // 约定：材质 paint = 可换色车漆；emit_* = 发光件；名字以 screen_/sign_/ribbon/cloth 开头的面运行时贴文字。
 export const MODEL_LIST = [
   'car_sedan', 'car_taxi', 'car_van', 'car_pickup', 'car_bus', 'car_ledtruck', 'car_coffee', 'car_scooter',
+  'st_lamp', 'st_signal', 'st_busstop', 'st_vending', 'st_pole', 'st_rail', 'st_planter', 'st_bench', 'st_bin',
+  'st_bollard', 'st_hydrant', 'st_cone',
+  'pr_wreath_w', 'pr_wreath_p', 'pr_basket', 'pr_banner', 'pr_picket', 'pr_fireworks',
 ];
 const store = {};
 const EMIT = { emit_head: 3, emit_tail: 2.5, emit_amber: 2, emit_warm: 1.6 };
@@ -70,4 +73,32 @@ export function named(obj, prefix) {
   const out = [];
   obj.traverse(o => { if (o.name.startsWith(prefix)) out.push(o); });
   return out;
+}
+
+// 大量重复的静态物体（路灯、电线杆、护栏、花坛）：每个部件一个 InstancedMesh
+export function instanced(name, matrices, parent, skip) {
+  const src = store[name];
+  if (!src || !matrices.length) return [];
+  src.updateMatrixWorld(true);
+  const out = [];
+  src.traverse(o => {
+    if (!o.isMesh || (skip && skip(o))) return;
+    const g = o.geometry.clone().applyMatrix4(o.matrixWorld);
+    const im = new THREE.InstancedMesh(g, o.material, matrices.length);
+    matrices.forEach((m, i) => im.setMatrixAt(i, m));
+    im.computeBoundingSphere();
+    im.castShadow = true; im.receiveShadow = true; im.name = o.name;
+    parent.add(im); out.push(im);
+  });
+  return out;
+}
+
+// 模型里的发光材质交给城市的昼夜系统（夜里更亮）
+export function registerNight(obj, city) {
+  if (!city) return;
+  const set = city._nightSet || (city._nightSet = new Set(city.nightMats));
+  obj.traverse(o => {
+    const m = o.material;
+    if (o.isMesh && m && m.name && m.name.startsWith('emit_') && !set.has(m)) { set.add(m); m.userData.night = true; city.nightMats.push(m); }
+  });
 }

@@ -3,7 +3,7 @@ import { Renderer } from './engine/renderer.js';
 import { Audio } from './engine/audio.js';
 import { City } from './world/city.js';
 import { loadActors } from './world/actors.js';
-import { loadModels, MODEL_LIST } from './engine/assets.js';
+import { loadModels, MODEL_LIST, model } from './engine/assets.js';
 import { Crowd } from './world/npc.js';
 import { Props } from './world/props.js';
 import { FX } from './fx/fx.js';
@@ -473,8 +473,9 @@ export class Game {
 
   fireworks(hq, ev, label) {
     const base = hq.plaza.clone().add(new THREE.Vector3(0, 0, hq.dir * 2));
-    const holder = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 1.2), new THREE.MeshStandardMaterial({ color: 0xaa2222, roughness: 0.6 }));
-    holder.position.copy(base).setY(0.43); this.props.place(holder);
+    const glb = model('pr_fireworks');
+    const holder = glb || new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 1.2), new THREE.MeshStandardMaterial({ color: 0xaa2222, roughness: 0.6 }));
+    holder.position.copy(base).setY(glb ? base.y : 0.43); this.props.place(holder);
     const sky = new THREE.Mesh(new THREE.BoxGeometry(30, 30, 4), new THREE.MeshBasicMaterial({ visible: false }));
     sky.position.copy(base).setY(28); this.props.place(sky);
     this.props.addSubject(sky, { eventId: ev.id, label, glow: true, weight: 1.2 });

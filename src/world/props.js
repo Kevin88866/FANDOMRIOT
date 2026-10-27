@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { textTex } from '../engine/textures.js';
+import { model } from '../engine/assets.js';
 
 // 花圈、横幅、花篮、涂鸦、炸弹、无人机等。每个道具注册成"拍照对象"。
 function verticalText(text, { bg = '#ffffff', fg = '#111', w = 128, h = 1024 } = {}) {
@@ -46,8 +47,20 @@ export class Props {
 
   // 花圈（근조화환）：黑白，竖条丝带写字
   wreath(pos, faceRy, text, kind = 'attack') {
-    const g = new THREE.Group();
     const support = kind === 'support';
+    const t1 = verticalText(text.slice(0, 14), { bg: support ? '#ffd9e6' : '#ffffff', fg: support ? '#c2185b' : '#111' });
+    const t2 = verticalText(support ? '♥ 팬 일동 ♥' : '팬 일동 올림', { bg: support ? '#ffd9e6' : '#ffffff', fg: '#444' });
+    const glb = model(support ? 'pr_wreath_p' : 'pr_wreath_w');
+    if (glb) {   // Blender 花圈：真实花朵 + 三脚架，丝带贴字
+      glb.traverse(o => {
+        if (o.isMesh && o.name === 'ribbon_L') o.material = new THREE.MeshStandardMaterial({ map: t1, roughness: 0.8 });
+        else if (o.isMesh && o.name === 'ribbon_R') o.material = new THREE.MeshStandardMaterial({ map: t2, roughness: 0.8 });
+      });
+      glb.position.copy(pos); glb.rotation.y = faceRy + (Math.random() - 0.5) * 0.1;
+      this.place(glb);
+      return glb;
+    }
+    const g = new THREE.Group();
     const legMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.8 });
     for (const [x, rz] of [[-0.45, -0.18], [0.45, 0.18]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 2.2, 6), legMat); l.position.set(x, 1.05, -0.15); l.rotation.z = rz; g.add(l); }
     const back = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 2.2, 6), legMat); back.position.set(0, 1.05, -0.5); back.rotation.x = -0.3; g.add(back);
@@ -58,8 +71,6 @@ export class Props {
     inner.position.z = -0.03; ring.add(inner);
     ring.position.set(0, 2.05, 0); g.add(ring);
     // 两条竖丝带
-    const t1 = verticalText(text.slice(0, 14), { bg: support ? '#ffd9e6' : '#ffffff', fg: support ? '#c2185b' : '#111' });
-    const t2 = verticalText(support ? '♥ 팬 일동 ♥' : '팬 일동 올림', { bg: support ? '#ffd9e6' : '#ffffff', fg: '#444' });
     for (const [x, t] of [[-0.32, t1], [0.32, t2]]) {
       const rb = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 1.6), new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide, roughness: 0.8 }));
       rb.position.set(x, 1.0, 0.06); g.add(rb);
@@ -70,6 +81,17 @@ export class Props {
   }
 
   banner(pos, faceRy, text, kind) {
+    const support0 = kind === 'support';
+    const glb = model('pr_banner');
+    if (glb) {
+      const t = textTex(text, { w: 1536, h: 340, bg: support0 ? '#ffe5ef' : '#111111', fg: support0 ? '#e0115f' : '#ff2222', size: 0.62, border: support0 ? '#ff7aa8' : '#ffffff' });
+      let cloth = null;
+      glb.traverse(o => { if (o.isMesh && o.name === 'cloth') { o.material = new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide, roughness: 0.85 }); cloth = o; } });
+      glb.position.copy(pos); glb.rotation.y = faceRy;
+      this.place(glb);
+      glb.userData.cloth = cloth;
+      return glb;
+    }
     const g = new THREE.Group();
     const poleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.8, roughness: 0.3 });
     for (const x of [-3.2, 3.2]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.2, 8), poleMat); p.position.set(x, 1.6, 0); g.add(p); }
@@ -88,6 +110,13 @@ export class Props {
 
   flowers(pos, faceRy, text) {
     // 应援花篮：彩色花团 + 立牌
+    const glb = model('pr_basket');
+    if (glb) {
+      const t = textTex(text, { w: 512, h: 288, bg: '#fff0f5', fg: '#d81b60', size: 0.4, border: '#ff9ec4' });
+      glb.traverse(o => { if (o.isMesh && o.name === 'sign_card') o.material = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 }); });
+      glb.position.copy(pos); glb.rotation.y = faceRy;
+      this.place(glb); return glb;
+    }
     const g = new THREE.Group();
     const basket = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.32, 0.5, 16), new THREE.MeshStandardMaterial({ color: 0xc89a5a, roughness: 0.9 }));
     basket.position.y = 0.95; g.add(basket);
@@ -129,6 +158,14 @@ export class Props {
 
   // 集会用的手举牌
   picket(pos, faceRy, text, kind) {
+    const support0 = kind === 'support';
+    const glb = model('pr_picket');
+    if (glb) {
+      const t = textTex(text, { w: 512, h: 316, bg: support0 ? '#ffe5ef' : '#ffffff', fg: support0 ? '#e0115f' : '#d10000', size: 0.42, border: support0 ? '#ff7aa8' : '#222' });
+      glb.traverse(o => { if (o.isMesh && o.name === 'sign_board') o.material = new THREE.MeshStandardMaterial({ map: t, roughness: 0.8 }); });
+      glb.position.copy(pos); glb.rotation.y = faceRy;
+      this.place(glb); return glb;
+    }
     const g = new THREE.Group();
     const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.9, 6), new THREE.MeshStandardMaterial({ color: 0x8a6a45 }));
     stick.position.y = 0.95; g.add(stick);
