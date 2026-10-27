@@ -1,2 +1,4 @@
 node_modules/
 dist/
+tools/blender/previews/
+__pycache__/

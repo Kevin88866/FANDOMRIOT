@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { textTex } from '../engine/textures.js';
+import { model, recolor } from '../engine/assets.js';
 
 // 程序化车辆：车漆用 clearcoat 物理材质，配合环境反射
 function paint(color) { return new THREE.MeshPhysicalMaterial({ color, metalness: 0.5, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.08 }); }
@@ -104,10 +105,31 @@ export class Vehicle {
     this.radius = T.wid * 0.55;
     const m = mats();
     const color = opts.color ?? T.color;
-    if (type === 'scooter') this.buildScooter(color);
+    const glb = model('car_' + type);
+    if (glb) this.buildModel(glb, color, opts);           // Blender 模型
+    else if (type === 'scooter') this.buildScooter(color);  // 没加载到就退回程序化模型
     else if (type === 'ledtruck' || type === 'coffee') this.buildTruck(color, opts);
     else this.buildCar(color, type);
     this.root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  }
+
+  buildModel(obj, color, opts) {
+    const m = mats();
+    this.body.add(obj);
+    recolor(obj, color);
+    this.screens = [];
+    obj.traverse(o => {
+      if (o.name.startsWith('wheel_')) { this.wheels.push(o); o.userData.front = /_(FL|FR|F)$/.test(o.name); }
+      else if (o.isMesh && o.name.startsWith('screen_')) { o.material = m.screenOff; this.screens.push(o); }
+      else if (o.isMesh && o.name.startsWith('sign_taxi')) {
+        const t = textTex('TAXI', { w: 256, h: 72, bg: '#fff7d6', fg: '#c4161c', size: 0.72 });
+        o.material = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.5 });
+      } else if (o.isMesh && (o.name === 'sign_route' || o.name === 'sign_side')) {
+        o.material = new THREE.MeshBasicMaterial({ map: textTex('472 신촌', { w: 512, h: 100, bg: '#000', fg: '#ffb020', size: 0.7 }), toneMapped: false });
+      }
+    });
+    if (this.type === 'scooter') { this.seatY = 0.26; this.standing = true; }
+    if (opts.text && this.screens.length) this.setText(opts.text, opts.textColor, opts.sub);
   }
 
   addWheels(positions, r, w) {

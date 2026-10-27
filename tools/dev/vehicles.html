@@ -6,6 +6,8 @@
 import * as THREE from 'three';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { Vehicle } from './src/player/vehicle.js';
+import { loadModels } from './src/engine/assets.js';
+if (!location.search.includes('proc')) await loadModels();
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); r.toneMapping = THREE.ACESFilmicToneMapping; document.body.appendChild(r.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x30343c);
 const pm = new THREE.PMREMGenerator(r); const hdr = await new RGBELoader().loadAsync('assets/hdr/venice_sunset_1k.hdr'); scene.environment = pm.fromEquirectangular(hdr).texture;
