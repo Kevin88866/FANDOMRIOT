@@ -116,7 +116,7 @@ export class City {
 
   building(L, r) {
     let h;
-    if (L.special === 'billboard') h = 34; else h = 8 + Math.pow(r(), 1.7) * 46;
+    if (L.special === 'billboard' && !this.billboard) h = 34; else h = 8 + Math.pow(r(), 1.7) * 46;
     const style = r() * 6 | 0, seed = r() * 1000 | 0;
     const f = facade(style, seed);
     const repY = Math.max(1, Math.round(h / 22));
@@ -139,7 +139,7 @@ export class City {
     }
     // 一楼店铺招牌（霓虹）
     if (h < 40 || r() < 0.5) this.shopSign(L, r);
-    if (L.special === 'billboard') this.billboardScreen(L, h);
+    if (L.special === 'billboard' && !this.billboard) this.billboardScreen(L, h);
   }
 
   shopSign(L, r, text) {

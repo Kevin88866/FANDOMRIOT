@@ -18,7 +18,7 @@ export function newGame(fav = LEAGUE.defaultFav) {
   for (const t of TEAMS) { const sub = { name: t.id + '-Sub', team: t.id, role: 'SUB', skill: 70, mood: 70, form: 0, heat: 2, sentiment: 0, rating: 6, lastRatings: [], benched: true, votes: 0, popularity: 50, sub: true, weeksBad: 0 }; players[sub.name] = sub; }
   return {
     v: 1, season: 1, week: 1, phase: 'match', fav,
-    money: B.startMoney, fans: B.startFans, heat: 0, arrests: 0,
+    money: B.startMoney, fans: B.startFans, heat: 0, lawsuits: 0,
     skills: { photo: 0, edit: 0, net: 0, stealth: 0 }, skillPoints: 1, nextSkillAt: B.skillPointEvery,
     vehicle: 'scooter', owned: ['scooter'], burner: 0, lawyer: false,
     banned: {}, used: {}, unlocked: 1,
@@ -118,7 +118,7 @@ export function applyAction(s, ev) {
   // ev: {item, target(player name), kind}
   const item = ITEMS.find(i => i.id === ev.item), p = s.players[ev.target];
   const stealthK = 1 - 0.12 * s.skills.stealth;
-  s.heat = clamp(s.heat + item.heat * (item.ext ? stealthK : 1) * (ev.kind === 'support' ? 0.3 : 1), 0, 120);
+  s.heat = clamp(s.heat + item.heat * (s.patrol && ev.kind !== 'support' ? 1.5 : 1) * stealthK * (ev.kind === 'support' ? 0.3 : 1), 0, 120);
   if (p) {
     let dm = ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood);
     // 知耻后勇：被骂有概率反而振作（心态好时概率高）
@@ -171,11 +171,12 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   if (roll < B.viralChance + qualityBoost) { viral = true; luck *= B.viralMin + rand.r() * (B.viralMax - B.viralMin); }
   else if (roll > 1 - B.flopChance * (1 - editK * 0.15)) { flop = true; luck *= B.flopMul; }
   parts.luck = luck;
-  const base = parts.impact * 350 + s.fans * 1.1;
+  // 粉丝带来的基础触达是次线性的，避免滚雪球式指数增长
+  const base = parts.impact * B.viewsPerImpact + B.fanReach * Math.pow(s.fans, B.fanReachExp);
   let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * luck;
   views = Math.round(views);
   // 涨粉：观点越被认同涨得越多；反噬会掉粉
-  let fans = Math.round(views * 0.018 * Math.min(1.6, parts.match));
+  let fans = Math.round(views * B.fanConv * Math.min(1.6, parts.match) / (1 + s.fans / B.fanSoftCap));
   if (backlash > 0) { const lost = Math.round(s.fans * backlash * 0.12 * T.backlash); fans = Math.round(fans * 0.4) - lost; }
   const money = Math.round(views * B.wonPerView * P.cpm);
   return { views, fans, money, viral, flop, backlash, parts };
@@ -202,9 +203,9 @@ export function endOfWeek(s, dayViews) {
   const rent = 250000 + s.week * 10000; s.money -= rent; log.push({ t: `房租和生活费 -₩${rent.toLocaleString()}`, c: '' });
   // 关注度后果
   if (s.heat >= B.heatArrest) {
-    s.arrests++; const fine = Math.round(Math.max(2000000, s.money * 0.3)) * (s.lawyer ? 0.5 : 1);
+    s.lawsuits++; const fine = Math.round(Math.max(2000000, s.money * 0.3) * (s.lawyer ? 0.5 : 1) * (1 - 0.08 * s.skills.stealth));
     s.money -= fine; s.heat = 45; s.fans = Math.round(s.fans * 0.85);
-    log.push({ t: `🚨 你被警方带走调查！罚款 ₩${fine.toLocaleString()}，粉丝流失 15%（累计被捕 ${s.arrests}/3）`, c: 'bad' });
+    log.push({ t: `⚖ 俱乐部对你发了律师函，赔偿 ₩${fine.toLocaleString()}，粉丝流失 15%（累计 ${s.lawsuits}/3，满 3 次会被全网封杀）`, c: 'bad' });
   } else if (s.heat >= B.heatBan) {
     const ok = ['x', 'tok', 'dc'].filter(id => !s.banned[id]);
     if (ok.length) { const id = rand.pick(ok); s.banned[id] = 2; log.push({ t: `⛔ ${PLATFORMS.find(p => p.id === id).name} 封了你的号（2 周）`, c: 'bad' }); }
@@ -235,8 +236,8 @@ export const EVENTS = [
   { id: 'apology', w: 1, run: (s, p) => { p.mood = clamp(p.mood + 15, 0, 100); p.sentiment += 0.3; return `${p.name} 开直播道歉："我会更努力的。" 舆论有所缓和`; } },
   { id: 'rage', w: 1, run: (s, p) => { p.heat = 100; p.sentiment -= 0.5; return `${p.name} 直播时怼粉丝"不懂别乱说"，话题瞬间爆炸！`; } },
   { id: 'meme', w: 1.2, run: (s, p) => { s.trendTopic = p.name; return `梗图「${p.name}的一生」突然爆火，本周和 ${p.name} 相关的帖子曝光 ×1.8`; } },
-  { id: 'lawyer', w: 0.7, run: (s) => { s.heat += 8; return `俱乐部发布声明：将对恶意粉丝追究法律责任。（关注度 +8）`; } },
-  { id: 'patrol', w: 0.6, run: (s) => { s.patrol = true; return `警方加强了总部周边巡逻，本周极端行动更危险`; } },
+  { id: 'lawyer', w: 0.7, run: (s) => { s.heat += 8; return `俱乐部发布声明：将对恶意粉丝追究法律责任。（争议度 +8）`; } },
+  { id: 'watch', w: 0.6, run: (s) => { s.patrol = true; return `俱乐部开始监控粉丝账号，本周抗议类行动争议度 +50%`; } },
   { id: 'sponsor', w: 0.9, run: (s) => { const m = 300000 + Math.round(s.fans * 20); s.money += m; return `某外卖平台找你接广告，收入 ₩${m.toLocaleString()}`; } },
   { id: 'rival', w: 0.8, run: (s) => { s.rival.fans += 2000; return `${s.rival.name} 的应援视频上了热门，他又涨了 2000 粉`; } },
   { id: 'injury', w: 0.4, run: (s, p) => { p.mood -= 15; p.form -= 3; return `传闻 ${p.name} 手腕旧伤复发，状态堪忧`; } },

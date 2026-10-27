@@ -17,9 +17,9 @@ export async function loadActors(onProgress) {
     const box = new THREE.Box3().setFromObject(g.scene), h = box.max.y - box.min.y;
     g.unit = h > 0.1 ? 1.72 / h : 1;
     for (const c of g.animations) {
-      // 去掉位移轨道（避免不同模型缩放不一致导致漂移），保留旋转
-      c.tracks = c.tracks.filter(t => !t.name.endsWith('.position'));
-      Clips[c.name.toLowerCase()] = c;
+      // 只保留旋转轨道：不同模型缩放不一致，位移会漂移；Xbot 独有的眼睛骨骼也去掉
+      c.tracks = c.tracks.filter(t => t.name.endsWith('.quaternion') && !t.name.includes('Eye'));
+      Clips[c.name.toLowerCase()] ||= c;   // 同名动画只取第一个（Soldier 的 idle 比 Xbot 的自然）
     }
     onProgress?.(++i / 3);
   }
@@ -30,8 +30,10 @@ const tmpColor = new THREE.Color();
 export class Actor {
   constructor(kind = 'michelle', { tint = null, scale = 1 } = {}) {
     const src = Models[kind];
-    this.root = SkeletonUtils.clone(src.scene);
-    this.root.scale.multiplyScalar(scale * (src.unit || 1));
+    // 外面套一层 Group：模型自带的根节点旋转不会被游戏逻辑覆盖
+    this.model = SkeletonUtils.clone(src.scene);
+    this.model.scale.multiplyScalar(scale * (src.unit || 1));
+    this.root = new THREE.Group(); this.root.add(this.model);
     this.root.traverse(o => {
       if (o.isMesh) {
         o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
@@ -40,7 +42,7 @@ export class Actor {
         o.material.envMapIntensity = 0.6;
       }
     });
-    this.mixer = new THREE.AnimationMixer(this.root);
+    this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
     this.current = null;
     this.kind = kind;

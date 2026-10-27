@@ -58,10 +58,10 @@ export class UI {
     h.heat.style.width = Math.min(100, s.heat) + '%';
     const m = Math.floor(g.clockMin); h.time.textContent = `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
     h.week.textContent = `S${s.season} · 第${s.week}周`;
-    h.phase.textContent = g.police.length ? '🚨 被追捕中' : g.mode === 'photo' ? '拍照中' : g.mode === 'aim' ? '瞄准中' : '行动日';
+    h.phase.textContent = g.mode === 'photo' ? '拍照中' : '行动日';
     if (now - (this.lastSlow || 0) > 400) {
       this.lastSlow = now;
-      h.obj.innerHTML = `<h4>赛季目标</h4>${this.goalLines().join('<br>')}<div class="sub" style="margin-top:6px">今日：照片 ${g.day.photos.length} 张 · 行动 ${g.day.events.length} 次 · 关注度 ${Math.round(s.heat)}</div>`;
+      h.obj.innerHTML = `<h4>赛季目标</h4>${this.goalLines().join('<br>')}<div class="sub" style="margin-top:6px">今日：照片 ${g.day.photos.length} 张 · 行动 ${g.day.events.length} 次 · 争议度 ${Math.round(s.heat)}</div>`;
       h.inv.innerHTML = s.inventory.slice(0, 6).map(o => `<div class="inv"><b>${itemOf(o.item).name}</b> → ${esc(o.target)}</div>`).join('') + (s.inventory.length > 6 ? `<div class="inv">+${s.inventory.length - 6}</div>` : '');
       this.minimap();
     }
@@ -87,7 +87,7 @@ export class UI {
       x.fillStyle = col[p.kind]; x.beginPath(); x.arc(a, b, big ? 7 : 5, 0, 7); x.fill();
       if (big) { x.fillStyle = '#fff'; x.font = '12px sans-serif'; x.fillText(p.label, a + 9, b + 4); }
     }
-    for (const v of g.vehicles) { if (v === g.player.vehicle) continue; const [a, b] = P(v.root.position.x, v.root.position.z); x.fillStyle = v.police ? (Math.floor(g.time * 4) % 2 ? '#f00' : '#04f') : v.order || v.shown || v.ai ? '#ff8a00' : '#888'; x.fillRect(a - 3, b - 3, 6, 6); }
+    for (const v of g.vehicles) { if (v === g.player.vehicle) continue; const [a, b] = P(v.root.position.x, v.root.position.z); x.fillStyle = v.order || v.shown || v.ai ? '#ff8a00' : '#888'; x.fillRect(a - 3, b - 3, 6, 6); }
     const [a, b] = P(me.x, me.z), hd = g.player.vehicle ? g.player.vehicle.heading : g.player.facing;
     x.save(); x.translate(a, b); x.rotate(-hd + Math.PI); x.fillStyle = '#fff'; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 6); x.lineTo(-5, 6); x.fill(); x.restore();
   }
@@ -105,9 +105,9 @@ export class UI {
       out.push({ t: '本赛季至少 2 次爆款', done: (s.seasonViral || 0) >= 2, sub: `已 ${s.seasonViral || 0} 次` });
     } else if (s.season === 3) {
       out.push({ t: `让主队 ${teamOf(s.fav).name} 夺冠`, done: s.champion === s.fav, sub: s.week < B.weeksPerSeason ? '第 10 周决赛（前两名进决赛）' : '' });
-      out.push({ t: '粉丝达到 150K', done: s.fans >= 150000, sub: `当前 ${num(s.fans)}` });
+      out.push({ t: '粉丝达到 100K', done: s.fans >= 100000, sub: `当前 ${num(s.fans)}` });
     } else {
-      const tgt = 150000 * Math.pow(2, s.season - 3);
+      const tgt = 100000 * Math.pow(2, s.season - 3);
       out.push({ t: `无尽模式：粉丝达到 ${num(tgt)}`, done: s.fans >= tgt, sub: `当前 ${num(s.fans)}` });
     }
     return out;
@@ -120,7 +120,7 @@ export class UI {
     const has = !!this.load();
     this.open(`<div style="text-align:center;padding:20px 0">
       <div class="logo">饭圈风云<small>FANDOM RIOT · SEOUL</small></div>
-      <p class="sub" style="margin-top:18px">你是首尔的一个电竞粉丝博主。开卡车、送花圈、放烟花……甚至扛火箭筒。<br>用镜头把这一切变成流量。（战队与选手均为虚构）</p>
+      <p class="sub" style="margin-top:18px">你是首尔的一个电竞粉丝博主。开 LED 卡车、送花圈、放烟花、搞无人机灯光秀。<br>用镜头把这一切变成流量。（战队与选手为恶搞名）</p>
       <div class="title-menu">
         ${has ? '<button class="btn pri" id="cont">继续游戏</button>' : ''}
         <button class="btn ${has ? '' : 'pri'}" id="new">新游戏</button>
@@ -139,7 +139,7 @@ export class UI {
       <div class="news">每周流程：<b>比赛日</b>（看赛果，谁打崩了、谁封神）→ <b>行动日</b>（18:00-24:00 在首尔街头行动）→ <b>发帖</b>（挑照片发到平台，换曝光、粉丝和钱）→ <b>周结算</b>。</div>
       <div class="news">曝光 = 道具冲击力 × 照片质量 × 话题热度 × <b>情绪匹配</b> × 新鲜度 × 平台偏好 × 运气。骂刚打崩的人，大家认同；骂刚拿 MVP 的人，会被反噬掉粉。同一招反复用，看的人越来越少。偶尔会莫名其妙爆火，也会石沉大海。</div>
       <div class="news">照片质量看：主体是否在画面里、标语能否看清、队标和总部招牌有没有入镜、有没有围观人群、有没有拍到爆炸或烟花的瞬间。</div>
-      <div class="news bad">关注度：极端道具会让关注度飙升。≥50 限流，≥75 封号，≥100 被捕。被捕 3 次游戏结束。用了炸弹和火箭筒，警察会来追你 —— 开车甩开他们（距离 70 米以上坚持 8 秒）。</div>
+      <div class="news bad">争议度：抗议类行动会让争议度上升，每周自然回落。≥50 限流，≥75 随机一个平台封号，≥100 收到俱乐部律师函（赔钱、掉粉）。律师函满 3 次会被全网封杀，游戏结束。</div>
       <div class="news good">你的行动会影响选手心态 → 影响比赛 → 影响热度。把选手骂到下放替补、把喜欢的选手捧进全明星、帮主队夺冠，都靠你。</div>
       <div class="news">操作：WASD 移动/开车 · Shift 跑 · 空格 刹车 · F 上下车 · E 互动 · C 手机拍照 · Tab 背包 · M 大地图 · 鼠标 视角 · 滚轮 拉近拉远/变焦 · Esc 菜单</div>
       <div class="row" style="margin-top:14px"><button class="btn pri" id="b">返回</button></div>`, { cinematic: true, esc: back });
@@ -217,7 +217,7 @@ export class UI {
   matchDay(resume = false) {
     const s = this.s;
     this.showHud(false); this.g.day = null;
-    if (s.arrests >= 3) return this.gameOver('你第三次被捕，被禁止接近任何战队总部。博主生涯结束。');
+    if ((s.lawsuits || 0) >= 3) return this.gameOver('你第三次收到律师函，所有平台同时封杀了你的账号。博主生涯结束。');
     if (s.money < -5000000) return this.gameOver('你欠了太多钱，只能卖掉设备回老家。');
     if (!resume || !s.lastResults) {
       s.lastResults = Sim.playWeek(s);
@@ -262,9 +262,9 @@ export class UI {
     const s = this.s, lvl = unlockLevel(s.fans);
     const cards = ITEMS.map(it => {
       const locked = it.unlock > lvl, cost = Sim.itemCost(s, it);
-      const tag = it.ext ? '<span class="tag ext">极端</span>' : it.kind === 'support' ? '<span class="tag good">应援</span>' : it.kind === 'both' ? '<span class="tag">黑/捧</span>' : '<span class="tag evil">抗议</span>';
+      const tag = it.kind === 'support' ? '<span class="tag good">应援</span>' : it.kind === 'both' ? '<span class="tag">黑/捧</span>' : '<span class="tag evil">抗议</span>';
       return `<div class="card ${locked ? 'locked' : ''} ${sel === it.id ? 'sel' : ''}" data-i="${it.id}">${tag}<div class="t">${it.name}</div><div class="d">${it.desc}</div>
-        <div class="p">${locked ? `🔒 粉丝 ${num(UNLOCK[it.unlock])} 解锁` : won(cost)}</div><div class="sub" style="font-size:11px">曝光力 ${it.impact} · 关注度 +${it.heat}</div></div>`;
+        <div class="p">${locked ? `🔒 粉丝 ${num(UNLOCK[it.unlock])} 解锁` : won(cost)}</div><div class="sub" style="font-size:11px">曝光力 ${it.impact} · 争议度 +${it.heat}</div></div>`;
     }).join('');
     this.open(`<h2>응원·항의 용품 SHOP</h2><div class="sub">资金 ${won(s.money)} · 选一件道具，再选目标选手和标语。卡车类道具买完去车行提车。</div>
       <div class="cards">${cards}</div><div id="order"></div>
@@ -308,6 +308,191 @@ export class UI {
     box.scrollIntoView({ behavior: 'smooth' });
   }
 
+
   // ================= 车行 =================
   garage() {
-    const s = this.s, trucks = s.inventory.filter(o => it
+    const s = this.s;
+    const trucks = s.inventory.filter(o => itemOf(o.item).truck);
+    const veh = VEHICLES.map(v => {
+      const own = s.owned.includes(v.id), cur = s.vehicle === v.id;
+      return `<div class="card ${cur ? 'sel' : ''}" data-v="${v.id}"><div class="t">${v.name}</div><div class="d">${v.desc} · 极速 ${v.speed}</div><div class="p">${cur ? '使用中' : own ? '切换（明天生效）' : won(v.price)}</div></div>`;
+    }).join('');
+    this.open(`<h2>중고차 · 대리운전</h2><div class="sub">资金 ${won(s.money)}</div>
+      <h3>卡车订单</h3>${trucks.length ? trucks.map((o, i) => `<div class="news"><b>${itemOf(o.item).name}</b> → ${esc(o.target)} · “${esc(o.text)}”
+        <div class="row" style="margin-top:8px"><button class="btn pri" data-self="${i}">自己开过去</button><button class="btn" data-drv="${i}" ${s.money < DRIVER_FEE ? 'disabled' : ''}>雇司机沿大路巡游（${won(DRIVER_FEE)}）</button></div></div>`).join('') : '<div class="sub">没有待提的卡车。LED 抗议卡车和咖啡应援车在用品店下单。</div>'}
+      <h3>我的座驾</h3><div class="cards">${veh}</div>
+      <h3>中介服务</h3><div class="cards">
+        <div class="card" data-svc="lawyer"><div class="t">签约律师</div><div class="d">律师函赔偿减半，争议度每周多降 6 点。一次签约，长期有效。</div><div class="p">${s.lawyer ? '已签约' : won(5000000)}</div></div>
+        <div class="card" data-svc="burner"><div class="t">买小号</div><div class="d">立刻解除所有平台的封号。</div><div class="p">${won(1000000)}</div></div>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn" id="x">离开</button></div>`, { esc: () => this.close() });
+    $('x').onclick = () => this.close();
+    this.on('[data-self]', 'click', (e, el) => { this.close(); this.g.spawnOrderTruck(trucks[+el.dataset.self], false); });
+    this.on('[data-drv]', 'click', (e, el) => { if (s.money < DRIVER_FEE) return; s.money -= DRIVER_FEE; this.close(); this.g.spawnOrderTruck(trucks[+el.dataset.drv], true); });
+    this.on('[data-v]', 'click', (e, el) => {
+      const v = VEHICLES.find(x => x.id === el.dataset.v);
+      if (!s.owned.includes(v.id)) { if (s.money < v.price) return this.toast('钱不够', 'bad'); s.money -= v.price; s.owned.push(v.id); this.g.audio.coin(); }
+      s.vehicle = v.id; this.toast(`明天起使用 ${v.name}`, 'good'); this.saveSoon(); this.garage();
+    });
+    this.on('[data-svc]', 'click', (e, el) => {
+      if (el.dataset.svc === 'lawyer' && !s.lawyer) { if (s.money < 5000000) return this.toast('钱不够', 'bad'); s.money -= 5000000; s.lawyer = true; }
+      if (el.dataset.svc === 'burner') { if (s.money < 1000000) return this.toast('钱不够', 'bad'); s.money -= 1000000; s.banned = {}; this.toast('所有平台都能发帖了', 'good'); }
+      this.g.audio.coin(); this.saveSoon(); this.garage();
+    });
+  }
+
+  // ================= 在总部使用道具 =================
+  locationOf(o) {
+    if (o.item === 'billboard') return 'ARENA';
+    const team = this.s.players[o.target]?.team;
+    return this.g.city.hq[team] ? team : 'ARENA';
+  }
+
+  useItems(hqId) {
+    const s = this.s, hq = this.g.city.hq[hqId];
+    const list = s.inventory.filter(o => !itemOf(o.item).truck && this.locationOf(o) === hqId);
+    const other = s.inventory.filter(o => !itemOf(o.item).truck && this.locationOf(o) !== hqId).length;
+    this.open(`<h2>${esc(hq.team.name)} ${hqId === 'ARENA' ? '' : '总部'}门口</h2>
+      <div class="sub">${list.length ? '选择要使用的道具。布置好后记得掏手机拍照（C）。' : '背包里没有能在这里用的道具。'}${other ? ` 还有 ${other} 件道具要去别的地点用。` : ''}</div>
+      <div class="cards">${list.map((o, i) => { const it = itemOf(o.item); return `<div class="card" data-u="${i}"><span class="tag ${o.kind === 'support' ? 'good' : 'evil'}">${o.kind === 'support' ? '应援' : '抗议'}</span><div class="t">${it.name}</div><div class="d">→ ${esc(o.target)}<br>“${esc(o.text)}”</div></div>`; }).join('')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn" id="x">离开</button></div>`, { esc: () => this.close() });
+    $('x').onclick = () => this.close();
+    this.on('[data-u]', 'click', (e, el) => { const o = list[+el.dataset.u]; this.close(); this.g.useItem(o, hqId); });
+  }
+
+  inventory() {
+    const s = this.s;
+    this.open(`<h2>背包</h2>${s.inventory.length ? s.inventory.map(o => { const it = itemOf(o.item); const loc = it.truck ? '车行提车' : this.locationOf(o) === 'ARENA' ? LEAGUE.arena : teamOf(this.locationOf(o)).name + ' 总部'; return `<div class="news"><b>${it.name}</b> → ${esc(o.target)} · “${esc(o.text)}” <span style="color:var(--dim)">· 使用地点：${esc(loc)}</span></div>`; }).join('') : '<div class="sub">空的。去用品店买点东西吧。</div>'}
+      <h3>今日照片（${this.g.day?.photos.length || 0}）</h3><div class="photos">${(this.g.day?.photos || []).map(p => `<div class="photo"><img src="${p.img}"><span class="q">${'★'.repeat(Math.max(1, Math.round(p.q * 3)))} ${esc(p.label)}</span></div>`).join('')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="x">关闭</button></div>`, { esc: () => this.close() });
+    $('x').onclick = () => this.close();
+  }
+
+  // ================= 发帖 =================
+  posting() {
+    const s = this.s, g = this.g, photos = g.day.photos;
+    this.posts = this.posts || [];
+    const plat = PLATFORMS.map(p => `<option value="${p.id}" ${s.banned[p.id] ? 'disabled' : ''}>${p.name}${s.banned[p.id] ? '（封号中）' : ''}</option>`).join('');
+    const tones = TONES.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    this.open(`<h2>📱 发帖</h2><div class="sub">从今天的照片里挑最多 3 张发出去。同一件事发到不同平台，热度会打折。${s.heat >= B.heatLimit ? '<span class="neg">（你正被限流，曝光减半）</span>' : ''}</div>
+      ${photos.length ? `<div class="photos">${photos.map((p, i) => `<div class="photo ${this.posts.some(x => x.i === i) ? 'sel' : ''}" data-p="${i}"><img src="${p.img}"><span class="q">${'★'.repeat(Math.max(1, Math.round(p.q * 3)))} ${esc(p.label)}${p.tags.includes('explosion') ? ' · 名场面' : ''}</span></div>`).join('')}</div>` : '<div class="news">今天一张照片都没拍……什么也发不了。</div>'}
+      <h3>待发布（${this.posts.length}/3）</h3>
+      ${this.posts.map((x, k) => `<div class="news"><b>${esc(photos[x.i].label)}</b>
+        <div class="row" style="margin-top:6px"><select class="txt" data-pl="${k}" style="min-width:140px">${plat}</select><select class="txt" data-tn="${k}" style="min-width:100px">${tones}</select><button class="btn ghost" data-rm="${k}">移除</button></div>
+        <div class="sub" style="margin-top:4px">${PLATFORMS.find(p => p.id === x.platform)?.desc || ''}</div></div>`).join('')}
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="go" ${this.posts.length ? '' : 'disabled'}>发布</button><button class="btn" id="skip">今天不发了</button></div>`);
+    this.posts.forEach((x, k) => { this.modal.querySelector(`[data-pl="${k}"]`).value = x.platform; this.modal.querySelector(`[data-tn="${k}"]`).value = x.tone; });
+    this.on('[data-p]', 'click', (e, el) => {
+      const i = +el.dataset.p, at = this.posts.findIndex(x => x.i === i);
+      if (at >= 0) this.posts.splice(at, 1);
+      else if (this.posts.length < 3) { const pl = PLATFORMS.find(p => !s.banned[p.id]); if (!pl) return this.toast('所有平台都把你封了', 'bad'); this.posts.push({ i, platform: pl.id, tone: photos[i].eventId && g.day.events.find(e => e.id === photos[i].eventId)?.kind === 'support' ? 'emo' : 'mock' }); }
+      this.posting();
+    });
+    this.modal.querySelectorAll('[data-pl]').forEach(el => el.onchange = () => { this.posts[+el.dataset.pl].platform = el.value; this.posting(); });
+    this.modal.querySelectorAll('[data-tn]').forEach(el => el.onchange = () => { this.posts[+el.dataset.tn].tone = el.value; });
+    this.on('[data-rm]', 'click', (e, el) => { this.posts.splice(+el.dataset.rm, 1); this.posting(); });
+    $('go').onclick = () => this.publish();
+    $('skip').onclick = () => { this.posts = []; this.weekSummary([]); };
+  }
+
+  publish() {
+    const s = this.s, g = this.g, photos = g.day.photos, seen = {};
+    const results = this.posts.map(x => {
+      const photo = photos[x.i], ev = g.day.events.find(e => e.id === photo.eventId) || null;
+      const key = ev?.id || 'none'; const extra = seen[key] || 0; seen[key] = extra + 1;
+      const r = Sim.evaluatePost(s, { photo, ev, platform: x.platform, tone: x.tone, extraPlatform: extra });
+      Sim.commitPost(s, r);
+      if (r.viral) s.seasonViral = (s.seasonViral || 0) + 1;
+      return { ...r, photo, platform: x.platform, ev };
+    });
+    this.posts = [];
+    this.save();
+    this.showResults(results);
+  }
+
+  showResults(results) {
+    const P = id => PLATFORMS.find(p => p.id === id);
+    this.open(`<h2>发帖结果</h2>${results.map((r, k) => `<div class="news ${r.viral ? 'good' : r.flop || r.backlash ? 'bad' : ''}" style="display:grid;grid-template-columns:160px 1fr;gap:14px">
+        <img src="${r.photo.img}" style="width:160px;border-radius:8px">
+        <div><b>${P(r.platform).name}</b> · ${esc(r.photo.label)} ${r.viral ? '<b class="pos">🔥 爆款！被大号转发上了热搜</b>' : r.flop ? '<span class="neg">石沉大海……</span>' : ''}
+          <canvas class="chart" id="ch${k}" width="600" height="150" style="height:90px;margin:6px 0"></canvas>
+          <div class="kv"><span>曝光</span><b id="v${k}">0</b><span>粉丝</span><b class="${r.fans >= 0 ? 'pos' : 'neg'}">${r.fans >= 0 ? '+' : ''}${num(r.fans)}</b><span>收入</span><b>${won(r.money)}</b></div>
+          ${r.backlash ? '<div class="sub neg">评论区炸了：大家觉得他打得挺好，你在无理取闹（掉粉）</div>' : ''}
+          <div class="sub">照片 ×${r.parts.quality.toFixed(2)} · 话题 ×${r.parts.topic.toFixed(2)} · 情绪 ×${r.parts.match.toFixed(2)} · 新鲜 ×${r.parts.fresh.toFixed(2)} · 平台 ×${r.parts.platform.toFixed(2)} · 运气 ×${r.parts.luck.toFixed(2)}</div></div></div>`).join('') || '<div class="sub">没有发帖。</div>'}
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="go">周结算 →</button></div>`);
+    results.forEach((r, k) => this.animateChart($(`ch${k}`), $(`v${k}`), r));
+    if (results.some(r => r.viral)) this.g.audio.viral(); else this.g.audio.coin();
+    $('go').onclick = () => this.weekSummary(results);
+  }
+
+  // 热度曲线：普通帖子慢慢涨，爆款中途突然起飞，沉底的很快走平
+  animateChart(c, label, r) {
+    const x = c.getContext('2d'), W = c.width, H = c.height, N = 60;
+    const pts = []; let v = 0;
+    const jump = r.viral ? 15 + Math.random() * 25 : -1;
+    for (let i = 0; i < N; i++) { const base = r.flop ? Math.exp(-i / 6) : Math.exp(-i / 18); v += base * (i === jump ? 30 : i > jump && jump > 0 ? 2.5 : 1); pts.push(v); }
+    const max = pts[N - 1];
+    let f = 0;
+    const draw = () => {
+      f = Math.min(N, f + 1.2); x.clearRect(0, 0, W, H);
+      x.strokeStyle = r.viral ? '#38e08a' : r.flop ? '#ff4a4a' : '#27e1ff'; x.lineWidth = 3; x.beginPath();
+      for (let i = 0; i < f; i++) { const px = (i / (N - 1)) * W, py = H - 8 - (pts[i] / max) * (H - 16); i ? x.lineTo(px, py) : x.moveTo(px, py); }
+      x.stroke();
+      label.textContent = num(Math.round(r.views * pts[Math.max(0, Math.floor(f) - 1)] / max));
+      if (f < N) requestAnimationFrame(draw);
+    };
+    draw();
+  }
+
+  // ================= 周结算 =================
+  weekSummary(results) {
+    const s = this.s;
+    const log = Sim.endOfWeek(s, results);
+    s.unlocked = unlockLevel(s.fans);
+    this.save();
+    this.weekSummaryView(log);
+  }
+
+  weekSummaryView(log) {
+    const s = this.s;
+    const lines = log.map(l => `<div class="news ${l.c}">${esc(l.t)}</div>`).join('');
+    this.open(`<h2>第 ${s.week} 周结算</h2>
+      <div class="kv"><span>资金</span><b>${won(s.money)}</b><span>粉丝</span><b>${num(s.fans)}</b><span>争议度</span><b>${Math.round(s.heat)}</b><span>对手粉头 ${esc(s.rival.name)}</span><b>${num(s.rival.fans)} 粉</b></div>
+      ${lines}
+      <h3>技能（可用点数 ${s.skillPoints}，下一点在 ${num(s.nextSkillAt)} 粉）</h3>
+      <div class="cards">${SKILLS.map(k => { const lv = s.skills[k.id], cost = k.cost[lv]; return `<div class="card ${lv >= k.max || s.skillPoints < cost ? 'locked' : ''}" data-k="${k.id}"><div class="t">${k.name} Lv.${lv}</div><div class="d">${k.desc}</div><div class="p">${lv >= k.max ? '已满级' : `升级需 ${cost} 点`}</div></div>`; }).join('')}</div>
+      <h3>赛季目标</h3><div style="font-size:13px;line-height:1.6">${this.goalLines().join('<br>')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="go">${s.week >= B.weeksPerSeason ? '赛季结算 →' : '下一周 →'}</button></div>`, { cinematic: true });
+    this.on('[data-k]', 'click', (e, el) => {
+      const k = SKILLS.find(x => x.id === el.dataset.k), lv = s.skills[k.id], cost = k.cost[lv];
+      if (lv >= k.max || s.skillPoints < cost) return;
+      s.skillPoints -= cost; s.skills[k.id]++; this.save(); this.weekSummaryView(log);
+    });
+    $('go').onclick = () => {
+      if (s.week >= B.weeksPerSeason) return this.seasonEnd();
+      s.week++; s.lastResults = null; this.save(); this.matchDay();
+    };
+  }
+
+  // ================= 赛季结算 =================
+  seasonEnd() {
+    const s = this.s, goals = this.goals(), done = goals.filter(g => g.done).length;
+    const grade = done === goals.length ? 'S' : done > 0 ? 'B' : 'C';
+    const as = Sim.allStar(s);
+    const reward = grade === 'S' ? 10000000 : grade === 'B' ? 3000000 : 0;
+    this.open(`<h2>第 ${s.season} 赛季结束 · 评级 <span style="color:${grade === 'S' ? 'var(--good)' : grade === 'B' ? 'var(--warn)' : 'var(--bad)'}">${grade}</span></h2>
+      <div class="news">🏆 冠军：<b style="color:${teamOf(s.champion).color}">${esc(teamOf(s.champion)?.name || '-')}</b></div>
+      <h3>目标</h3><div style="font-size:14px;line-height:1.7">${this.goalLines().join('<br>')}</div>
+      <h3>全明星首发</h3><div>${Object.entries(as).map(([r, l]) => `<span class="pl">${r} <b>${esc(l[0].name)}</b></span>`).join('')}</div>
+      <h3>本季数据</h3><div class="kv"><span>粉丝</span><b>${num(s.fans)}</b><span>累计曝光</span><b>${num(s.totalViews)}</b><span>爆款</span><b>${s.seasonViral || 0} 次</b><span>赛季奖励（商单续约）</span><b>${won(reward)}</b></div>
+      <div class="row" style="margin-top:16px"><button class="btn pri" id="go">进入第 ${s.season + 1} 赛季 →</button></div>`, { cinematic: true });
+    $('go').onclick = () => {
+      s.money += reward;
+      s.season++; s.week = 1; s.lastResults = null; s.seasonViral = 0; s.champion = null; s.results = [];
+      for (const k in s.teams) Object.assign(s.teams[k], { w: 0, l: 0, gw: 0, gl: 0 });
+      for (const p of Object.values(s.players)) { p.mood = 70; p.form = 0; p.votes = 0; p.weeksBad = 0; if (!p.sub) p.benched = false; else { p.benched = true; p.replacing = null; } p.skill = Math.max(60, Math.min(97, p.skill + Math.round((Math.random() - 0.5) * 6))); }
+      s.rival.fans = Math.max(s.rival.fans, Math.round(s.fans * 1.1));
+      this.save(); this.matchDay();
+    };
+  }
+}

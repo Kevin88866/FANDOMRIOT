@@ -42,7 +42,6 @@ const TYPES = {
   van:       { len: 5.0, wid: 2.0, color: 0xd9dde3, speed: 20, accel: 9 },
   pickup:    { len: 5.4, wid: 2.1, color: 0x1a1a1a, speed: 26, accel: 13 },
   scooter:   { len: 1.4, wid: 0.6, color: 0x27e1ff, speed: 14, accel: 10 },
-  police:    { len: 4.8, wid: 1.9, color: 0x1a2a6c, speed: 24, accel: 12 },
   sedan:     { len: 4.6, wid: 1.9, color: 0x888888, speed: 12, accel: 5 },
 };
 
@@ -110,14 +109,6 @@ export class Vehicle {
     for (const s of [-1, 1]) {
       const hl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.06), m.head); hl.position.set(s * W * 0.33, 0.95, L / 2 + 0.02); this.body.add(hl);
       const tl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.06), m.tail); tl.position.set(s * W * 0.33, 1.0, -L / 2 - 0.02); this.body.add(tl);
-    }
-    if (type === 'police') {
-      const bar = new THREE.Group(); bar.position.set(0, 1.25 + cabH + 0.12, cabZ);
-      this.sirenR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.25), new THREE.MeshBasicMaterial({ color: 0xff0000, toneMapped: false }));
-      this.sirenB = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.25), new THREE.MeshBasicMaterial({ color: 0x0044ff, toneMapped: false }));
-      this.sirenR.position.x = -0.3; this.sirenB.position.x = 0.3; bar.add(this.sirenR, this.sirenB); this.body.add(bar);
-      this.sirenLight = new THREE.PointLight(0xff0000, 25, 18, 1.5); this.sirenLight.position.copy(bar.position); this.body.add(this.sirenLight);
-      const stripe = new THREE.Mesh(new THREE.BoxGeometry(W + 0.02, 0.18, L * 0.7), new THREE.MeshStandardMaterial({ color: 0xffffff })); stripe.position.y = 0.95; this.body.add(stripe);
     }
     this.addWheels([[-W * 0.45, L * 0.32], [W * 0.45, L * 0.32], [-W * 0.45, -L * 0.32], [W * 0.45, -L * 0.32]], 0.38, 0.28);
   }
@@ -190,10 +181,5 @@ export class Vehicle {
 
   update(dt, t) {
     if (this.screenTex) this.screenTex.offset.x = (t * 0.12) % 1;
-    if (this.sirenR) {
-      const on = Math.floor(t * 6) % 2 === 0;
-      this.sirenR.material.color.setRGB(on ? 3 : 0.1, 0, 0); this.sirenB.material.color.setRGB(0, 0, on ? 0.1 : 3);
-      this.sirenLight.color.set(on ? 0xff0000 : 0x0044ff);
-    }
   }
 }

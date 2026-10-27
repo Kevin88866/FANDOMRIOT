@@ -28,7 +28,6 @@ export class Audio {
     const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
     o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.05);
   }
-  boom(s = 1) { this.noise(2.5, { f: 900, f2: 60, gain: 1.2 * s, q: 0.7 }); this.tone(70, 1.4, { type: 'sine', gain: 0.9 * s, slide: 30 }); this.noise(0.3, { f: 4000, type: 'highpass', gain: 0.4 * s }); }
   pop() { this.noise(0.9, { f: 2500, f2: 300, gain: 0.5 }); this.noise(1.6, { f: 6000, type: 'highpass', gain: 0.12, attack: 0.15 }); }
   shutter() { this.noise(0.05, { f: 3000, type: 'bandpass', q: 2, gain: 0.5, verb: false }); setTimeout(() => this.noise(0.06, { f: 2000, type: 'bandpass', q: 2, gain: 0.4, verb: false }), 70); }
   click() { this.tone(900, 0.06, { type: 'triangle', gain: 0.12 }); }
@@ -36,7 +35,6 @@ export class Audio {
   bad() { this.tone(220, 0.3, { type: 'sawtooth', gain: 0.08, slide: 110 }); }
   notify() { this.tone(1046, 0.12, { gain: 0.15 }); this.tone(1568, 0.2, { gain: 0.12, delay: 0.1 }); }
   whoosh() { this.noise(1.2, { f: 300, f2: 3000, type: 'bandpass', q: 3, gain: 0.5 }); }
-  splat() { this.noise(0.25, { f: 600, gain: 0.6, verb: false }); }
   viral() { [523, 659, 784, 1046].forEach((f, i) => this.tone(f, 0.4, { type: 'triangle', gain: 0.15, delay: i * 0.09 })); }
 
   // 城市环境音：远处车流 + 低频嗡鸣
@@ -51,10 +49,6 @@ export class Audio {
     const ef = C.createBiquadFilter(); ef.type = 'lowpass'; ef.frequency.value = 300;
     const eg = C.createGain(); eg.gain.value = 0; o.connect(ef); ef.connect(eg); eg.connect(this.master); o.start();
     this.engine = { o, g: eg };
-    // 警笛
-    const so = C.createOscillator(); so.type = 'triangle'; const sg = C.createGain(); sg.gain.value = 0; so.connect(sg); sg.connect(this.master); so.start();
-    this.siren = { o: so, g: sg };
   }
   setEngine(on, speed) { if (!this.engine) return; const t = this.ctx.currentTime; this.engine.g.gain.setTargetAtTime(on ? 0.05 + Math.min(0.06, speed * 0.003) : 0, t, 0.1); this.engine.o.frequency.setTargetAtTime(35 + speed * 3.5, t, 0.1); }
-  setSiren(level, time) { if (!this.siren) return; const t = this.ctx.currentTime; this.siren.g.gain.setTargetAtTime(level * 0.05, t, 0.2); this.siren.o.frequency.setTargetAtTime(Math.sin(time * 3) > 0 ? 960 : 720, t, 0.05); }
 }

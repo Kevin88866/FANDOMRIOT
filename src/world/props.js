@@ -102,29 +102,17 @@ export class Props {
     this.place(g); return g;
   }
 
-  graffiti(hq, text) {
-    const c = document.createElement('canvas'); c.width = 1024; c.height = 512; const g = c.getContext('2d');
-    g.font = '900 300px Impact, "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.shadowColor = 'rgba(255,0,60,.8)'; g.shadowBlur = 25; g.fillStyle = '#ff1e46';
-    g.save(); g.translate(512, 230); g.rotate(-0.08); g.fillText('OUT', 0, 0); g.restore();
-    g.shadowBlur = 0; g.font = '700 70px "Noto Sans KR",sans-serif'; g.fillStyle = '#ffffff'; g.fillText(text, 512, 440);
-    for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(255,30,70,.8)'; g.fillRect(200 + Math.random() * 600, 300 + Math.random() * 60, 4, 20 + Math.random() * 90); }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -4, emissive: 0x330008, emissiveMap: t }));
-    m.position.copy(hq.wallPos); m.position.x += 8; m.rotation.y = hq.faceRy;
-    m.position.z += hq.dir * 0.1;
-    this.place(m); return m;
-  }
-
-  // 卡通炸弹：黑球 + 引信 + 闪灯
-  bomb(pos) {
+  // 集会用的手举牌
+  picket(pos, faceRy, text, kind) {
     const g = new THREE.Group();
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 16), new THREE.MeshPhysicalMaterial({ color: 0x111111, roughness: 0.3, clearcoat: 1 }));
-    ball.position.y = 0.45; g.add(ball);
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.15, 12), new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 1, roughness: 0.3 })); cap.position.y = 0.92; g.add(cap);
-    const light = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0000, toneMapped: false })); light.position.set(0, 1.02, 0); g.add(light);
-    g.userData.light = light;
-    g.position.copy(pos); this.place(g); return g;
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.9, 6), new THREE.MeshStandardMaterial({ color: 0x8a6a45 }));
+    stick.position.y = 0.95; g.add(stick);
+    const support = kind === 'support';
+    const t = textTex(text, { w: 512, h: 320, bg: support ? '#ffe5ef' : '#ffffff', fg: support ? '#e0115f' : '#d10000', size: 0.42, border: support ? '#ff7aa8' : '#222' });
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.56, 0.02), new THREE.MeshStandardMaterial({ map: t, roughness: 0.8 }));
+    board.position.y = 2.0; g.add(board);
+    g.position.copy(pos); g.rotation.y = faceRy;
+    this.place(g); return g;
   }
 
   // 无人机灯光秀：把文字采样成点阵
@@ -162,21 +150,7 @@ export class Props {
         a.needsUpdate = true;
         p.userData.formed = k >= 1;
       }
-      if (p.userData.light) p.userData.light.visible = Math.floor(t * (p.userData.fast ? 8 : 2)) % 2 === 0;
       if (p.userData.cloth) { const a = p.userData.cloth.geometry.attributes.position; for (let i = 0; i < a.count; i++) a.setZ(i, Math.sin(a.getX(i) * 1.3 + t * 2.2) * 0.12); a.needsUpdate = true; }
-      if (p.userData.vel) { // 被炸飞的道具
-        p.userData.vel.y -= 20 * dt; p.position.addScaledVector(p.userData.vel, dt); p.rotation.x += dt * 4; p.rotation.z += dt * 3;
-        if (p.position.y < 0.2) { p.position.y = 0.2; p.userData.vel.multiplyScalar(0.3); p.userData.vel.y = Math.abs(p.userData.vel.y) * 0.3; if (p.userData.vel.length() < 0.5) p.userData.vel = null; }
-      }
-    }
-  }
-
-  // 爆炸冲击：把附近道具掀飞
-  blast(center, r = 10) {
-    for (const p of this.list) {
-      if (p.isPoints) continue;
-      const d = p.position.distanceTo(center);
-      if (d < r && d > 0.01) { const v = p.position.clone().sub(center).setY(0).normalize().multiplyScalar((r - d) * 2.2); v.y = 6 + (r - d); p.userData.vel = v; }
     }
   }
 }

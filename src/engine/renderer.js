@@ -11,16 +11,16 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 // 暗角 + 轻微色调
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null }, vignette: { value: 0.32 }, sat: { value: 1.08 } },
+  uniforms: { tDiffuse: { value: null }, vignette: { value: 0.32 }, sat: { value: 1.08 }, fade: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float vignette; uniform float sat; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float vignette; uniform float sat; uniform float fade; varying vec2 vUv;
     void main(){ vec4 c=texture2D(tDiffuse,vUv); float l=dot(c.rgb,vec3(.299,.587,.114));
-      c.rgb=mix(vec3(l),c.rgb,sat); vec2 d=vUv-.5; c.rgb*=1.0-vignette*dot(d,d)*2.2; gl_FragColor=c; }`,
+      c.rgb=mix(vec3(l),c.rgb,sat); vec2 d=vUv-.5; c.rgb*=(1.0-vignette*dot(d,d)*2.2)*(1.0-fade); gl_FragColor=c; }`,
 };
 
 export class Renderer {
   constructor(canvas) {
-    const r = this.r = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+    const r = this.r = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
     r.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     r.setSize(innerWidth, innerHeight);
     r.toneMapping = THREE.ACESFilmicToneMapping;
