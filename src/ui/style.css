@@ -386,7 +386,7 @@ kbd.pad.p-LB,kbd.pad.p-RB,kbd.pad.p-LT,kbd.pad.p-RT{border-radius:7px;min-width:
 /* 帧率 */
 #fps{position:fixed;left:8px;top:6px;z-index:60;font:700 12px/1 ui-monospace,monospace;color:#7dffb0;background:rgba(0,0,0,.45);padding:3px 6px;border-radius:5px;pointer-events:none}
 /* 新手引导 */
-#tutorial{position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:25;width:min(560px,80vw);background:rgba(12,14,24,.9);border:1px solid rgba(39,225,255,.45);border-radius:14px;padding:10px 16px 12px;box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 30px rgba(39,225,255,.12);pointer-events:none;animation:tin .3s ease-out}
+#tutorial{position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:25;width:min(460px,42vw);background:rgba(12,14,24,.9);border:1px solid rgba(39,225,255,.45);border-radius:14px;padding:10px 16px 12px;box-shadow:0 10px 40px rgba(0,0,0,.45),0 0 30px rgba(39,225,255,.12);pointer-events:none;animation:tin .3s ease-out}
 #tutorial .tut-h{font-size:11px;color:var(--acc2);letter-spacing:.2em;display:flex;justify-content:space-between;position:relative;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)}
 #tutorial .tut-h i{position:absolute;left:0;bottom:-1px;height:2px;background:var(--acc2);transition:width .4s}
 #tutorial .tut-t{font-size:15px;line-height:1.6}

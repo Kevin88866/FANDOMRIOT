@@ -151,7 +151,7 @@ export class Game {
       }
     });
     addEventListener('keyup', e => { const act = actionOf(e.code); if (MOVE.includes(act)) this.keyState[act] = 0; });
-    addEventListener('blur', () => { this.keyState = {}; });
+    addEventListener('blur', () => { this.keyState = {}; if (this.mode === 'play' && this.day) this.ui.pause(); });   // 切出窗口自动暂停
     addEventListener('pointerdown', () => this.audio.init());   // 浏览器要求用户交互后才能出声
     const cv = this.renderer.r.domElement;
     cv.addEventListener('mousedown', e => {
