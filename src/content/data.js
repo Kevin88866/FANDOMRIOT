@@ -1,28 +1,48 @@
-// 所有可调数值和内容集中在这里。名字都是"实况足球式"恶搞名。
-// 阵容可随意修改：role = TOP/JG/MID/ADC/SUP，skill 0-100。
+// ============================================================
+//  名字配置：联盟、战队、选手、招牌全部在这里，改这里即可。
+//  游戏其他代码不硬编码任何名字。
+//  role = TOP/JG/MID/ADC/SUP，skill 0-100（影响比赛强度）
+//  sign = 总部楼顶招牌文字，popular = 额外人气（影响全明星投票和话题度）
+// ============================================================
+
+export const LEAGUE = {
+  name: 'KSL',                          // 联盟简称
+  full: 'Korea Summit League',
+  arena: 'KSL 竞技场',                   // 其余战队的"总部"（地图上的竞技场）
+  billboard: 'KSL 2026 · 서울 아레나',    // 竞技场大屏默认文字
+  hqA: 'NVA',                           // 大路北侧总部的战队 id
+  hqB: 'SOL',                           // 大路南侧总部的战队 id
+  defaultFav: 'NVA',
+};
 
 export const TEAMS = [
-  { id: 'T0',  name: 'T0',        full: 'T0 이스포츠',      color: '#e2012d', color2: '#111111', hq: true,
-    players: [['Dorran','TOP',86],['Onar','JG',87],['Fakor','MID',93],['Peiz','ADC',86],['Kerya','SUP',92]] },
-  { id: 'HWL', name: '汉华生命',  full: 'Hanhwa Lyfe Esports', color: '#f37321', color2: '#1d1d1d', hq: true,
-    players: [['Zeous','TOP',91],['Kanabi','JG',89],['Zekka','MID',88],['Gumayoshi','ADC',88],['Delite','SUP',87]] },
-  { id: 'GZ',  name: 'Gen.Z',     full: 'Gen.Z Esports',   color: '#aa8b56', color2: '#000000',
-    players: [['Kiyn','TOP',90],['Kanyon','JG',91],['Chobi','MID',93],['Rular','ADC',91],['Duroo','SUP',85]] },
-  { id: 'DM',  name: 'D-Minus',   full: 'D-Minus KIYA',    color: '#1fc3c9', color2: '#0b1830',
-    players: [['Syeon','TOP',80],['Lussid','JG',82],['ShoeMaker','MID',84],['Aimy','ADC',85],['Kellin','SUP',81]] },
-  { id: 'KC',  name: 'KC 롤스터', full: 'KC Rollster',     color: '#e60012', color2: '#222222',
-    players: [['PerFact','TOP',81],['Kuzi','JG',83],['Bidd','MID',85],['Ahz','ADC',84],['Peter','SUP',80]] },
-  { id: 'DRZ', name: 'DRZ',       full: 'DRZ Gaming',      color: '#2e5bff', color2: '#0a0f2a',
-    players: [['Rich','TOP',77],['Sponj','JG',76],['Ucal','MID',80],['Teddi','ADC',80],['Andi','SUP',76]] },
-  { id: 'FX',  name: 'FearZ',     full: 'BNK FearZ',       color: '#ffcc00', color2: '#1a1a1a',
-    players: [['Clea','TOP',77],['Raptr','JG',78],['VicLa','MID',79],['Diable','ADC',80],['Kelly','SUP',76]] },
-  { id: 'NS',  name: '농심 레드',  full: 'Nongsim RedForce',color: '#d4002a', color2: '#2a0000',
-    players: [['Kingin','TOP',78],['Sylvi','JG',76],['Calix','MID',80],['Jiwoo','ADC',81],['Lehendz','SUP',79]] },
-  { id: 'BRY', name: 'BRYON',     full: 'OKSaving BRYON',  color: '#00a651', color2: '#06240f',
-    players: [['Kasting','TOP',74],['GIDEN','JG',75],['Fisha','MID',76],['Hype','ADC',77],['Pullbak','SUP',74]] },
-  { id: 'DNF', name: 'DN 프릭스', full: 'DN Freaks',       color: '#7b2cbf', color2: '#160828',
-    players: [['DuDu','TOP',78],['Pyosik','JG',79],['Clozer','MID',79],['deokdam','ADC',79],['Peter2','SUP',76]] },
+  { id: 'NVA', name: 'Nova',       full: 'Nova Esports',        sign: 'NOVA',      color: '#e2012d', color2: '#111111', popular: 300,
+    players: [['Ridge','TOP',86],['Hollow','JG',87],['Lumen','MID',93],['Quill','ADC',86],['Mossy','SUP',92]] },
+  { id: 'SOL', name: 'Solaris',    full: 'Solaris Gaming',      sign: 'SOLARIS',   color: '#f37321', color2: '#1d1d1d', popular: 200,
+    players: [['Tundra','TOP',91],['Wisp','JG',89],['Sable','MID',88],['Arrow','ADC',88],['Pebble','SUP',87]] },
+  { id: 'IRC', name: 'Ironclad',   full: 'Ironclad Esports',    sign: 'IRONCLAD',  color: '#aa8b56', color2: '#000000', popular: 150,
+    players: [['Bastion','TOP',90],['Fable','JG',91],['Cinder','MID',93],['Volley','ADC',91],['Lantern','SUP',85]] },
+  { id: 'VTX', name: 'Vortex',     full: 'Vortex Gaming',       sign: 'VORTEX',    color: '#1fc3c9', color2: '#0b1830', popular: 80,
+    players: [['Granite','TOP',80],['Haze','JG',82],['Mirage','MID',84],['Sling','ADC',85],['Anchor','SUP',81]] },
+  { id: 'OWL', name: 'Midnight Owls', full: 'Midnight Owls',    sign: 'OWLS',      color: '#e60012', color2: '#222222', popular: 60,
+    players: [['Talon','TOP',81],['Nocturne','JG',83],['Hoot','MID',85],['Glint','ADC',84],['Feather','SUP',80]] },
+  { id: 'THB', name: 'Thunderbirds', full: 'Thunderbirds',      sign: 'THUNDER',   color: '#2e5bff', color2: '#0a0f2a', popular: 30,
+    players: [['Bolt','TOP',77],['Static','JG',76],['Volt','MID',80],['Surge','ADC',80],['Ohm','SUP',76]] },
+  { id: 'JTG', name: 'Jade Tigers', full: 'Jade Tigers',        sign: 'JADE',      color: '#ffcc00', color2: '#1a1a1a', popular: 30,
+    players: [['Stripe','TOP',77],['Prowl','JG',78],['Jasper','MID',79],['Claw','ADC',80],['Whisker','SUP',76]] },
+  { id: 'CFX', name: 'Crimson Fox', full: 'Crimson Fox',        sign: 'CRIMSON',   color: '#d4002a', color2: '#2a0000', popular: 30,
+    players: [['Ember','TOP',78],['Kit','JG',76],['Rusk','MID',80],['Vixen','ADC',81],['Bramble','SUP',79]] },
+  { id: 'NWF', name: 'Neon Wolves', full: 'Neon Wolves',        sign: 'NEON',      color: '#00a651', color2: '#06240f', popular: 20,
+    players: [['Howl','TOP',74],['Pack','JG',75],['Lunar','MID',76],['Fang','ADC',77],['Scout','SUP',74]] },
+  { id: 'STR', name: 'Storm Riders', full: 'Storm Riders',      sign: 'STORM',     color: '#7b2cbf', color2: '#160828', popular: 20,
+    players: [['Gale','TOP',78],['Squall','JG',79],['Drift','MID',79],['Monsoon','ADC',79],['Breeze','SUP',76]] },
 ];
+
+// 横幅 / 花圈 / LED 屏的默认标语（{p} = 选手名，{t} = 战队名）
+export const SLOGANS = {
+  attack: ['{p} OUT', '{p} 나가', '{p} 退役吧', '{t} 정신 차려', '{p} 是来度假的吗'],
+  support: ['{p} 최고!', '{p} 永远的神', '{p} 응원해요 ♥', '{t} 화이팅', '{p} 生日快乐'],
+};
 
 // 道具：kind = attack(黑) / support(应援)，ext = 极端道具（关注度大涨，触发警察）
 // impact: 曝光基础值，heat: 关注度增加，mood: 对目标选手心态影响

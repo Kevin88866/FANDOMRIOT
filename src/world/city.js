@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { asphalt, sidewalk, facade, textTex, logoTex, mulberry, KOREAN_SIGNS } from '../engine/textures.js';
-import { TEAMS } from '../content/data.js';
+import { TEAMS, LEAGUE } from '../content/data.js';
 
-// 首尔街区：6x6 路网，中间一条宽的大路（z=30），T0 与 汉华 总部隔路相对。
+// 首尔街区：6x6 路网，中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
 export const ROADS = [-150, -90, -30, 30, 90, 150];
 export const AVENUE_Z = 30;
 export const roadWidth = (axis, v) => (axis === 'z' && v === AVENUE_Z ? 26 : 14);
@@ -30,7 +30,7 @@ export class City {
     this.roadMarkings();
     for (let bx = -2; bx <= 2; bx++) for (let bz = -2; bz <= 2; bz++) this.block(bx * BLOCK, bz * BLOCK);
     this.streetLamps();
-    this.hqT0(); this.hqHWL();
+    this.hqA(); this.hqB();
     this.shops();
     this.boundary();
   }
@@ -74,8 +74,8 @@ export class City {
     this.group.add(sw);
 
     const key = `${cx},${cz}`;
-    const special = { '0,60': 'T0', '0,0': 'HWL', '-60,0': 'shop', '60,60': 'billboard', '-120,60': 'home', '120,0': 'garage' }[key];
-    if (special === 'T0' || special === 'HWL') { this.hqBlocks = this.hqBlocks || {}; this.hqBlocks[special] = s; this.fillerRing(s, true, special === 'T0' ? -1 : 1); return; }
+    const special = { '0,60': 'A', '0,0': 'B', '-60,0': 'shop', '60,60': 'billboard', '-120,60': 'home', '120,0': 'garage' }[key];
+    if (special === 'A' || special === 'B') { this.hqBlocks = this.hqBlocks || {}; this.hqBlocks[special] = s; this.fillerRing(s, true, special === 'A' ? -1 : 1); return; }
     if (special) { this.specialBlocks = this.specialBlocks || {}; this.specialBlocks[special] = s; }
     this.fillerRing(s, false, 0, special);
     // 街树
@@ -168,7 +168,7 @@ export class City {
     screen.position.set(L.x, h * 0.55, L.z - L.d / 2 - 0.2); screen.rotation.y = Math.PI;
     this.group.add(screen);
     this.billboard = screen;
-    this.setBillboard('LCK 2026 · 롤 파크', '#27e1ff');
+    this.setBillboard(LEAGUE.billboard, '#27e1ff');
   }
 
   setBillboard(text, color = '#ffffff', sub = null) {
@@ -281,9 +281,9 @@ export class City {
     return { team, cx, bzc, W, D, plazaZ, faceZ, front };
   }
 
-  hqT0() {
-    const s = this.hqBlocks.T0, front = -1;           // 楼在北侧，正面朝南（-z）对着大路
-    const h = this.hqCommon('T0', s, front);
+  hqA() {
+    const s = this.hqBlocks.A, front = -1;            // 楼在北侧，正面朝南（-z）对着大路
+    const id = LEAGUE.hqA, h = this.hqCommon(id, s, front);
     const { cx, bzc, W, D, faceZ, plazaZ, team } = h;
     const glass = new THREE.MeshStandardMaterial({ color: 0x0d0f14, metalness: 0.9, roughness: 0.12 });
     glass.userData.envMul = 1.6;
@@ -300,16 +300,16 @@ export class City {
     const lobby = new THREE.Mesh(new THREE.BoxGeometry(18, 6, 1), glass);
     lobby.position.set(cx, 3.2, faceZ - 0.3); this.group.add(lobby);
     // 顶部招牌（可被火箭筒打掉）
-    this.makeHQSign('T0', team, cx, 52, faceZ - 0.6, Math.PI, 14, 6);
+    this.makeHQSign(id, team, cx, 52, faceZ - 0.6, Math.PI, 14, 6);
     // 立面队标
     const logo = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshStandardMaterial({ map: logoTex(team), emissive: 0xffffff, emissiveMap: logoTex(team), emissiveIntensity: 0.6 }));
     logo.position.set(cx + 11, 8, faceZ - 0.05); logo.rotation.y = Math.PI; this.group.add(logo);
-    this.registerHQ('T0', h, Math.PI, logo);
+    this.registerHQ(id, h, Math.PI, logo);
   }
 
-  hqHWL() {
-    const s = this.hqBlocks.HWL, front = 1;            // 楼在南侧，正面朝北（+z）
-    const h = this.hqCommon('HWL', s, front);
+  hqB() {
+    const s = this.hqBlocks.B, front = 1;             // 楼在南侧，正面朝北（+z）
+    const id = LEAGUE.hqB, h = this.hqCommon(id, s, front);
     const { cx, bzc, W, D, faceZ, team } = h;
     const f = facade(5, 31);
     const mat = new THREE.MeshStandardMaterial({ map: f.map, emissiveMap: f.emissive, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.5, metalness: 0.2 });
@@ -324,14 +324,14 @@ export class City {
     canopy.position.set(cx, 5.5, faceZ + 2.5); canopy.castShadow = true; this.group.add(canopy);
     const glass = new THREE.MeshStandardMaterial({ color: 0x10141a, metalness: 0.9, roughness: 0.1 });
     const lobby = new THREE.Mesh(new THREE.BoxGeometry(16, 5, 0.6), glass); lobby.position.set(cx, 2.7, faceZ + 0.3); this.group.add(lobby);
-    this.makeHQSign('HWL', team, cx, 38, faceZ + 1.4, 0, 18, 5);
+    this.makeHQSign(id, team, cx, 38, faceZ + 1.4, 0, 18, 5);
     const logo = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4.5), new THREE.MeshStandardMaterial({ map: logoTex(team), emissive: 0xffffff, emissiveMap: logoTex(team), emissiveIntensity: 0.6 }));
     logo.position.set(cx - 12, 8, faceZ + 1.3); this.group.add(logo);
-    this.registerHQ('HWL', h, 0, logo);
+    this.registerHQ(id, h, 0, logo);
   }
 
   makeHQSign(id, team, x, y, z, ry, w, hgt) {
-    const t = textTex(id === 'T0' ? 'T0' : 'HANHWA LYFE', { w: 1024, h: 420, bg: '#050505', fg: team.color, glow: 40, size: 0.8, sub: team.full, subColor: '#ffffff' });
+    const t = textTex(team.sign || team.name, { w: 1024, h: 420, bg: '#050505', fg: team.color, glow: 40, size: 0.8, sub: team.full, subColor: '#ffffff' });
     const m = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.8 });
     const frame = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.3 });
     const sign = new THREE.Mesh(new THREE.BoxGeometry(w, hgt, 0.6), [frame, frame, frame, frame, m, m]);
@@ -384,15 +384,15 @@ export class City {
     mk('shop', '应援 & 抗议用品店', 'shop', '응원·항의 용품  SHOP', 0.92);
     mk('garage', '车行 / 司机中介', 'garage', '중고차 · 대리운전', 0.55);
     mk('home', '你的出租屋（结束今天）', 'home', '원룸  HOME', 0.15);
-    // LCK 竞技场（롤파크）：其余 8 支战队的选手都在这里"被应援/被抗议"
+    // 联盟竞技场：其余 8 支战队的选手都在这里"被应援/被抗议"
     const bb0 = sb.billboard, acx = (bb0.xMin + bb0.xMax) / 2, aface = bb0.zMin + 4.5;
     this.hq.ARENA = {
-      id: 'ARENA', team: { id: 'ARENA', name: 'LCK 竞技场', color: '#27e1ff' }, cx: acx, face: aface, dir: -1, faceRy: Math.PI, used: 0,
+      id: 'ARENA', team: { id: 'ARENA', name: LEAGUE.arena, color: '#27e1ff' }, cx: acx, face: aface, dir: -1, faceRy: Math.PI, used: 0,
       plaza: new THREE.Vector3(acx, CURB, aface - 3), sign: this.billboard, signHome: this.billboard.position.clone(), logo: null,
       slots: Array.from({ length: 10 }, (_, i) => new THREE.Vector3(acx - 13 + i * 2.9, CURB, aface - 1.6)),
       bannerPos: new THREE.Vector3(acx, CURB, bb0.zMin + 0.8), wallPos: new THREE.Vector3(acx - 8, 6, aface - 0.02),
     };
-    this.points.hq_ARENA = { pos: this.hq.ARENA.plaza.clone(), r: 9, label: 'LCK 竞技场（其他战队）', kind: 'hq', id: 'ARENA' };
+    this.points.hq_ARENA = { pos: this.hq.ARENA.plaza.clone(), r: 9, label: `${LEAGUE.arena}（其他战队）`, kind: 'hq', id: 'ARENA' };
     const bb = sb.billboard; this.points.billboard = { pos: new THREE.Vector3((bb.xMin + bb.xMax) / 2, CURB, bb.zMin - 2), r: 0, label: '对面大屏', kind: 'billboard' };
   }
 

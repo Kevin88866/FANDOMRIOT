@@ -9,7 +9,7 @@ import { FX } from './fx/fx.js';
 import { Player } from './player/player.js';
 import { Vehicle } from './player/vehicle.js';
 import { PhotoMode } from './player/photo.js';
-import { ITEMS, TEAMS, VEHICLES, BALANCE as B } from './content/data.js';
+import { ITEMS, TEAMS, VEHICLES, LEAGUE, BALANCE as B } from './content/data.js';
 import * as Sim from './sim/sim.js';
 import { UI } from './ui/ui.js';
 
@@ -144,7 +144,7 @@ export class Game {
     this.props.clearAll(); this.fx.clearDecals();
     for (const v of this.vehicles.slice()) this.removeVehicle(v);
     this.police = [];
-    this.city.setBillboard('LCK 2026 · 롤 파크', '#27e1ff', `WEEK ${s.week}`);
+    this.city.setBillboard(LEAGUE.billboard, '#27e1ff', `WEEK ${s.week}`);
     for (const id in this.city.hq) { const hq = this.city.hq[id]; hq.used = 0; hq.sign.position.copy(hq.signHome); hq.sign.rotation.set(0, hq.faceRy ?? hq.sign.rotation.y, 0); hq.sign.userData.vel = null; hq.sign.visible = true; }
     this.player.vehicle && this.player.exit();
     // 自己的载具停在家门口
@@ -423,7 +423,7 @@ export class Game {
     if (driver) {
       v.ai = true; v.path = this.truckRoute(); v.loop = true; v.aiSpeed = 7;
       v.root.position.copy(v.path[0]); v.heading = Math.PI / 2;
-      const team = this.state.players[order.target].team; const hqId = this.city.hq[team] ? team : 'T0';
+      const team = this.state.players[order.target].team; const hqId = this.city.hq[team] ? team : 'ARENA';
       const ev = this.newEvent(order, hqId);
       this.props.addSubject(v.root, { eventId: ev.id, label: `${item.name}→${order.target}`, text: true, glow: true, weight: 1.3 });
       this.addVehicle(v);

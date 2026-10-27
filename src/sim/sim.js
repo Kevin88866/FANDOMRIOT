@@ -1,5 +1,5 @@
 // 纯逻辑模拟（不依赖浏览器，可在 node 里跑平衡测试）
-import { TEAMS, ITEMS, PLATFORMS, TONES, BALANCE as B } from '../content/data.js';
+import { TEAMS, ITEMS, PLATFORMS, TONES, LEAGUE, BALANCE as B } from '../content/data.js';
 
 export const rand = {
   r: Math.random,
@@ -9,10 +9,10 @@ export const rand = {
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // ---------- 新游戏 ----------
-export function newGame(fav = 'T0') {
+export function newGame(fav = LEAGUE.defaultFav) {
   const players = {};
   for (const t of TEAMS) for (const [name, role, skill] of t.players) {
-    players[name] = { name, team: t.id, role, skill, mood: 70, form: 0, heat: 10, sentiment: 0, rating: 6, lastRatings: [], benched: false, votes: 0, popularity: skill * 10 + (t.id === 'T0' ? 300 : 0), weeksBad: 0 };
+    players[name] = { name, team: t.id, role, skill, mood: 70, form: 0, heat: 10, sentiment: 0, rating: 6, lastRatings: [], benched: false, votes: 0, popularity: skill * 10 + (t.popular || 0), weeksBad: 0 };
   }
   // 每队一个替补
   for (const t of TEAMS) { const sub = { name: t.id + '-Sub', team: t.id, role: 'SUB', skill: 70, mood: 70, form: 0, heat: 2, sentiment: 0, rating: 6, lastRatings: [], benched: true, votes: 0, popularity: 50, sub: true, weeksBad: 0 }; players[sub.name] = sub; }
