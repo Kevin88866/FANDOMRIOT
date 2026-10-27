@@ -122,6 +122,7 @@ export const Screens = {
 
   posting() {
     const s = this.s, g = this.g, photos = g.day.photos;
+    g.audio.music('result');
     this.posts = this.posts || [];
     this.open(this.postingView(), { cls: 'wide' });
     this.on('[data-p]', 'click', (e, el) => {

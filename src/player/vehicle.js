@@ -43,6 +43,8 @@ const TYPES = {
   pickup:    { len: 5.4, wid: 2.1, color: 0x1a1a1a, speed: 26, accel: 13 },
   scooter:   { len: 1.4, wid: 0.6, color: 0x27e1ff, speed: 14, accel: 10 },
   sedan:     { len: 4.6, wid: 1.9, color: 0x888888, speed: 12, accel: 5 },
+  taxi:      { len: 4.7, wid: 1.85, color: 0xe9782a, speed: 12, accel: 5 },
+  bus:       { len: 10.5, wid: 2.5, color: 0x2a8f4e, speed: 10, accel: 3 },
 };
 
 export class Vehicle {
@@ -100,17 +102,29 @@ export class Vehicle {
   buildCar(color, type) {
     const m = mats(), L = this.T.len, W = this.T.wid;
     const lower = new THREE.Mesh(rbox(W, 0.8, L, 0.25), paint(color)); lower.position.y = 0.85; this.body.add(lower);
-    const cabLen = type === 'van' ? L * 0.8 : type === 'pickup' ? L * 0.42 : L * 0.55;
-    const cabZ = type === 'van' ? -0.1 : type === 'pickup' ? 0.4 : -0.2;
-    const cabH = type === 'van' ? 1.3 : 0.75;
-    const upper = new THREE.Mesh(rbox(W * 0.92, cabH, cabLen, 0.22), paint(color)); upper.position.set(0, 1.25 + cabH / 2, cabZ); this.body.add(upper);
-    const g1 = new THREE.Mesh(new THREE.BoxGeometry(W * 0.93, cabH * 0.62, cabLen * 0.92), m.glass); g1.position.set(0, 1.3 + cabH * 0.5, cabZ); this.body.add(g1);
+    const bus = type === 'bus';
+    const cabLen = bus ? L * 0.97 : type === 'van' ? L * 0.8 : type === 'pickup' ? L * 0.42 : L * 0.55;
+    const cabZ = bus ? 0 : type === 'van' ? -0.1 : type === 'pickup' ? 0.4 : -0.2;
+    const cabH = bus ? 1.75 : type === 'van' ? 1.3 : 0.75;
+    const upper = new THREE.Mesh(rbox(W * (bus ? 1 : 0.92), cabH, cabLen, bus ? 0.12 : 0.22), paint(color)); upper.position.set(0, 1.25 + cabH / 2, cabZ); this.body.add(upper);
+    const g1 = new THREE.Mesh(new THREE.BoxGeometry(W * (bus ? 1.01 : 0.93), cabH * 0.62, cabLen * 0.92), m.glass); g1.position.set(0, 1.3 + cabH * 0.5, cabZ); this.body.add(g1);
+    if (bus) {   // 车内灯光 + 路线牌
+      const lit = new THREE.Mesh(new THREE.BoxGeometry(W * 1.012, cabH * 0.4, cabLen * 0.85), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 1.15, 1.0), toneMapped: false, transparent: true, opacity: 0.35 }));
+      lit.position.set(0, 1.35 + cabH * 0.5, cabZ); this.body.add(lit);
+      const no = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.35), new THREE.MeshBasicMaterial({ map: textTex('472 신촌', { w: 512, h: 112, bg: '#000', fg: '#ffb020', size: 0.7 }), toneMapped: false }));
+      no.position.set(0, 1.25 + cabH - 0.25, L / 2 + 0.01); this.body.add(no);
+    }
+    if (type === 'taxi') {   // 车顶灯
+      const sign = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.22, 0.3), new THREE.MeshStandardMaterial({ map: textTex('TAXI', { w: 256, h: 96, bg: '#fff7d6', fg: '#c4161c', size: 0.7 }), emissive: 0xfff2c0, emissiveIntensity: 1.2 }));
+      sign.position.set(0, 1.25 + cabH + 0.12, cabZ); this.body.add(sign);
+    }
     if (type === 'pickup') { const bed = new THREE.Mesh(new THREE.BoxGeometry(W * 0.9, 0.5, L * 0.38), m.black); bed.position.set(0, 1.3, -L * 0.28); this.body.add(bed); }
     for (const s of [-1, 1]) {
       const hl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.06), m.head); hl.position.set(s * W * 0.33, 0.95, L / 2 + 0.02); this.body.add(hl);
       const tl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.06), m.tail); tl.position.set(s * W * 0.33, 1.0, -L / 2 - 0.02); this.body.add(tl);
     }
-    this.addWheels([[-W * 0.45, L * 0.32], [W * 0.45, L * 0.32], [-W * 0.45, -L * 0.32], [W * 0.45, -L * 0.32]], 0.38, 0.28);
+    const wr = bus ? 0.52 : 0.38;
+    this.addWheels([[-W * 0.45, L * 0.32], [W * 0.45, L * 0.32], [-W * 0.45, -L * 0.32], [W * 0.45, -L * 0.32]], wr, bus ? 0.36 : 0.28);
   }
 
   buildScooter(color) {

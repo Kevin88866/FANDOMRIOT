@@ -12,6 +12,8 @@ import { PhotoMode } from './player/photo.js';
 import { Placer } from './player/placer.js';
 import { Opportunities, Walker } from './world/opportunities.js';
 import { Actor } from './world/actors.js';
+import { Traffic } from './world/traffic.js';
+import { buildStreetDetails } from './world/details.js';
 import { ITEMS, TEAMS, VEHICLES, LEAGUE, BALANCE as B } from './content/data.js';
 import * as Sim from './sim/sim.js';
 import { UI } from './ui/ui.js';
@@ -32,17 +34,19 @@ export class Game {
     const bar = document.getElementById('lbar'), txt = document.getElementById('ltext');
     const step = (p, t) => { bar.style.width = (p * 100) + '%'; txt.textContent = t; };
     step(0.05, '加载天空…');
-    await this.renderer.loadEnv('assets/hdr/venice_sunset_1k.hdr');
+    await this.renderer.loadEnv('assets/hdr/venice_sunset_1k.hdr', 'assets/hdr/night.exr');
     step(0.2, '加载角色…');
     await loadActors(p => step(0.2 + p * 0.5, '加载角色…'));
     step(0.75, '建造首尔街区…');
     await new Promise(r => setTimeout(r, 30));
     this.city = new City(this.scene);
     this.city.finalizeTrees();
+    buildStreetDetails(this);
+    this.traffic = new Traffic(this, 12);
     this.fx = new FX(this.scene, this);
     this.props = new Props(this);
     step(0.85, '路人出门中…');
-    this.crowd = new Crowd(this, 28);
+    this.crowd = new Crowd(this, 36);
     this.player = new Player(this);
     this.photo = new PhotoMode(this);
     this.placer = new Placer(this);
@@ -85,6 +89,7 @@ export class Game {
       if (e.code === 'Tab') e.preventDefault();
     });
     addEventListener('keyup', e => { if (map[e.code]) this.input[map[e.code]] = 0; });
+    addEventListener('pointerdown', () => this.audio.init());   // 浏览器要求用户交互后才能出声
     const cv = this.renderer.r.domElement;
     cv.addEventListener('mousedown', e => {
       this.audio.init();
@@ -108,16 +113,20 @@ export class Game {
 
   // ================= 主循环 =================
   loop(now) {
-    const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
+    const raw = (now - this.last) / 1000, dt = Math.min(0.05, raw); this.last = now;
+    this.watchFps(raw);
     this.time += dt;
     if (this.mode === 'play' || this.mode === 'photo') this.tickDay(dt);
     if (this.mode === 'play') this.player.update(dt, this.input);
     else this.player.actor.update(dt);
     for (const v of this.vehicles) {
-      if (v.ai) this.updateAIVehicle(v, dt);
+      if (v.ai && !v.traffic) this.updateAIVehicle(v, dt);
       v.update(dt, this.time);
     }
     this.crowd.update(dt);
+    this.traffic.update(dt);
+    this.bumpTraffic();
+    this.details?.update(this.time);
     this.props.update(dt, this.time);
     this.fx.update(dt);
     this.updateTimers(dt);
@@ -136,11 +145,21 @@ export class Game {
     requestAnimationFrame(t => this.loop(t));
   }
 
+  // 高画质下持续卡顿（<30 帧）时，提示一次切换到中画质
+  watchFps(raw) {
+    if (this.fpsHinted || this.renderer.quality !== 'high' || this.mode !== 'play') return;
+    this.fpsAcc = (this.fpsAcc || 0) + raw; this.fpsN = (this.fpsN || 0) + 1;
+    if (this.fpsAcc > 6) {
+      const fps = this.fpsN / this.fpsAcc; this.fpsAcc = 0; this.fpsN = 0;
+      if (fps < 30) { this.fpsHinted = true; this.ui.push('画面有点卡？', `当前约 ${Math.round(fps)} 帧。可以在 Esc → 设置 里切换到"中"画质`, ''); }
+    }
+  }
+
   cinematicCam(dt) {
     // 沿大路缓慢移动的航拍镜头，看向两栋总部
-    const t = this.time * 0.04;
-    this.camera.position.set(Math.sin(t) * 70, 14 + Math.sin(t * 0.7) * 4, 30);
-    this.camera.lookAt(Math.sin(t) * 70 * 0.4, 16, 30 + Math.sin(t * 0.5) * 12);
+    const t = this.time * 0.035, x = Math.sin(t) * 110, dir = Math.cos(t) >= 0 ? 1 : -1;
+    this.camera.position.set(x, 7 + Math.sin(t * 1.7) * 1.5, 30 + Math.sin(t * 0.8) * 5);
+    this.camera.lookAt(x + dir * 45, 10 + Math.sin(t * 1.3) * 2, 30 + Math.sin(t * 0.6) * 10);
     if (this.renderer.hour !== 21) { this.renderer.setTime(21); this.city.updateNight(this.renderer.night); }
   }
 
@@ -155,7 +174,7 @@ export class Game {
     this.day = { photos: [], events: [], startMin: 18 * 60 };
     this.clockMin = 18 * 60;
     this.props.clearAll(); this.fx.clearDecals();
-    for (const v of this.vehicles.slice()) this.removeVehicle(v);
+    for (const v of this.vehicles.slice()) if (!v.traffic) this.removeVehicle(v);
     this.city.setBillboard(LEAGUE.billboard, '#27e1ff', `WEEK ${s.week}`);
     for (const id in this.city.hq) { const hq = this.city.hq[id]; hq.used = 0; hq.sign.position.copy(hq.signHome); hq.sign.rotation.set(0, hq.faceRy ?? hq.sign.rotation.y, 0); hq.sign.userData.vel = null; hq.sign.visible = true; }
     this.player.vehicle && this.player.exit();
@@ -173,6 +192,7 @@ export class Game {
     this.opps.plan();
     this.mode = 'play'; this.ui.showHud(true);
     this.lockMouse();
+    this.audio.music('night');
     this.toast(`第 ${s.week} 周 · 行动日开始（18:00 - 24:00）`, 'big');
     if (s.week === 1 && s.season === 1) setTimeout(() => this.toast('先去「应援 & 抗议用品店」买东西（地图上的粉色点）', ''), 2500);
   }
@@ -216,6 +236,21 @@ export class Game {
     if (p.vehicle) { if (Math.abs(p.vehicle.speed) > 3) return this.toast('先停车（空格刹车）'); p.exit(); return; }
     const near = this.vehicles.filter(v => !v.ai && !v.npc).map(v => [v, v.root.position.distanceTo(p.pos)]).filter(([, d]) => d < 4.5).sort((a, b) => a[1] - b[1])[0];
     if (near) { p.enter(near[0]); this.audio.click(); }
+  }
+
+  // 玩家开的车撞到 AI 车：互相推开、减速
+  bumpTraffic() {
+    const pv = this.player.vehicle; if (!pv) return;
+    for (const v of this.vehicles) {
+      if (v === pv || !v.npc) continue;
+      const d = pv.root.position.clone().sub(v.root.position); d.y = 0;
+      const min = pv.radius + v.T.len * 0.42, L = d.length();
+      if (L < min && L > 0.01) {
+        pv.root.position.addScaledVector(d.normalize(), (min - L));
+        if (Math.abs(pv.speed) > 4) { this.shake(0.25); this.audio.tone(90, 0.2, { type: 'sawtooth', gain: 0.12 }); }
+        pv.speed *= -0.3;
+      }
+    }
   }
 
   updateAIVehicle(v, dt) {

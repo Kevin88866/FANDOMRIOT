@@ -1,6 +1,7 @@
 import { TEAMS, ITEMS, PLATFORMS, TONES, SKILLS, VEHICLES, LEAGUE, SLOGANS, BALANCE as B } from '../content/data.js';
 import * as Sim from '../sim/sim.js';
 import { Screens } from './screens.js';
+import { itemThumb } from './thumbs.js';
 import { pickStory, STORIES, rollMissions, missionText, rewardText, MISSIONS, ACHIEVEMENTS, achGrant, achLoad } from '../content/story.js';
 
 const $ = id => document.getElementById(id);
@@ -177,18 +178,25 @@ export class UI {
   // ================= 标题 =================
   title() {
     this.g.mode = 'menu'; this.showHud(false); this.g.day = null;
-    const has = !!this.load();
-    this.open(`<div style="text-align:center;padding:20px 0">
-      <div class="logo">饭圈风云<small>FANDOM RIOT · SEOUL</small></div>
-      <p class="sub" style="margin-top:18px">你是首尔的一个电竞粉丝博主。开 LED 卡车、送花圈、放烟花、搞无人机灯光秀。<br>用镜头把这一切变成流量。（战队与选手为恶搞名）</p>
-      <div class="title-menu">
-        ${has ? '<button class="btn pri" id="cont">继续游戏</button>' : ''}
-        <button class="btn ${has ? '' : 'pri'}" id="new">新游戏</button>
-        <button class="btn" id="howto">玩法说明</button>
-        <button class="btn" id="ach">成就</button>
-        <button class="btn" id="set">设置</button>
-      </div></div>`, { cinematic: true });
-    this.modal.querySelector('.panel').style.background = 'rgba(10,12,20,.55)';
+    this.g.audio.music('menu');
+    const sv = this.load(), has = !!sv;
+    const card = has ? `<div class="save-card"><div class="dim">继续上次的进度</div><b>${esc(sv.handle || '@饭圈观察员')}</b>
+      <div class="kv2"><span>赛季</span><b>S${sv.season} · 第 ${sv.week} 周</b><span>粉丝</span><b>${num(sv.fans)}</b><span>资金</span><b>${won(sv.money)}</b><span>主队</span><b>${esc(teamOf(sv.fav).name)}</b></div></div>` : '';
+    this.open(`<div class="title-screen">
+      <div class="ts-left">
+        <div class="logo left">饭圈风云<small>FANDOM RIOT · SEOUL</small></div>
+        <p class="tag">首尔夜晚的电竞饭圈。LED 卡车、花圈、烟花、无人机灯光秀……<br>用镜头把这一切变成流量。</p>
+        <div class="title-menu left">
+          ${has ? '<button class="btn pri" id="cont">继续游戏</button>' : ''}
+          <button class="btn ${has ? '' : 'pri'}" id="new">新游戏</button>
+          <button class="btn" id="howto">玩法说明</button>
+          <button class="btn" id="ach">成就</button>
+          <button class="btn" id="set">设置</button>
+        </div>
+        <div class="foot dim">战队与选手为恶搞名 · 名字可在 src/content/data.js 修改</div>
+      </div>
+      <div class="ts-right">${card}</div>
+    </div>`, { cinematic: true, cls: 'wide' });
     if (has) $('cont').onclick = () => { this.g.state = this.load(); this.s.inventory ||= []; this.close(false); this.matchDay(true); };
     $('new').onclick = () => (has ? this.confirm('开始新游戏会覆盖现有存档，确定？', () => this.newGame(), () => this.title()) : this.newGame());
     $('howto').onclick = () => this.howto(() => this.title());
@@ -213,9 +221,11 @@ export class UI {
     this.open(`<h2>设置</h2>
       <h3>画质</h3><div class="row"><button class="btn ${q === 'high' ? 'pri' : ''}" data-q="high">高（环境光遮蔽）</button><button class="btn ${q === 'mid' ? 'pri' : ''}" data-q="mid">中（更流畅）</button></div>
       <h3>音量</h3><input type="range" min="0" max="1" step="0.05" value="${this.g.audio.vol}" id="vol" style="width:300px;pointer-events:auto">
+      <h3>音乐</h3><input type="range" min="0" max="1" step="0.05" value="${localStorage.getItem('fr_mvol') ?? 0.7}" id="mvol" style="width:300px;pointer-events:auto">
       <div class="row" style="margin-top:18px"><button class="btn pri" id="b">返回</button></div>`, { cinematic: this.g.mode === 'menu', esc: back });
     this.on('[data-q]', 'click', (e, el) => { if (el.dataset.q !== q) { if (this.s) this.save(); this.g.renderer.setQuality(el.dataset.q); } });
     $('vol').oninput = e => this.g.audio.setVol(+e.target.value);
+    $('mvol').oninput = e => this.g.audio.setMusicVol(+e.target.value);
     $('b').onclick = back;
   }
 
@@ -281,6 +291,7 @@ export class UI {
   matchDay(resume = false) {
     const s = this.s;
     this.showHud(false); this.g.day = null;
+    this.g.audio.music('menu');
     if ((s.lawsuits || 0) >= 3) return this.gameOver('你第三次收到律师函，所有平台同时封杀了你的账号。博主生涯结束。');
     if (s.money < -5000000) return this.gameOver('你欠了太多钱，只能卖掉设备回老家。');
     if (!resume || !s.lastResults) {
@@ -288,7 +299,7 @@ export class UI {
       s.lastEvent = Sim.weeklyEvent(s);
       s.unlocked = unlockLevel(s.fans);
       if (s.week === B.weeksPerSeason) s.champion = s.lastResults[0].winner;
-      s.weekStartFans = s.fans;
+      s.weekStartFans = s.fans; s.weekStartMoney = s.money;
       rollMissions(s);
       const st = pickStory(s);
       s.pendingStory = st ? { id: st.story.id, t: st.t } : null;
@@ -311,18 +322,18 @@ export class UI {
   // ================= 商店 =================
   shop(sel = null) {
     const s = this.s, lvl = unlockLevel(s.fans);
+    sel = sel || (this.shopSel && itemOf(this.shopSel).unlock <= lvl ? this.shopSel : ITEMS.find(it => it.unlock <= lvl).id);
+    this.shopSel = sel;
+    const thumb = id => { try { return itemThumb(this.g, id); } catch (e) { console.warn(e); return ''; } };
     const cards = ITEMS.map(it => {
       const locked = it.unlock > lvl, cost = Sim.itemCost(s, it);
       const tag = it.kind === 'support' ? '<span class="tag good">应援</span>' : it.kind === 'both' ? '<span class="tag">黑/捧</span>' : '<span class="tag evil">抗议</span>';
-      return `<div class="card ${locked ? 'locked' : ''} ${sel === it.id ? 'sel' : ''}" data-i="${it.id}">${tag}<div class="t">${it.name}</div><div class="d">${it.desc}</div>
-        <div class="p">${locked ? `🔒 粉丝 ${num(UNLOCK[it.unlock])} 解锁` : won(cost)}</div><div class="sub" style="font-size:11px">曝光力 ${it.impact} · 争议度 +${it.heat}</div></div>`;
+      return `<div class="sc ${locked ? 'locked' : ''} ${sel === it.id ? 'sel' : ''}" data-i="${it.id}">${tag}<img src="${thumb(it.id)}" alt=""><div class="nm">${it.name}</div><div class="pr">${locked ? `🔒 粉丝 ${num(UNLOCK[it.unlock])}` : won(cost)}</div></div>`;
     }).join('');
-    this.open(`<h2>응원·항의 용품 SHOP</h2><div class="sub">资金 ${won(s.money)} · 选一件道具，再选目标选手和标语。卡车类道具买完去车行提车。</div>
-      <div class="cards">${cards}</div><div id="order"></div>
-      <div class="row" style="margin-top:14px"><button class="btn" id="x">离开</button></div>`, { esc: () => this.close() });
-    $('x').onclick = () => this.close();
-    this.on('.card[data-i]', 'click', (e, el) => { const it = itemOf(el.dataset.i); if (it.unlock > lvl) return; this.shop(it.id); });
-    if (sel) this.orderForm(itemOf(sel));
+    this.open(`<div class="shop"><div class="shop-l"><div class="hd"><b>응원·항의 용품 SHOP</b><span class="dim">资金 ${won(s.money)}</span></div><div class="sgrid">${cards}</div></div>
+      <div class="shop-r" id="order"></div></div>`, { cls: 'wide', esc: () => this.close() });
+    this.on('.sc[data-i]', 'click', (e, el) => { const it = itemOf(el.dataset.i); if (it.unlock > lvl) return; this.shop(it.id); });
+    this.orderForm(itemOf(sel));
   }
 
   orderForm(it) {
@@ -330,12 +341,22 @@ export class UI {
     const ps = Object.values(s.players).filter(p => !p.sub || !p.benched).sort((a, b) => b.heat - a.heat);
     const both = it.kind === 'both';
     const box = $('order');
-    box.innerHTML = `<h3>下单：${it.name}（${won(cost)}）</h3>
-      <div class="row">${both ? `<select class="txt" id="kind" style="min-width:120px"><option value="attack">抗议</option><option value="support">应援</option></select>` : ''}
-      <select class="txt" id="tgt">${ps.map(p => `<option value="${esc(p.name)}">${esc(p.name)} · ${esc(teamOf(p.team).name)} ${p.role} · ${p.sentiment < -0.3 ? '挨骂中' : p.sentiment > 0.4 ? '被夸中' : '平静'} · 热度 ${Math.round(p.heat)}</option>`).join('')}</select></div>
-      <div class="row" style="margin-top:8px"><input class="txt" id="txt" maxlength="24" style="min-width:420px"><button class="btn" id="rnd">换一句</button></div>
-      <div class="sub" id="hint" style="margin-top:6px"></div>
-      <div class="row" style="margin-top:8px"><button class="btn pri" id="buy" ${s.money < cost ? 'disabled' : ''}>购买 ${won(cost)}</button></div>`;
+    const bar = (label, v, max, col) => `<div class="sbar"><span>${label}</span><div><i style="width:${Math.min(100, Math.abs(v) / max * 100)}%;background:${col}"></i></div><b>${v > 0 && label !== '曝光力' ? '+' : ''}${v}</b></div>`;
+    const warn = s.flags?.noExtreme && (it.id === 'eggs' || it.id === 'graffiti') ? '<div class="news bad">⚠ 你和 BOLT 签了"文明条款"，使用它会违约（-₩4,000,000）</div>' : '';
+    box.innerHTML = `<img class="big" src="${itemThumb(this.g, it.id)}" alt="">
+      <div class="ttl"><b>${it.name}</b><span class="pr">${won(cost)}</span></div>
+      <div class="dim" style="font-size:13px;line-height:1.6">${it.desc}</div>
+      <div class="stats">${bar('曝光力', it.impact, 120, 'var(--acc2)')}${bar('争议度', it.heat, 20, 'var(--bad)')}${bar('心态', it.kind === 'support' ? Math.abs(it.mood) : it.kind === 'both' ? Math.abs(it.mood) : -Math.abs(it.mood), 20, 'var(--warn)')}${it.cleanup ? `<div class="dim" style="font-size:12px">物业清洁费 ${won(it.cleanup)}（周结算扣除）</div>` : ''}</div>
+      ${warn}
+      <h3>目标</h3>
+      <div class="row">${both ? `<select class="txt" id="kind" style="min-width:90px"><option value="attack">抗议</option><option value="support">应援</option></select>` : ''}
+      <select class="txt" id="tgt" style="flex:1;min-width:0">${ps.map(p => `<option value="${esc(p.name)}">${esc(p.name)} · ${esc(teamOf(p.team).name)} ${p.role} · ${p.sentiment < -0.3 ? '挨骂中' : p.sentiment > 0.4 ? '被夸中' : '平静'} · 热度 ${Math.round(p.heat)}</option>`).join('')}</select></div>
+      <h3>标语</h3>
+      <div class="row"><input class="txt" id="txt" maxlength="24" style="flex:1;min-width:0"><button class="btn" id="rnd">换一句</button></div>
+      <div class="sub" id="hint" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:14px;justify-content:space-between"><button class="btn ghost" id="x">离开</button><button class="btn pri" id="buy" ${s.money < cost ? 'disabled' : ''}>购买 ${won(cost)}</button></div>`;
+    $('x').onclick = () => this.close();
+    $('txt').onkeydown = e => e.stopPropagation();
     const kindOf = () => both ? $('kind').value : it.kind;
     let si = 0;
     const fill = () => {
@@ -354,9 +375,8 @@ export class UI {
       s.money -= cost; this.g.audio.coin();
       s.inventory.push({ item: it.id, target: $('tgt').value, text: $('txt').value.trim() || it.name, kind: kindOf() });
       this.toast(`已购买 ${it.name}`, 'good'); this.saveSoon();
-      this.shop();
+      this.shop(it.id);
     };
-    box.scrollIntoView({ behavior: 'smooth' });
   }
 
 
@@ -467,14 +487,23 @@ export class UI {
 
   weekSummaryView(log) {
     const s = this.s;
-    const lines = log.map(l => `<div class="news ${l.c}">${esc(l.t)}</div>`).join('');
-    this.open(`<h2>第 ${s.week} 周结算</h2>
-      <div class="kv"><span>资金</span><b>${won(s.money)}</b><span>粉丝</span><b>${num(s.fans)}</b><span>争议度</span><b>${Math.round(s.heat)}</b><span>对手粉头 ${esc(s.rival.name)}</span><b>${num(s.rival.fans)} 粉</b></div>
-      ${lines}
-      <h3>技能（可用点数 ${s.skillPoints}，下一点在 ${num(s.nextSkillAt)} 粉）</h3>
-      <div class="cards">${SKILLS.map(k => { const lv = s.skills[k.id], cost = k.cost[lv]; return `<div class="card ${lv >= k.max || s.skillPoints < cost ? 'locked' : ''}" data-k="${k.id}"><div class="t">${k.name} Lv.${lv}</div><div class="d">${k.desc}</div><div class="p">${lv >= k.max ? '已满级' : `升级需 ${cost} 点`}</div></div>`; }).join('')}</div>
-      <h3>赛季目标</h3><div style="font-size:13px;line-height:1.6">${this.goalLines().join('<br>')}</div>
-      <div class="row" style="margin-top:14px"><button class="btn pri" id="go">${s.week >= B.weeksPerSeason ? '赛季结算 →' : '下一周 →'}</button></div>`, { cinematic: true });
+    const lines = log.map(l => `<div class="ledger ${l.c}">${esc(l.t)}</div>`).join('');
+    const delta = (v, v0, fmt) => v0 == null ? '' : `<em class="${v - v0 >= 0 ? 'pos' : 'neg'}">${v - v0 >= 0 ? '+' : '-'}${fmt(Math.abs(v - v0))}</em>`;
+    const kpi = (label, val, d, extra = '') => `<div class="kpi"><span>${label}</span><b>${val}</b>${d}${extra}</div>`;
+    const tot = Math.max(1, s.fans + s.rival.fans), mine = s.fans / tot * 100;
+    this.open(`<div class="wsum">
+      <div class="wk-l">
+        <div class="hd"><b>第 ${s.week} 周结算</b><span class="dim">S${s.season}</span></div>
+        <div class="kpis">${kpi('资金', won(s.money), delta(s.money, s.weekStartMoney, v => '₩' + num(v)))}${kpi('粉丝', num(s.fans), delta(s.fans, s.weekStartFans, num))}${kpi('粉丝团', s.club ?? 0, '')}${kpi('争议度', Math.round(s.heat), '', `<div class="hb"><i style="width:${Math.min(100, s.heat)}%"></i></div>`)}</div>
+        <div class="vs"><span>你 ${num(s.fans)}</span><div class="vsbar"><i style="width:${mine}%"></i></div><span>${esc(s.rival.name)} ${num(s.rival.fans)}</span></div>
+        <h3>本周账单与动态</h3>${lines || '<div class="dim">平静的一周。</div>'}
+      </div>
+      <div class="wk-r">
+        <h3>技能 <span class="dim">可用 ${s.skillPoints} 点 · 下一点在 ${num(s.nextSkillAt)} 粉</span></h3>
+        <div class="skills">${SKILLS.map(k => { const lv = s.skills[k.id], cost = k.cost[lv], can = lv < k.max && s.skillPoints >= cost; return `<div class="sk ${can ? 'can' : ''}" data-k="${k.id}"><div><b>${k.name}</b> <span class="pips">${'●'.repeat(lv)}${'○'.repeat(k.max - lv)}</span><div class="dim">${k.desc}</div></div><span class="cost">${lv >= k.max ? 'MAX' : `${cost} 点`}</span></div>`; }).join('')}</div>
+        <h3>赛季目标</h3><div class="goals2">${this.goalLines().join('<br>')}</div>
+        <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn pri" id="go">${s.week >= B.weeksPerSeason ? '赛季结算 →' : '下一周 →'}</button></div>
+      </div></div>`, { cinematic: true, cls: 'wide' });
     this.on('[data-k]', 'click', (e, el) => {
       const k = SKILLS.find(x => x.id === el.dataset.k), lv = s.skills[k.id], cost = k.cost[lv];
       if (lv >= k.max || s.skillPoints < cost) return;

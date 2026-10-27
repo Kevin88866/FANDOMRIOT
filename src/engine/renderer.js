@@ -8,6 +8,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 
 // 暗角 + 轻微色调
 const GradeShader = {
@@ -31,6 +32,7 @@ export class Renderer {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 900);
     this.quality = localStorage.getItem('fr_quality') || 'high';
+    if (this.quality === 'mid') r.setPixelRatio(1);   // 中画质：降低分辨率倍率、阴影精度，去掉环境光遮蔽
 
     this.setupLights();
     this.setupComposer();
@@ -49,19 +51,55 @@ export class Renderer {
     s.add(this.hemi);
     const sun = this.sun = new THREE.DirectionalLight(0xffc89a, 2.2);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    const sm = this.quality === 'mid' ? 1024 : 2048;
+    sun.shadow.mapSize.set(sm, sm);
     const sc = sun.shadow.camera; sc.left = -70; sc.right = 70; sc.top = 70; sc.bottom = -70; sc.near = 1; sc.far = 400;
     sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
     s.add(sun, sun.target);
     s.fog = new THREE.FogExp2(0x8a7f8f, 0.0042);
+    this.setupNightSky();
     this.setTime(18);
   }
 
-  async loadEnv(url) {
+  // 夜空：渐变穹顶（城市光污染）+ 星星 + 月亮，随入夜淡入；整组跟着相机走
+  setupNightSky() {
+    const R = 780, grp = this.skyGroup = new THREE.Group();
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 16), new THREE.ShaderMaterial({
+      side: THREE.BackSide, transparent: true, depthWrite: false, fog: false,
+      uniforms: { k: { value: 0 } },
+      vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: `uniform float k; varying vec3 vP;
+        void main(){ float h = clamp(vP.y, -0.1, 1.0);
+          vec3 top = vec3(0.012,0.016,0.04), mid = vec3(0.05,0.045,0.09), glow = vec3(0.32,0.16,0.10);
+          vec3 c = mix(glow, mid, smoothstep(0.0, 0.12, h)); c = mix(c, top, smoothstep(0.12, 0.7, h));
+          gl_FragColor = vec4(c, k); }`,
+    }));
+    dome.renderOrder = -2; grp.add(dome); this.dome = dome;
+    const n = 1400, pos = new Float32Array(n * 3), size = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const v = new THREE.Vector3().randomDirection(); v.y = Math.abs(v.y) * 0.9 + 0.08; v.normalize().multiplyScalar(R - 10); pos.set([v.x, v.y, v.z], i * 3); size[i] = Math.random(); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('s', new THREE.BufferAttribute(size, 1));
+    this.stars = new THREE.Points(g, new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending,
+      uniforms: { k: { value: 0 }, t: { value: 0 } },
+      vertexShader: 'attribute float s; uniform float t; varying float a; void main(){ a = 0.35 + 0.65 * fract(s * 91.7 + sin(t * (0.5 + s) + s * 40.0) * 0.5); vec4 mv = modelViewMatrix*vec4(position,1.0); gl_PointSize = 1.0 + s * 1.8; gl_Position = projectionMatrix*mv; }',
+      fragmentShader: 'uniform float k; varying float a; void main(){ vec2 d = gl_PointCoord - 0.5; if (dot(d,d) > 0.25) discard; gl_FragColor = vec4(vec3(1.0,0.97,0.9), a * k * 0.8); }',
+    }));
+    this.stars.renderOrder = -1; this.stars.frustumCulled = false; grp.add(this.stars);
+    const mc = document.createElement('canvas'); mc.width = mc.height = 128; const mg = mc.getContext('2d');
+    const gr = mg.createRadialGradient(64, 64, 10, 64, 64, 64); gr.addColorStop(0, 'rgba(255,250,235,1)'); gr.addColorStop(0.32, 'rgba(255,248,230,1)'); gr.addColorStop(0.36, 'rgba(200,210,255,.25)'); gr.addColorStop(1, 'rgba(120,140,255,0)');
+    mg.fillStyle = gr; mg.fillRect(0, 0, 128, 128);
+    this.moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(mc), transparent: true, depthWrite: false, fog: false, opacity: 0 }));
+    this.moon.scale.setScalar(70); this.moon.position.set(-330, 420, -520); grp.add(this.moon);
+    this.scene.add(grp);
+  }
+
+  // 黄昏用落日 HDR，入夜后换成城市夜景 HDR（玻璃幕墙的反射会跟着变）
+  async loadEnv(url, nightUrl) {
     const pmrem = new THREE.PMREMGenerator(this.r);
     const tex = await new RGBELoader().loadAsync(url);
-    this.envMap = pmrem.fromEquirectangular(tex).texture;
-    tex.dispose();
+    this.envDusk = pmrem.fromEquirectangular(tex).texture; tex.dispose();
+    if (nightUrl) { const nt = await new EXRLoader().loadAsync(nightUrl); this.envNight = pmrem.fromEquirectangular(nt).texture; nt.dispose(); }
+    this.envMap = this.envDusk;
     this.scene.environment = this.envMap;
     this.applyEnvIntensity();
   }
@@ -81,23 +119,29 @@ export class Renderer {
     const sunDir = new THREE.Vector3().setFromSphericalCoords(1, phi, theta);
     this.sky.material.uniforms.sunPosition.value.copy(sunDir);
     this.sunDir = sunDir;
-    this.sun.intensity = THREE.MathUtils.lerp(2.4, 0.0, Math.min(1, t * 1.4));
-    this.sun.color.setHSL(0.07, 0.8, THREE.MathUtils.lerp(0.68, 0.5, t));
+    // 入夜后主光换成冷色月光（从高处照下来，阴影方向固定）
+    const dusk = Math.min(1, t * 1.4);
+    this.sun.intensity = dusk < 0.85 ? THREE.MathUtils.lerp(2.4, 0.2, dusk / 0.85) : 0.32;
+    this.sun.color.setHSL(THREE.MathUtils.lerp(0.07, 0.6, dusk), THREE.MathUtils.lerp(0.8, 0.35, dusk), THREE.MathUtils.lerp(0.68, 0.78, dusk));
+    this.lightDir = dusk < 0.85 ? sunDir : new THREE.Vector3(-0.42, 0.78, -0.46).normalize();
     this.moonish = t;
-    this.hemi.intensity = THREE.MathUtils.lerp(0.4, 0.18, t);
+    this.hemi.intensity = THREE.MathUtils.lerp(0.4, 0.26, t);
     this.hemi.color.setHSL(0.62, 0.6, THREE.MathUtils.lerp(0.75, 0.35, t));
-    this.r.toneMappingExposure = THREE.MathUtils.lerp(0.75, 0.95, t);
+    this.r.toneMappingExposure = THREE.MathUtils.lerp(0.75, 1.08, t);
     this.scene.fog.color.setHSL(THREE.MathUtils.lerp(0.95, 0.66, t), 0.25, THREE.MathUtils.lerp(0.45, 0.06, t));
     this.scene.fog.density = THREE.MathUtils.lerp(0.0035, 0.0055, t);
-    const newEnv = THREE.MathUtils.lerp(0.8, 0.22, t);
+    const newEnv = THREE.MathUtils.lerp(0.8, 0.38, t);
     if (Math.abs((this.envIntensity ?? 0) - newEnv) > 0.03) { this.envIntensity = newEnv; this.applyEnvIntensity(); }
     if (this.bloom) this.bloom.strength = THREE.MathUtils.lerp(0.35, 0.75, t);
     this.night = t;
+    if (this.dome) { const k = THREE.MathUtils.smoothstep(t, 0.35, 0.9); this.dome.material.uniforms.k.value = k; this.stars.material.uniforms.k.value = k; this.moon.material.opacity = k; }
+    const env = t > 0.55 && this.envNight ? this.envNight : this.envDusk;
+    if (env && this.scene.environment !== env) { this.scene.environment = env; this.envMap = env; }
   }
 
   followShadow(target) {
     // 阴影相机跟随玩家，按 texel 对齐防闪烁
-    const d = this.sunDir.clone(); if (d.y < 0.15) d.y = 0.15; d.normalize();
+    const d = (this.lightDir || this.sunDir).clone(); if (d.y < 0.15) d.y = 0.15; d.normalize();
     const step = 140 / 2048;
     const tx = Math.round(target.x / step) * step, tz = Math.round(target.z / step) * step;
     this.sun.target.position.set(tx, 0, tz);
@@ -132,5 +176,8 @@ export class Renderer {
     this.composer.setSize(innerWidth, innerHeight);
   }
 
-  render() { this.composer.render(); }
+  render() {
+    if (this.skyGroup) { this.skyGroup.position.copy(this.camera.position); this.stars.material.uniforms.t.value = performance.now() / 1000; }
+    this.composer.render();
+  }
 }
