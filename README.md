@@ -3,7 +3,7 @@
 一个首尔电竞饭圈 3D 模拟游戏（自用，不发布）。你是一个粉丝博主：开 LED 卡车、送花圈、拉横幅、组织集会、放烟花、搞无人机灯光秀，用手机拍下来发到社交平台换曝光、粉丝和钱。你的行动会影响选手心态 → 比赛结果 → 舆论热度。
 
 ## 怎么玩
-- **Windows**：在 Releases 下载 `FandomRiot-win32-x64.zip`，解压后双击 `FandomRiot.exe`。F11 全屏。
+- **Windows**：解压 `FandomRiot-win32-x64.zip`（不在仓库里，可用 `npm install && npm run pack:win` 自己打包到 dist/），双击 `FandomRiot.exe`。F11 全屏。
 - **开发 / 其他系统**：装好 Node.js 后 `npm install`，再 `npm start`。也可以 `npm run serve`，然后用浏览器打开 http://localhost:8123 。
 
 操作：WASD 移动/开车 · Shift 跑 · 空格 刹车 · F 上下车 · E 互动 · C 手机拍照（左键拍、滚轮变焦）· Tab 背包 · M 大地图 · Esc 菜单
