@@ -10,6 +10,7 @@ export const MODEL_LIST = [
   'pr_wreath_w', 'pr_wreath_p', 'pr_basket', 'pr_banner', 'pr_picket', 'pr_fireworks',
   'bd_ac', 'bd_vsign', 'bd_tank', 'bd_stair', 'bd_condenser', 'bd_dish', 'bd_antenna',
   'lm_t0', 'lm_hwl', 'lm_arena',
+  'tr_ginkgo', 'tr_zelkova', 'tr_round', 'acc_cap', 'acc_beanie', 'acc_backpack', 'acc_crossbag', 'acc_hair', 'acc_hair_long',
 ];
 const store = {};
 const EMIT = { emit_head: 3, emit_tail: 2.5, emit_amber: 2, emit_warm: 1.6 };

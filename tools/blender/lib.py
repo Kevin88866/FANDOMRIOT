@@ -184,7 +184,7 @@ def tube(name, pts, r, material=None, parent=None, res=8):
     cu = bpy.data.curves.new(name, 'CURVE')
     cu.dimensions = '3D'
     cu.bevel_depth = r
-    cu.bevel_resolution = 2
+    cu.bevel_resolution = 0 if r < 0.025 else 1 if r < 0.09 else 2   # 细管子少几段
     cu.resolution_u = res
     cu.use_fill_caps = True
     sp = cu.splines.new('BEZIER')

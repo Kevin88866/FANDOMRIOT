@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Actor, randomTint } from './actors.js';
+import { Actor, randomTint, dressActor } from './actors.js';
 import { mulberry } from '../engine/textures.js';
 
 // 路人：沿街区人行道绕圈；发生"事件"时会围观拍照
@@ -12,8 +12,9 @@ export class Crowd {
     // 优先放在总部附近
     const near = blocks.filter(s => Math.abs((s.xMin + s.xMax) / 2) <= 60 && Math.abs((s.zMin + s.zMax) / 2 - 30) <= 60);
     for (let i = 0; i < count; i++) {
-      const kind = r() < 0.75 ? 'michelle' : 'xbot';
-      const a = new Actor(kind, { tint: randomTint(r), scale: game.charScale * (kind === 'xbot' ? 1.02 : 0.94 + r() * 0.12) });
+      const kind = r() < 0.32 ? 'michelle' : 'xbot';
+      const a = new Actor(kind, { tint: kind === 'michelle' ? randomTint(r) : null, scale: game.charScale * (kind === 'xbot' ? 0.96 + r() * 0.1 : 0.94 + r() * 0.12) });
+      dressActor(a, r);
       const s = (i < count * 0.6 ? near : blocks)[r() * (i < count * 0.6 ? near.length : blocks.length) | 0];
       const loop = [[s.xMin + 1.2, s.zMin + 1.2], [s.xMax - 1.2, s.zMin + 1.2], [s.xMax - 1.2, s.zMax - 1.2], [s.xMin + 1.2, s.zMax - 1.2]].map(([x, z]) => new THREE.Vector3(x, 0.18, z));
       if (r() < 0.5) loop.reverse();
@@ -51,7 +52,7 @@ export class Crowd {
     const cam = this.game.camera.position;
     for (const p of this.list) {
       const root = p.a.root, pos = root.position;
-      const far = pos.distanceToSquared(cam) > 160 * 160;
+      const far = pos.distanceToSquared(cam) > 110 * 110;
       root.visible = !far;
       let tgt = null, spd = p.speed;
       if (p.state === 'walk') tgt = p.loop[p.idx];

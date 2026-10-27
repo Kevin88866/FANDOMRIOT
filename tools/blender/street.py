@@ -280,5 +280,5 @@ ALL = {
 
 if __name__ == '__main__':
     names = [a for a in sys.argv[1:] if a in ALL] or list(ALL)
-    for n in names:
-        build(n, ALL[n])
+    for n in names:   # 大量实例化的物体不细分（AO 渐变不值那么多三角形）
+        build(n, ALL[n], max_len=0.45 if n in ('st_busstop', 'st_vending', 'st_signal') else 4.0)

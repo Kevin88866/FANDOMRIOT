@@ -215,7 +215,7 @@ export class City {
       if (!resid && style !== 4) return;
       const tiles = Math.max(1, Math.round(F.along / FACADE_TILE.w)), bays = tiles * BAYS, bw = F.along / bays;
       for (let k = 0; k < n; k++) for (let b = 0; b < bays; b++) {
-        if (r() > 0.2) continue;
+        if (r() > 0.1) continue;
         const u = -F.along / 2 + (b + 0.5) * bw + (r() - 0.5) * bw * 0.3;
         (this.inst.bd_ac ||= []).push(new THREE.Matrix4().compose(F.at(u, y0 + k * FLOOR + 0.28, 0), F.q, one));
       }
@@ -418,6 +418,22 @@ export class City {
   }
 
   finalizeTrees() {
+    if (hasModel('tr_ginkgo')) {   // Blender 行道树：三种树形，叶色逐棵微调
+      const kinds = ['tr_ginkgo', 'tr_zelkova', 'tr_round'], lists = kinds.map(() => []);
+      const r = mulberry(31), up = new THREE.Vector3(0, 1, 0);
+      this.treeList.forEach(([x, z]) => {
+        const k = r() < 0.5 ? 0 : r() < 0.6 ? 1 : 2, s = 0.85 + r() * 0.3;
+        lists[k].push(new THREE.Matrix4().compose(new THREE.Vector3(x, CURB, z), new THREE.Quaternion().setFromAxisAngle(up, r() * 6.28), new THREE.Vector3(s, s, s)));
+        this.colliders.push({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.3, maxZ: z + 0.3, small: true });
+      });
+      kinds.forEach((name, k) => {
+        for (const im of instanced(name, lists[k], this.group)) {
+          if (im.material.name !== 'leaf') continue;
+          for (let i = 0; i < lists[k].length; i++) im.setColorAt(i, new THREE.Color(0.82 + r() * 0.3, 0.85 + r() * 0.25, 0.7 + r() * 0.3));
+        }
+      });
+      return;
+    }
     const n = this.treeList.length, m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3();
     const t = new THREE.InstancedMesh(this.trunkGeo, this.trunkMat, n), l = new THREE.InstancedMesh(this.treeGeo, this.leafMat, n);
     this.treeList.forEach(([x, z], i) => {

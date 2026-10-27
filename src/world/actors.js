@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { model as glbModel } from '../engine/assets.js';
 
 // 三个 Mixamo 角色骨骼同名，但导出时各自的坐标轴和骨骼朝向不同，动画不能直接套用。
 // 这里做"世界空间重定向"：逐帧采样源模型每根骨骼的世界旋转相对静止姿势的变化量，
@@ -135,4 +136,117 @@ export class Actor {
 export function randomTint(r) {
   const h = r(), s = 0.15 + r() * 0.25, l = 0.75 + r() * 0.25;
   return tmpColor.setHSL(h, s, l).clone();
+}
+
+// ================= 路人换装 =================
+// Xbot 人偶本身是一体的灰色模型。按每个顶点的主骨骼把身体分区（皮肤 / 上衣 / 前臂 / 裤子 / 小腿 / 鞋），
+// 着色器里按区域上色，每个路人一套随机衣服；再随机挂帽子、双肩包、斜挎包（Blender 模型，绑在骨骼上）。
+const region = name => {
+  const n = name.replace(/^mixamorig:?/, '');
+  if (/Hand|Head|Neck|Eye/.test(n)) return 3;      // 皮肤
+  if (/ForeArm/.test(n)) return 1;                  // 前臂（长袖 = 上衣色，短袖 = 皮肤色）
+  if (/Spine|Shoulder|Arm/.test(n)) return 0;       // 上衣
+  if (/Hips|UpLeg/.test(n)) return 2;               // 裤子
+  if (/Leg/.test(n)) return 4;                      // 小腿（短裤 = 皮肤色）
+  if (/Foot|Toe/.test(n)) return 5;                 // 鞋
+  return 0;
+};
+function maskGeometry(mesh) {
+  const g = mesh.geometry;
+  if (g.attributes.maskA) return;
+  const si = g.attributes.skinIndex, sw = g.attributes.skinWeight, bones = mesh.skeleton.bones;
+  const n = si.count, A = new Float32Array(n * 4), B = new Float32Array(n), acc = new Float32Array(6);
+  const get = (a, i, k) => k === 0 ? a.getX(i) : k === 1 ? a.getY(i) : k === 2 ? a.getZ(i) : a.getW(i);
+  for (let i = 0; i < n; i++) {
+    acc.fill(0);
+    for (let k = 0; k < 4; k++) { const w = get(sw, i, k); if (w > 0) acc[region(bones[get(si, i, k)]?.name || '')] += w; }
+    let best = 0; for (let k = 1; k < 6; k++) if (acc[k] > acc[best]) best = k;
+    if (best === 3 && /Head/.test(bones[get(si, i, 0)]?.name || '') && get(sw, i, 0) > 0.6) (g.userData.head ||= []).push(i);
+    // 区域编码：A = (上衣, 前臂, 裤子, 小腿)，B = 鞋；都不是 = 皮肤
+    if (best === 0) A[i * 4] = 1; else if (best === 1) A[i * 4 + 1] = 1; else if (best === 2) A[i * 4 + 2] = 1; else if (best === 4) A[i * 4 + 3] = 1; else if (best === 5) B[i] = 1;
+  }
+  g.setAttribute('maskA', new THREE.BufferAttribute(A, 4));
+  g.setAttribute('maskB', new THREE.BufferAttribute(B, 1));
+}
+function outfitMaterial(base, o) {
+  const m = base.clone();
+  m.color.set(0xffffff); m.metalness = 0; m.roughness = 0.72; m.map = null; m.envMapIntensity = 0.5;
+  m.onBeforeCompile = sh => {
+    for (const k of ['shirt', 'sleeve', 'pants', 'shin', 'shoes', 'skin']) sh.uniforms['o_' + k] = { value: o[k] };
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec4 maskA; attribute float maskB; varying vec4 vMaskA; varying float vMaskB;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMaskA = maskA; vMaskB = maskB;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 o_shirt, o_sleeve, o_pants, o_shin, o_shoes, o_skin; varying vec4 vMaskA; varying float vMaskB;')
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        { float sk = clamp(1.0 - vMaskA.x - vMaskA.y - vMaskA.z - vMaskA.w - vMaskB, 0.0, 1.0);
+          diffuseColor.rgb *= o_shirt * vMaskA.x + o_sleeve * vMaskA.y + o_pants * vMaskA.z + o_shin * vMaskA.w + o_shoes * vMaskB + o_skin * sk; }`);
+  };
+  m.customProgramCacheKey = () => 'outfit';
+  return m;
+}
+const PAL = {
+  shirt: ['#f2f2f2', '#1d1f24', '#2b3a55', '#8a8f96', '#c9b79c', '#a83232', '#3f6b4a', '#d4a017', '#6b4c8a', '#e98aa6', '#e2012d', '#ff6a13', '#27a4ff'],
+  pants: ['#2c3e5c', '#1b1b1e', '#5a5f66', '#c2b59b', '#3d4a3a', '#4a6fa5', '#2b2b30'],
+  shoes: ['#f4f4f4', '#151515', '#7a5230', '#c0c0c0', '#f4f4f4'],
+  skin: ['#f1d3bd', '#e8bfa0', '#dcae8c', '#c99572'],
+};
+const pick = (r, a) => a[r() * a.length | 0];
+
+function attachAt(actor, name, boneName, worldPos, color, scale) {
+  let bone = null;
+  actor.model.traverse(o => { if (o.isBone && o.name.replace(':', '') === boneName) bone = o; });
+  if (!bone) return null;
+  actor.root.updateMatrixWorld(true);
+  const off = worldPos.clone().sub(new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld));
+  return attach(actor, name, boneName, off, color, scale);
+}
+
+function attach(actor, name, boneName, offset, color, scale = new THREE.Vector3(1, 1, 1)) {
+  const acc = glbModel(name);
+  if (!acc) return null;
+  let bone = null;
+  actor.model.traverse(o => { if (o.isBone && o.name.replace(':', '') === boneName) bone = o; });
+  if (!bone) return null;
+  actor.root.updateMatrixWorld(true);
+  const p = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld).add(offset);
+  const local = bone.matrixWorld.clone().invert().multiply(new THREE.Matrix4().compose(p, new THREE.Quaternion(), scale));
+  local.decompose(acc.position, acc.quaternion, acc.scale);
+  if (color) acc.traverse(o => { if (o.isMesh && o.material.name === 'paint') { o.material = o.material.clone(); o.material.color.set(color); } });
+  acc.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+  bone.add(acc);
+  return acc;
+}
+
+// 头部包围盒（世界坐标，角色刚创建时在原点）：头发、帽子按头的实际大小摆放
+function headFit(actor) {
+  let best = null;
+  actor.root.updateMatrixWorld(true);
+  actor.root.traverse(m => { if (m.isSkinnedMesh && m.geometry.userData.head && (!best || m.geometry.userData.head.length > best.geometry.userData.head.length)) best = m; });
+  if (!best) return null;
+  const box = new THREE.Box3(), v = new THREE.Vector3();
+  for (const i of best.geometry.userData.head) box.expandByPoint(best.getVertexPosition(i, v).applyMatrix4(best.matrixWorld));   // 蒙皮后的真实位置
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  return { top: new THREE.Vector3(c.x, box.max.y, c.z), hx: size.x / 2, hz: size.z / 2 };
+}
+
+// 给路人随机换一套衣服 + 配件。只对 Xbot 换衣服；Michelle 只加包。
+export function dressActor(actor, r) {
+  if (actor.kind === 'xbot') {
+    const shirt = pick(r, PAL.shirt), skin = pick(r, PAL.skin), pants = pick(r, PAL.pants);
+    const o = {
+      shirt: new THREE.Color(shirt), sleeve: new THREE.Color(r() < 0.55 ? shirt : skin), pants: new THREE.Color(pants),
+      shin: new THREE.Color(r() < 0.15 ? skin : pants), shoes: new THREE.Color(pick(r, PAL.shoes)), skin: new THREE.Color(skin),
+    };
+    actor.root.traverse(m => { if (m.isSkinnedMesh) { maskGeometry(m); m.material = outfitMaterial(m.material, o); } });
+    const hat = r(), hf = headFit(actor);
+    if (hf) {   // 头发 / 帽子：按头的实际大小缩放，挂在头部骨骼上
+      const kx = (hf.hx + 0.02) / 0.118, kz = (hf.hz + 0.02) / 0.13, k = (kx + kz) / 2;
+      const at = (dy, dz = 0) => new THREE.Vector3(hf.top.x, hf.top.y + dy * k, hf.top.z + dz * k), sc = f => new THREE.Vector3(kx * f, k * f, kz * f);
+      attachAt(actor, hat >= 0.38 && r() < 0.4 ? 'acc_hair_long' : 'acc_hair', 'mixamorigHead', at(0.006), hat < 0.38 ? '#141210' : pick(r, ['#141210', '#141210', '#2b1d14', '#4a3020', '#7a5232', '#b8925a']), sc(1.0));
+      if (hat < 0.25) attachAt(actor, 'acc_cap', 'mixamorigHead', at(-0.06, 0.005), pick(r, ['#151515', '#f2f2f2', '#2b3a55', '#a83232', '#c9b79c']), sc(1.13));
+      else if (hat < 0.38) attachAt(actor, 'acc_beanie', 'mixamorigHead', at(-0.045), pick(r, ['#a83232', '#2b2b30', '#d4a017', '#6b8fb5']), sc(1.13));
+    }
+  }
+  const bag = r();
+  if (bag < 0.22) attach(actor, 'acc_backpack', 'mixamorigSpine2', new THREE.Vector3(0, -0.02, -0.11), pick(r, ['#1d1f24', '#2b3a55', '#6b4c8a', '#a83232', '#3f6b4a']));
+  else if (bag < 0.38) attach(actor, 'acc_crossbag', 'mixamorigSpine2', new THREE.Vector3(0, -0.05, 0), pick(r, ['#7a5230', '#151515', '#c9b79c']));
 }

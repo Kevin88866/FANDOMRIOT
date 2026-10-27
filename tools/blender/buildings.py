@@ -13,16 +13,15 @@ def ac():
     body = mat('acbody', (0.86, 0.86, 0.83), metal=0.2, rough=0.5)
     box('case', (0.82, 0.3, 0.58), (0, -0.2, 0.33), body, bevel=0.02, parent=root)
     grill = mat('grill', (0.08, 0.08, 0.09), rough=0.6)
-    cyl('fan', 0.22, 0.02, (-0.12, -0.355, 0.33), grill, 'Y', 20, parent=root)
-    for k in range(4):
-        box(f'bar{k}', (0.46, 0.012, 0.012), (-0.12, -0.368, 0.17 + k * 0.105), body, parent=root)
-    for k in range(5):
-        box(f'vent{k}', (0.16, 0.01, 0.02), (0.27, -0.356, 0.15 + k * 0.08), grill, parent=root)
+    cyl('fan', 0.22, 0.02, (-0.12, -0.355, 0.33), grill, 'Y', 12, parent=root)
+    for k in range(3):
+        box(f'bar{k}', (0.46, 0.012, 0.012), (-0.12, -0.368, 0.2 + k * 0.13), body, parent=root)
+    box('vent', (0.16, 0.01, 0.36), (0.27, -0.356, 0.33), grill, parent=root)
     iron = mat('iron', (0.2, 0.2, 0.21), metal=0.7, rough=0.5)
     for s in (-1, 1):
         box(f'arm{s}', (0.04, 0.4, 0.04), (s * 0.36, -0.2, 0.02), iron, parent=root)
-        tube(f'strut{s}', [(s * 0.36, -0.01, -0.3), (s * 0.36, -0.38, 0.0)], 0.015, iron, root, 2)
-    tube('pipe', [(0.3, -0.06, 0.45), (0.3, -0.02, 0.7), (0.3, -0.01, 1.0)], 0.018, mat('pipe', (0.9, 0.9, 0.88), rough=0.5), root, 6)
+        box(f'strut{s}', (0.03, 0.03, 0.5), (s * 0.36, -0.19, -0.13), iron, parent=root, rot=(math.radians(-50), 0, 0))
+    box('pipe', (0.035, 0.035, 0.6), (0.3, -0.03, 0.7), mat('pipe', (0.9, 0.9, 0.88), rough=0.5), parent=root)
 
 
 # ---------- 竖排招牌（세로 간판）：从墙面伸出，两面贴字 ----------
@@ -113,4 +112,4 @@ ALL = {'bd_ac': ac, 'bd_vsign': vsign, 'bd_tank': tank, 'bd_stair': stair, 'bd_c
 if __name__ == '__main__':
     names = [a for a in sys.argv[1:] if a in ALL] or list(ALL)
     for n in names:
-        build(n, ALL[n])
+        build(n, ALL[n], max_len=4.0)
