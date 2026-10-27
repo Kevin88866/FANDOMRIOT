@@ -25,6 +25,7 @@ export function newGame(fav = LEAGUE.defaultFav) {
     teams: Object.fromEntries(TEAMS.map(t => [t.id, { w: 0, l: 0, gw: 0, gl: 0 }])),
     players, schedule: makeSchedule(), results: [], news: [], trending: [],
     rival: { name: '킹갓팬_Chan', fans: 3000, stance: 'attack' },
+    flags: {}, club: 30, storySeen: [], missions: [], missionsDone: 0, handle: '@饭圈观察员',
     goals: null, history: [], trendTopic: null, totalViews: 0, bestPost: null, viralCount: 0,
   };
 }
@@ -193,6 +194,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   parts.platform = pref;
   parts.trend = p && s.trendTopic === p.name ? 1.8 : (p && s.trending[0] === p.name ? 1.4 : 1);
   parts.limit = s.heat >= B.heatLimit ? 0.5 : 1;
+  parts.club = 1 + Math.min(0.5, (s.club || 0) / 2000);   // 粉丝团帮你转发
   // 名场面：选手亲眼看到你的道具 / 记者入镜 / 拍到选手本人 / 堵门
   parts.moment = (photo.reaction ? 1.8 : 1) * (photo.press ? 1.4 : 1) * (photo.star && !photo.reaction ? 1.15 : 1) * (ev?.blockDoor ? 1.3 : 1);
   // 运气
@@ -207,7 +209,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   parts.luck = luck;
   // 粉丝带来的基础触达是次线性的，避免滚雪球式指数增长
   const base = parts.impact * B.viewsPerImpact + B.fanReach * Math.pow(s.fans, B.fanReachExp);
-  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * parts.moment * luck;
+  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * parts.moment * parts.club * luck;
   views = Math.round(views);
   // 涨粉：观点越被认同涨得越多；反噬会掉粉
   let fans = Math.round(views * B.fanConv * Math.min(1.6, parts.match) / (1 + s.fans / B.fanSoftCap));
@@ -259,6 +261,21 @@ export function endOfWeek(s, dayViews) {
       log.push({ t: `📰 ${p.name} 调整好状态，重回首发`, c: 'good' });
     }
   }
+  // 剧情状态：休战 / 赞助禁令 / 联手
+  const F = s.flags ||= {};
+  if (F.truce && --F.truce.weeks <= 0) { log.push({ t: `和 ${F.truce.name} 的休战期结束了`, c: '' }); delete F.truce; }
+  if (F.noExtreme && --F.noExtreme <= 0) { log.push({ t: '赞助合同的"文明条款"到期了', c: '' }); delete F.noExtreme; }
+  if (F.sellout && --F.sellout <= 0) delete F.sellout;
+  if (F.alliance) {
+    const g = Math.round(s.fans * 0.05) + 100; s.fans += g; log.push({ t: `和 ${s.rival.name} 联手互推，粉丝 +${g}`, c: 'good' });
+    if (--F.alliance <= 0) { delete F.alliance; if (rand.r() < 0.3) { const l = Math.round(s.fans * 0.08); s.fans -= l; s.rival.fans += l; log.push({ t: `${s.rival.name} 背叛了你，把你的黑料全发了出来！粉丝 -${l}`, c: 'bad' }); } else log.push({ t: `和 ${s.rival.name} 的联手和平结束`, c: '' }); }
+  }
+  // 粉丝团：跟着粉丝增长，争议太大会有人退
+  const gained = Math.max(0, s.fans - (s.weekStartFans ?? s.fans));
+  const club0 = s.club ?? 30;
+  s.club = Math.round(club0 + gained * 0.015 + 2);
+  if (s.heat > 60) s.club = Math.round(s.club * 0.94);
+  if (s.club !== club0) log.push({ t: `粉丝团 ${club0} → ${s.club} 人`, c: s.club > club0 ? 'good' : 'bad' });
   // 对手粉头
   const rg = Math.round(s.rival.fans * (0.08 + rand.r() * 0.2) + 400);
   s.rival.fans += rg;

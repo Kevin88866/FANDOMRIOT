@@ -1,5 +1,6 @@
 // 比赛日（电竞直播风格）、发帖（社交 App 风格）、发帖结果（信息流）
 import { TEAMS, PLATFORMS, TONES, LEAGUE, COMMENTS, BALANCE as B } from '../content/data.js';
+import { STORIES, ACHIEVEMENTS, achLoad } from '../content/story.js';
 import * as Sim from '../sim/sim.js';
 
 const $ = id => document.getElementById(id);
@@ -12,6 +13,33 @@ const RESULT = { mvp: ['MVP', 'pos'], worst: ['背锅', 'neg'], win: ['赢了', 
 const PLAT_STYLE = { x: { bg: '#0f1419', fg: '#fff', badge: '𝕏' }, tok: { bg: '#fe2c55', fg: '#fff', badge: '♪' }, dc: { bg: '#3b4890', fg: '#fff', badge: 'DC' } };
 
 export const Screens = {
+  // ================= 私信抉择（进入行动日前） =================
+  beforeDay() {
+    const s = this.s, ps = s.pendingStory;
+    const st = ps && STORIES.find(x => x.id === ps.id);
+    if (!st) { this.close(false); return this.g.startDay(); }
+    const from = typeof st.from === 'function' ? st.from(s, ps.t) : st.from;
+    this.open(`<div class="dm"><div class="dm-h"><span class="av" style="background:#2a3043">${st.av}</span><div><b>${esc(from)}</b><div class="dim">发来一条私信 · 刚刚</div></div></div>
+      <div class="bubble in">${esc(st.text(s, ps.t))}</div>
+      <div class="dm-opts">${st.options.map((o, i) => `<button class="opt" data-o="${i}"><b>${esc(o.label)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div></div>`, { cinematic: true, cls: 'wide' });
+    this.on('[data-o]', 'click', (e, el) => {
+      const o = st.options[+el.dataset.o];
+      const msg = o.run(s, ps.t);
+      (s.storySeen ||= []).push(st.id); s.pendingStory = null; this.save();
+      const box = this.modal.querySelector('.dm');
+      box.querySelector('.dm-opts').innerHTML = `<div class="bubble out">${esc(o.label)}</div><div class="bubble sys">${esc(msg)}</div><button class="btn pri" id="cont" style="align-self:flex-end">进入行动日 →</button>`;
+      $('cont').onclick = () => { this.close(false); this.g.startDay(); };
+    });
+  },
+
+  achievements(back) {
+    const got = achLoad();
+    this.open(`<h2>🏆 成就 <span class="dim" style="font-size:14px">${Object.keys(got).length}/${ACHIEVEMENTS.length}</span></h2>
+      <div class="cards">${ACHIEVEMENTS.map(a => `<div class="card ${got[a.id] ? '' : 'locked'}"><div class="t">${got[a.id] ? '🏆' : '🔒'} ${esc(a.name)}</div><div class="d">${esc(a.desc)}</div>${got[a.id] ? `<div class="dim" style="font-size:11px">${new Date(got[a.id]).toLocaleDateString()}</div>` : ''}</div>`).join('')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="b">返回</button></div>`, { cinematic: true, esc: back });
+    $('b').onclick = back;
+  },
+
   // ================= 比赛日 =================
   matchDayView() {
     const s = this.s, res = s.lastResults, P = s.players;

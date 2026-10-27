@@ -137,7 +137,8 @@ export class PhotoMode {
     ctx.drawImage(g.renderer.r.domElement, 0, 0, this.small.width, this.small.height);
     const img = this.small.toDataURL('image/jpeg', 0.82);
     const photo = { img, q: r.q, tags: r.tags, eventId: r.subject?.eventId ?? r.opp?.reaction?.eventId ?? null, label: r.subject?.label || (r.opp?.star ? `${r.opp.star} 本人` : '街景'), t: g.clockMin, crowd: r.crowd,
-      star: r.opp?.star || null, reaction: !!r.opp?.reaction, press: !!r.opp?.press };
+      star: r.opp?.star || null, reaction: !!r.opp?.reaction, press: !!r.opp?.press, truckSlogan: !!(r.subject?.vehicle && r.tags.includes('text')) };
+    if (photo.reaction) g.ui.achieve('reaction'); if (photo.press) g.ui.achieve('press');
     g.day.photos.push(photo);
     this.flash.style.transition = 'none'; this.flash.style.opacity = 0.9;
     requestAnimationFrame(() => { this.flash.style.transition = 'opacity .35s'; this.flash.style.opacity = 0; });

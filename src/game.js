@@ -73,6 +73,7 @@ export class Game {
         if (e.code === 'KeyC') this.enterPhoto();
         if (e.code === 'Tab') { e.preventDefault(); this.ui.inventory(); }
         if (e.code === 'KeyM') this.bigMap = !this.bigMap;
+        if (e.code === 'KeyH') document.getElementById('objective').classList.toggle('collapsed');
         if (e.code === 'Escape') this.ui.pause();
       } else if (this.mode === 'photo') {
         if (e.code === 'KeyC' || e.code === 'Escape') this.exitPhoto();
@@ -278,6 +279,17 @@ export class Game {
   hqFor(team) { return this.city.hq[team] ? team : null; }
 
   newEvent(order, hqId) {
+    const s = this.state, F = s.flags ||= {};
+    // 剧情约束：休战期间骂他 / 违反赞助合同
+    if (order.kind === 'attack' && F.truce?.name === order.target) {
+      const l = Math.round(s.fans * 0.1); s.fans -= l; delete F.truce;
+      this.ui.push('💔 你违背了休战承诺', `${order.target} 把你们的私信公开了，粉丝 -${l}`, 'bad');
+      (s.weekStory ||= []).push({ t: `你违背了和 ${order.target} 的休战约定，被骂"出尔反尔"`, c: 'bad' });
+    }
+    if (F.noExtreme && (order.item === 'eggs' || order.item === 'graffiti')) {
+      s.money -= 4000000; delete F.noExtreme;
+      this.ui.push('📄 违反赞助合同', 'BOLT 要求退还双倍预付款：-₩4,000,000', 'bad');
+    }
     const ev = { id: 'e' + Math.random().toString(36).slice(2, 8), item: order.item, target: order.target, kind: order.kind, text: order.text, hq: hqId, time: this.clockMin };
     Sim.applyAction(this.state, ev);
     const cost = ITEMS.find(i => i.id === order.item).cleanup;
@@ -338,6 +350,7 @@ export class Game {
     for (const o of placed) this.props.addSubject(o, { eventId: ev.id, label, text: true, weight: item.prop === 'banner' ? 1.1 : item.prop === 'rally' ? 1.2 : 1, layout: sc.score });
     this.crowd.attract(hq.plaza, 80, item.prop === 'rally' ? 22 : 12, order.kind === 'support' ? 'cheer' : 'angry');
     const stars = '★'.repeat(Math.round((sc.score - 0.6) / 0.65 * 5)).padEnd(5, '☆');
+    if (sc.score >= 1.18) this.ui.achieve('layout');
     this.toast(`${item.name} 已布置 · 排面 ${stars}　掏出手机（C）拍照`, 'good');
     if (sc.blockDoor) {
       this.state.heat = Math.min(120, this.state.heat + 5);
@@ -365,6 +378,7 @@ export class Game {
     path.push({ pos: door });
     this.guards.push({ w: new Walker(this, a, path, 1.4), a });
     this.ui.push('👮 保安出来清理大门口了', '现在拍照是名场面！', 'big');
+    this.ui.achieve('door');
     (this.state.weekStory ||= []).push({ t: `${hq.team.name} 的保安清理了你堵在门口的道具`, c: 'bad' });
   }
 

@@ -243,7 +243,7 @@ export class Opportunities {
       const s = this.s;
       if (best > e.rivalQ) {
         const gain = Math.round(300 + s.rival.fans * 0.04); s.fans += gain; s.rival.fans = Math.round(s.rival.fans * 0.94);
-        e.result = { win: true, gain }; g.ui.push('⚔ 抢镜成功！', `你的现场照片比 ${s.rival.name} 的卡车更火，粉丝 +${gain}`, 'good');
+        e.result = { win: true, gain }; g.ui.achieve('rival'); g.ui.push('⚔ 抢镜成功！', `你的现场照片比 ${s.rival.name} 的卡车更火，粉丝 +${gain}`, 'good');
       } else {
         s.rival.fans = Math.round(s.rival.fans * 1.08);
         e.result = { win: false }; g.ui.push('⚔ 被抢了风头', best ? `你这段时间最好的照片（${best.toFixed(2)}）没赢过对手（${e.rivalQ.toFixed(2)}）` : '这段时间你一张照片都没拍', 'bad');

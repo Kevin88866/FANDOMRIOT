@@ -227,3 +227,23 @@ table.t tr.me{background:rgba(255,45,85,.12)}
 .mult{display:flex;flex-wrap:wrap;gap:4px;padding:0 12px 12px}.mult i{font-style:normal;font-size:10px;border-radius:4px;padding:1px 6px;background:#232a3d}
 .mult i.up{color:#7dffb7}.mult i.down{color:#ff9a9a}
 @media (max-width:1100px){.feed>.fc{width:calc(50% - 10px)}.sns{grid-template-columns:1fr 380px}.bc-grid{grid-template-columns:1fr 280px}}
+
+/* 私信 */
+.dm{width:min(560px,94vw);margin:0 auto;background:#0f1119;border:1px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.dm-h{display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.bubble{max-width:85%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.6;animation:mcin .35s backwards}
+.bubble.in{background:#1e2333;border-top-left-radius:4px;align-self:flex-start}
+.bubble.out{background:var(--acc);border-top-right-radius:4px;align-self:flex-end}
+.bubble.sys{background:transparent;border:1px dashed var(--line);color:var(--dim);align-self:center;max-width:100%;text-align:center}
+.dm-opts{display:flex;flex-direction:column;gap:8px}
+.opt{cursor:pointer;text-align:left;background:#171b28;border:1px solid var(--line);border-radius:12px;padding:10px 14px;color:var(--tx);font-family:inherit;transition:.15s}
+.opt:hover{border-color:var(--acc);transform:translateX(3px)}
+.opt b{display:block;font-size:14px}.opt span{font-size:12px;color:var(--dim)}
+.panel.wide .dm{max-height:90vh;overflow:auto}
+
+/* 顶栏紧凑一些，避免和时钟重叠；H 键折叠目标面板 */
+.stat{min-width:88px;padding:6px 12px}
+.stat span:last-child{font-size:18px}
+.stat .bar{width:100px}
+#objective.collapsed>*:not(h4:first-child){display:none}
+#objective.collapsed::after{content:'（H 展开）';font-size:11px;color:var(--dim)}

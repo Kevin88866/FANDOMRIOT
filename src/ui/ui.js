@@ -1,6 +1,7 @@
 import { TEAMS, ITEMS, PLATFORMS, TONES, SKILLS, VEHICLES, LEAGUE, SLOGANS, BALANCE as B } from '../content/data.js';
 import * as Sim from '../sim/sim.js';
 import { Screens } from './screens.js';
+import { pickStory, STORIES, rollMissions, missionText, rewardText, MISSIONS, ACHIEVEMENTS, achGrant, achLoad } from '../content/story.js';
 
 const $ = id => document.getElementById(id);
 const won = n => (n < 0 ? '-₩' : '₩') + Math.abs(Math.round(n)).toLocaleString();
@@ -42,6 +43,7 @@ export class UI {
   streamerInterview(e) {
     const s = this.s;
     e.interviewed = true;
+    this.achieve('stream');
     const hot = s.trending[0] || Object.keys(s.players)[0];
     this.open(`<h2>🔴 直播采访</h2><div class="sub">"各位家人们，我在战队总部门口遇到一位大粉！来聊两句？" —— 直播间 ${num(2000 + Math.random() * 8000)} 人在线</div>
       <div class="cards" style="grid-template-columns:1fr 1fr 1fr">
@@ -77,7 +79,20 @@ export class UI {
 
   save() { try { localStorage.setItem(SAVE, JSON.stringify(this.s)); } catch (e) { console.warn(e); } }
   saveSoon() { clearTimeout(this.st); this.st = setTimeout(() => this.save(), 500); }
-  load() { try { const s = JSON.parse(localStorage.getItem(SAVE)); return s && s.v === 1 ? s : null; } catch { return null; } }
+  load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(SAVE)); if (!s || s.v !== 1) return null;
+      // 旧存档补字段
+      s.flags ||= {}; s.club ??= 30; s.storySeen ||= []; s.missions ||= []; s.missionsDone ??= 0; s.handle ||= '@饭圈观察员'; s.inventory ||= [];
+      return s;
+    } catch { return null; }
+  }
+
+  achieve(id) {
+    const a = achGrant(id); if (!a) return;
+    if (!$('hud').classList.contains('hidden')) this.push(`🏆 成就解锁：${a.name}`, a.desc, 'big');
+    else this.toast(`🏆 成就解锁：${a.name}`, 'big');
+  }
 
   // ================= HUD =================
   hud() {
@@ -86,13 +101,14 @@ export class UI {
     const h = this.h, now = performance.now();
     h.money.textContent = won(s.money); h.money.style.color = s.money < 0 ? 'var(--bad)' : '';
     h.fans.textContent = num(s.fans);
+    (h.club ||= $('hud-club')).textContent = s.club ?? 0;
     h.heat.style.width = Math.min(100, s.heat) + '%';
     const m = Math.floor(g.clockMin); h.time.textContent = `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
     h.week.textContent = `S${s.season} · 第${s.week}周`;
     h.phase.textContent = g.mode === 'photo' ? '拍照中' : '行动日';
     if (now - (this.lastSlow || 0) > 400) {
       this.lastSlow = now;
-      h.obj.innerHTML = `<h4>赛季目标</h4>${this.goalLines().join('<br>')}<div class="sub" style="margin-top:6px">今日：照片 ${g.day.photos.length} 张 · 行动 ${g.day.events.length} 次 · 争议度 ${Math.round(s.heat)}</div>`;
+      h.obj.innerHTML = `<h4>赛季目标</h4>${this.goalLines().join('<br>')}${s.missions?.length ? `<h4 style="margin-top:8px">本周商单</h4>${this.missionLines().join('<br>')}` : ''}<div class="sub" style="margin-top:6px">今日：照片 ${g.day.photos.length} 张 · 行动 ${g.day.events.length} 次 · 争议度 ${Math.round(s.heat)}</div>`;
       h.inv.innerHTML = s.inventory.slice(0, 6).map(o => `<div class="inv"><b>${itemOf(o.item).name}</b> → ${esc(o.target)}</div>`).join('') + (s.inventory.length > 6 ? `<div class="inv">+${s.inventory.length - 6}</div>` : '');
       this.minimap();
       const opps = g.opps.hudList();
@@ -152,6 +168,10 @@ export class UI {
     }
     return out;
   }
+  missionLines() {
+    return (this.s.missions || []).map(m => { const d = MISSIONS.find(x => x.id === m.id); return `<span class="${m.done ? 'done' : ''}">${m.done ? '✔' : '◇'} ${esc(missionText(m))}</span> <span class="dim" style="font-size:11px">${rewardText(d.reward)}</span>`; });
+  }
+
   goalLines() { return this.goals().map(g => `<span class="${g.done ? 'done' : ''}">${g.done ? '✔' : '○'} ${esc(g.t)}</span>${g.sub ? `<div class="sub">${esc(g.sub)}</div>` : ''}`); }
 
   // ================= 标题 =================
@@ -165,6 +185,7 @@ export class UI {
         ${has ? '<button class="btn pri" id="cont">继续游戏</button>' : ''}
         <button class="btn ${has ? '' : 'pri'}" id="new">新游戏</button>
         <button class="btn" id="howto">玩法说明</button>
+        <button class="btn" id="ach">成就</button>
         <button class="btn" id="set">设置</button>
       </div></div>`, { cinematic: true });
     this.modal.querySelector('.panel').style.background = 'rgba(10,12,20,.55)';
@@ -172,6 +193,7 @@ export class UI {
     $('new').onclick = () => (has ? this.confirm('开始新游戏会覆盖现有存档，确定？', () => this.newGame(), () => this.title()) : this.newGame());
     $('howto').onclick = () => this.howto(() => this.title());
     $('set').onclick = () => this.settings(() => this.title());
+    $('ach').onclick = () => this.achievements(() => this.title());
   }
 
   howto(back) {
@@ -266,10 +288,14 @@ export class UI {
       s.lastEvent = Sim.weeklyEvent(s);
       s.unlocked = unlockLevel(s.fans);
       if (s.week === B.weeksPerSeason) s.champion = s.lastResults[0].winner;
+      s.weekStartFans = s.fans;
+      rollMissions(s);
+      const st = pickStory(s);
+      s.pendingStory = st ? { id: st.story.id, t: st.t } : null;
       this.save();
     }
     this.open(this.matchDayView(), { cinematic: true, cls: 'wide' });
-    $('go').onclick = () => { this.close(false); this.g.startDay(); };
+    $('go').onclick = () => this.beforeDay();
     $('pl').onclick = () => this.playerList(() => this.matchDay(true));
     $('menu').onclick = () => { this.save(); this.title(); };
   }
@@ -348,6 +374,7 @@ export class UI {
       <h3>我的座驾</h3><div class="cards">${veh}</div>
       <h3>中介服务</h3><div class="cards">
         <div class="card" data-svc="lawyer"><div class="t">签约律师</div><div class="d">律师函赔偿减半，争议度每周多降 6 点。一次签约，长期有效。</div><div class="p">${s.lawyer ? '已签约' : won(5000000)}</div></div>
+        <div class="card" data-svc="recruit"><div class="t">招募粉丝团（+25 人）</div><div class="d">在社区发招募帖。粉丝团越大，集会越有气势，帖子转发越多。当前 ${s.club} 人。</div><div class="p">${won(400000)}</div></div>
         <div class="card" data-svc="burner"><div class="t">买小号</div><div class="d">立刻解除所有平台的封号。</div><div class="p">${won(1000000)}</div></div>
       </div>
       <div class="row" style="margin-top:14px"><button class="btn" id="x">离开</button></div>`, { esc: () => this.close() });
@@ -361,6 +388,7 @@ export class UI {
     });
     this.on('[data-svc]', 'click', (e, el) => {
       if (el.dataset.svc === 'lawyer' && !s.lawyer) { if (s.money < 5000000) return this.toast('钱不够', 'bad'); s.money -= 5000000; s.lawyer = true; }
+      if (el.dataset.svc === 'recruit') { if (s.money < 400000) return this.toast('钱不够', 'bad'); s.money -= 400000; s.club += 25; this.toast(`粉丝团 +25 人（现在 ${s.club} 人）`, 'good'); }
       if (el.dataset.svc === 'burner') { if (s.money < 1000000) return this.toast('钱不够', 'bad'); s.money -= 1000000; s.banned = {}; this.toast('所有平台都能发帖了', 'good'); }
       this.g.audio.coin(); this.saveSoon(); this.garage();
     });
@@ -405,6 +433,8 @@ export class UI {
       return { ...r, photo, platform: x.platform, tone: x.tone, ev };
     });
     this.posts = [];
+    if (results.length) this.achieve('first_post');
+    if (results.some(r => r.viral)) this.achieve('viral'); if ((s.viralCount || 0) >= 5) this.achieve('viral5');
     this.save();
     this.showResults(results);
   }
@@ -412,8 +442,25 @@ export class UI {
   // ================= 周结算 =================
   weekSummary(results) {
     const s = this.s;
-    const log = Sim.endOfWeek(s, results);
+    const g = this.g, lawsuits0 = s.lawsuits || 0;
+    // 商单
+    const ctx = { s, photos: g.day?.photos || [], events: g.day?.events || [], results };
+    const mlog = [];
+    for (const m of s.missions || []) {
+      if (m.done) continue;
+      const d = MISSIONS.find(x => x.id === m.id);
+      if (d.check({ ...ctx, n: m.n })) {
+        m.done = true; s.missionsDone = (s.missionsDone || 0) + 1;
+        if (d.reward.money) s.money += d.reward.money; if (d.reward.fans) s.fans += d.reward.fans; if (d.reward.skill) s.skillPoints += d.reward.skill;
+        mlog.push({ t: `✅ 商单完成：${missionText(m)}（${rewardText(d.reward)}）`, c: 'good' });
+      }
+    }
+    const log = [...mlog, ...Sim.endOfWeek(s, results)];
     s.unlocked = unlockLevel(s.fans);
+    if ((s.lawsuits || 0) > lawsuits0) this.achieve('lawsuit');
+    if (s.fans >= 10000) this.achieve('fans10k'); if (s.fans >= 100000) this.achieve('fans100k');
+    if (s.money >= 50000000) this.achieve('rich'); if (s.missionsDone >= 10) this.achieve('missions');
+    if (s.season === 1 && s.goals?.route === 'attack' && s.players[s.goals.target]?.benched) this.achieve('benched');
     this.save();
     this.weekSummaryView(log);
   }
@@ -445,6 +492,8 @@ export class UI {
     const grade = done === goals.length ? 'S' : done > 0 ? 'B' : 'C';
     const as = Sim.allStar(s);
     const reward = grade === 'S' ? 10000000 : grade === 'B' ? 3000000 : 0;
+    if (s.champion === s.fav) this.achieve('champion');
+    if (s.season === 1 && s.goals?.route === 'support' && goals[0]?.done) this.achieve('allstar');
     this.open(`<h2>第 ${s.season} 赛季结束 · 评级 <span style="color:${grade === 'S' ? 'var(--good)' : grade === 'B' ? 'var(--warn)' : 'var(--bad)'}">${grade}</span></h2>
       <div class="news">🏆 冠军：<b style="color:${teamOf(s.champion).color}">${esc(teamOf(s.champion)?.name || '-')}</b></div>
       <h3>目标</h3><div style="font-size:14px;line-height:1.7">${this.goalLines().join('<br>')}</div>
