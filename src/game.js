@@ -168,6 +168,7 @@ export class Game {
     this.addVehicle(own); this.myRide = own;
     this.crowd.list.forEach(p => { p.state = 'walk'; });
     this.guards = [];
+    s.weekStory = [];
     this.opps.plan();
     this.mode = 'play'; this.ui.showHud(true);
     this.lockMouse();

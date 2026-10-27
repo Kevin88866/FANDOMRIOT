@@ -1,5 +1,6 @@
 import { TEAMS, ITEMS, PLATFORMS, TONES, SKILLS, VEHICLES, LEAGUE, SLOGANS, BALANCE as B } from '../content/data.js';
 import * as Sim from '../sim/sim.js';
+import { Screens } from './screens.js';
 
 const $ = id => document.getElementById(id);
 const won = n => (n < 0 ? '-₩' : '₩') + Math.abs(Math.round(n)).toLocaleString();
@@ -55,11 +56,11 @@ export class UI {
       this.close();
     });
   }
-  open(html, { cinematic = false, esc: escFn = null } = {}) {
+  open(html, { cinematic = false, esc: escFn = null, cls = '' } = {}) {
     if (this.g.mode !== 'menu') this.g.mode = 'ui';
     this.cinematic = cinematic; this.escape = escFn;
     this.g.releaseMouse();
-    this.modal.innerHTML = `<div class="panel">${html}</div>`; this.modal.classList.remove('hidden');
+    this.modal.innerHTML = `<div class="panel ${cls}">${html}</div>`; this.modal.classList.remove('hidden');
     this.modal.querySelector('.panel').scrollTop = 0;
     return this.modal.querySelector('.panel');
   }
@@ -239,8 +240,10 @@ export class UI {
       <div class="news">你刚搬进战队总部附近的一间单间，手上有 ${won(s.money)} 存款和 ${s.fans} 个粉丝。</div>
       <div class="news">${s.goals.route === 'attack' ? `你的目标：让 <b>${esc(s.goals.target)}</b> 被下放替补。` : `你的目标：把 <b>${esc(s.goals.target)}</b> 捧进全明星。`}</div>
       <div class="news">第一周建议：去用品店（地图粉色点）买花圈或横幅 → 去目标所在的总部门口布置 → 按 C 掏手机拍照（让标语、队标和围观的人都入镜）→ 回家发帖。</div>
+      <h3>你的账号名</h3><input class="txt" id="handle" maxlength="16" value="@饭圈观察员">
       <div class="row" style="margin-top:14px"><button class="btn pri" id="go">看第 1 周比赛</button></div>`, { cinematic: true });
-    $('go').onclick = () => this.matchDay();
+    $('handle').onkeydown = e => e.stopPropagation();
+    $('go').onclick = () => { const h = $('handle').value.trim(); s.handle = h ? (h.startsWith('@') ? h : '@' + h) : '@饭圈观察员'; this.save(); this.matchDay(); };
   }
 
   gameOver(msg) {
@@ -265,24 +268,7 @@ export class UI {
       if (s.week === B.weeksPerSeason) s.champion = s.lastResults[0].winner;
       this.save();
     }
-    const res = s.lastResults, P = s.players;
-    const row = m => {
-      const A = teamOf(m.a), Bt = teamOf(m.b), focus = m.a === s.fav || m.b === s.fav;
-      return `<div class="match ${focus ? 'focus' : ''}"><div><b style="color:${A.color}">${esc(A.name)}</b></div><div class="sc">${m.wa} : ${m.wb}</div><div class="r"><b style="color:${Bt.color}">${esc(Bt.name)}</b></div>
-        <div style="grid-column:1/4;font-size:12px;color:var(--dim)">MVP <span class="pos">${esc(m.mvp)}</span>（${m.flavor.mvp}）· 背锅 <span class="neg">${esc(m.worst)}</span>（${m.flavor.worst}）</div></div>`;
-    };
-    const trend = s.trending.length ? s.trending : Object.values(P).sort((a, b) => b.heat - a.heat).slice(0, 8).map(p => p.name);
-    const st = Sim.standings(s);
-    const final = s.week === B.weeksPerSeason;
-    this.open(`<h2>${final ? '🏆 总决赛' : `第 ${s.week} 周 比赛结果`}</h2><div class="sub">S${s.season} · ${LEAGUE.full}${final ? ` · 冠军：<b style="color:${teamOf(s.champion).color}">${esc(teamOf(s.champion).name)}</b>` : ''}</div>
-      ${res.map(row).join('')}
-      <div class="news ${s.lastEvent.id === 'rage' || s.lastEvent.id === 'injury' ? 'bad' : ''}">📰 ${esc(s.lastEvent.text)}</div>
-      <div class="row" style="align-items:flex-start;gap:18px">
-        <div style="flex:1;min-width:300px"><h3>🔥 热搜榜</h3>${trend.map((n, i) => { const p = P[n]; return `<div class="pl" style="display:flex;justify-content:space-between"><span>${i + 1}. <b>${esc(n)}</b> <span style="color:var(--dim)">${esc(teamOf(p.team).name)}</span></span><span>${sentTag(p)} 评分 <b>${p.rating}</b> 热度 ${meter(p.heat, 'var(--acc)')}</span></div>`; }).join('')}</div>
-        <div style="width:260px"><h3>积分榜</h3><table class="t">${st.slice(0, 10).map((t, i) => `<tr class="${t.id === s.fav ? 'me' : ''}"><td>${i + 1}</td><td style="color:${teamOf(t.id).color}">${esc(teamOf(t.id).name)}</td><td>${t.w}-${t.l}</td></tr>`).join('')}</table></div>
-      </div>
-      <h3>赛季目标</h3><div style="font-size:13px;line-height:1.6">${this.goalLines().join('<br>')}</div>
-      <div class="row" style="margin-top:16px"><button class="btn pri" id="go">进入行动日 →</button><button class="btn" id="pl">查看所有选手</button><button class="btn ghost" id="menu">回到标题</button></div>`, { cinematic: true });
+    this.open(this.matchDayView(), { cinematic: true, cls: 'wide' });
     $('go').onclick = () => { this.close(false); this.g.startDay(); };
     $('pl').onclick = () => this.playerList(() => this.matchDay(true));
     $('menu').onclick = () => { this.save(); this.title(); };
@@ -408,32 +394,6 @@ export class UI {
   }
 
   // ================= 发帖 =================
-  posting() {
-    const s = this.s, g = this.g, photos = g.day.photos;
-    this.posts = this.posts || [];
-    const plat = PLATFORMS.map(p => `<option value="${p.id}" ${s.banned[p.id] ? 'disabled' : ''}>${p.name}${s.banned[p.id] ? '（封号中）' : ''}</option>`).join('');
-    const tones = TONES.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    this.open(`<h2>📱 发帖</h2><div class="sub">从今天的照片里挑最多 3 张发出去。同一件事发到不同平台，热度会打折。${s.heat >= B.heatLimit ? '<span class="neg">（你正被限流，曝光减半）</span>' : ''}</div>
-      ${photos.length ? `<div class="photos">${photos.map((p, i) => `<div class="photo ${this.posts.some(x => x.i === i) ? 'sel' : ''}" data-p="${i}"><img src="${p.img}"><span class="q">${'★'.repeat(Math.max(1, Math.round(p.q * 3)))} ${esc(p.label)}${p.tags.includes('explosion') ? ' · 名场面' : ''}</span></div>`).join('')}</div>` : '<div class="news">今天一张照片都没拍……什么也发不了。</div>'}
-      <h3>待发布（${this.posts.length}/3）</h3>
-      ${this.posts.map((x, k) => `<div class="news"><b>${esc(photos[x.i].label)}</b>
-        <div class="row" style="margin-top:6px"><select class="txt" data-pl="${k}" style="min-width:140px">${plat}</select><select class="txt" data-tn="${k}" style="min-width:100px">${tones}</select><button class="btn ghost" data-rm="${k}">移除</button></div>
-        <div class="sub" style="margin-top:4px">${PLATFORMS.find(p => p.id === x.platform)?.desc || ''}</div></div>`).join('')}
-      <div class="row" style="margin-top:14px"><button class="btn pri" id="go" ${this.posts.length ? '' : 'disabled'}>发布</button><button class="btn" id="skip">今天不发了</button></div>`);
-    this.posts.forEach((x, k) => { this.modal.querySelector(`[data-pl="${k}"]`).value = x.platform; this.modal.querySelector(`[data-tn="${k}"]`).value = x.tone; });
-    this.on('[data-p]', 'click', (e, el) => {
-      const i = +el.dataset.p, at = this.posts.findIndex(x => x.i === i);
-      if (at >= 0) this.posts.splice(at, 1);
-      else if (this.posts.length < 3) { const pl = PLATFORMS.find(p => !s.banned[p.id]); if (!pl) return this.toast('所有平台都把你封了', 'bad'); this.posts.push({ i, platform: pl.id, tone: photos[i].eventId && g.day.events.find(e => e.id === photos[i].eventId)?.kind === 'support' ? 'emo' : 'mock' }); }
-      this.posting();
-    });
-    this.modal.querySelectorAll('[data-pl]').forEach(el => el.onchange = () => { this.posts[+el.dataset.pl].platform = el.value; this.posting(); });
-    this.modal.querySelectorAll('[data-tn]').forEach(el => el.onchange = () => { this.posts[+el.dataset.tn].tone = el.value; });
-    this.on('[data-rm]', 'click', (e, el) => { this.posts.splice(+el.dataset.rm, 1); this.posting(); });
-    $('go').onclick = () => this.publish();
-    $('skip').onclick = () => { this.posts = []; this.weekSummary([]); };
-  }
-
   publish() {
     const s = this.s, g = this.g, photos = g.day.photos, seen = {};
     const results = this.posts.map(x => {
@@ -442,45 +402,11 @@ export class UI {
       const r = Sim.evaluatePost(s, { photo, ev, platform: x.platform, tone: x.tone, extraPlatform: extra });
       Sim.commitPost(s, r);
       if (r.viral) s.seasonViral = (s.seasonViral || 0) + 1;
-      return { ...r, photo, platform: x.platform, ev };
+      return { ...r, photo, platform: x.platform, tone: x.tone, ev };
     });
     this.posts = [];
     this.save();
     this.showResults(results);
-  }
-
-  showResults(results) {
-    const P = id => PLATFORMS.find(p => p.id === id);
-    this.open(`<h2>发帖结果</h2>${results.map((r, k) => `<div class="news ${r.viral ? 'good' : r.flop || r.backlash ? 'bad' : ''}" style="display:grid;grid-template-columns:160px 1fr;gap:14px">
-        <img src="${r.photo.img}" style="width:160px;border-radius:8px">
-        <div><b>${P(r.platform).name}</b> · ${esc(r.photo.label)} ${r.viral ? '<b class="pos">🔥 爆款！被大号转发上了热搜</b>' : r.flop ? '<span class="neg">石沉大海……</span>' : ''}
-          <canvas class="chart" id="ch${k}" width="600" height="150" style="height:90px;margin:6px 0"></canvas>
-          <div class="kv"><span>曝光</span><b id="v${k}">0</b><span>粉丝</span><b class="${r.fans >= 0 ? 'pos' : 'neg'}">${r.fans >= 0 ? '+' : ''}${num(r.fans)}</b><span>收入</span><b>${won(r.money)}</b></div>
-          ${r.backlash ? '<div class="sub neg">评论区炸了：大家觉得他打得挺好，你在无理取闹（掉粉）</div>' : ''}
-          <div class="sub">照片 ×${r.parts.quality.toFixed(2)} · 话题 ×${r.parts.topic.toFixed(2)} · 情绪 ×${r.parts.match.toFixed(2)} · 新鲜 ×${r.parts.fresh.toFixed(2)} · 平台 ×${r.parts.platform.toFixed(2)} · 运气 ×${r.parts.luck.toFixed(2)}</div></div></div>`).join('') || '<div class="sub">没有发帖。</div>'}
-      <div class="row" style="margin-top:14px"><button class="btn pri" id="go">周结算 →</button></div>`);
-    results.forEach((r, k) => this.animateChart($(`ch${k}`), $(`v${k}`), r));
-    if (results.some(r => r.viral)) this.g.audio.viral(); else this.g.audio.coin();
-    $('go').onclick = () => this.weekSummary(results);
-  }
-
-  // 热度曲线：普通帖子慢慢涨，爆款中途突然起飞，沉底的很快走平
-  animateChart(c, label, r) {
-    const x = c.getContext('2d'), W = c.width, H = c.height, N = 60;
-    const pts = []; let v = 0;
-    const jump = r.viral ? 15 + Math.random() * 25 : -1;
-    for (let i = 0; i < N; i++) { const base = r.flop ? Math.exp(-i / 6) : Math.exp(-i / 18); v += base * (i === jump ? 30 : i > jump && jump > 0 ? 2.5 : 1); pts.push(v); }
-    const max = pts[N - 1];
-    let f = 0;
-    const draw = () => {
-      f = Math.min(N, f + 1.2); x.clearRect(0, 0, W, H);
-      x.strokeStyle = r.viral ? '#38e08a' : r.flop ? '#ff4a4a' : '#27e1ff'; x.lineWidth = 3; x.beginPath();
-      for (let i = 0; i < f; i++) { const px = (i / (N - 1)) * W, py = H - 8 - (pts[i] / max) * (H - 16); i ? x.lineTo(px, py) : x.moveTo(px, py); }
-      x.stroke();
-      label.textContent = num(Math.round(r.views * pts[Math.max(0, Math.floor(f) - 1)] / max));
-      if (f < N) requestAnimationFrame(draw);
-    };
-    draw();
   }
 
   // ================= 周结算 =================
@@ -535,3 +461,5 @@ export class UI {
     };
   }
 }
+
+Object.assign(UI.prototype, Screens);

@@ -1,5 +1,5 @@
 // 纯逻辑模拟（不依赖浏览器，可在 node 里跑平衡测试）
-import { TEAMS, ITEMS, PLATFORMS, TONES, LEAGUE, BALANCE as B } from '../content/data.js';
+import { TEAMS, ITEMS, PLATFORMS, TONES, LEAGUE, PLAYER_POSTS, BALANCE as B } from '../content/data.js';
 
 export const rand = {
   r: Math.random,
@@ -51,11 +51,21 @@ function teamPower(s, tid) {
 // ---------- 比赛 ----------
 export function playWeek(s) {
   const out = [];
+  const inf = s.influence || {};
+  for (const name in inf) inf[name].moodAtMatch = Math.round(s.players[name].mood);
   let pairs = s.schedule[s.week - 1];
   if (s.week === B.weeksPerSeason) { const st = standings(s); pairs = [[st[0].id, st[1].id]]; }
   for (const [a, b] of pairs) out.push(playMatch(s, a, b, s.week === B.weeksPerSeason));
   s.results.push(out);
   updateTopics(s, out);
+  // 因果链：你的行动 → 心态 → 本场表现
+  for (const name in inf) {
+    const p = s.players[name], m = out.find(r => r.perf[name] !== undefined);
+    inf[name].rating = m ? m.perf[name] : null;
+    inf[name].result = !m ? 'bench' : m.mvp === name ? 'mvp' : m.worst === name ? 'worst' : (m.winner === p.team ? 'win' : 'lose');
+  }
+  s.lastInfluence = inf; s.influence = {};
+  s.playerPosts = makePlayerPosts(s, out);
   return out;
 }
 
@@ -107,6 +117,20 @@ function updateTopics(s, results) {
   }
 }
 
+function makePlayerPosts(s, results) {
+  const posts = [], pick = a => a[Math.floor(rand.r() * a.length)];
+  const fill = (t, p, i) => t.replace('{p}', p.name).replace('{t}', TEAMS.find(x => x.id === p.team)?.name || p.team).replace('{i}', i || '应援');
+  for (const [name, inf] of Object.entries(s.lastInfluence || {})) {
+    const p = s.players[name], item = inf.acts[0]?.label;
+    const net = inf.acts.reduce((a, x) => a + x.dm, 0);
+    const good = inf.result === 'mvp' || inf.result === 'win';
+    let key = inf.result === 'bench' ? 'benched' : net < 0 ? (good ? 'attacked_good' : 'attacked_bad') : (good ? 'supported_good' : 'supported_bad');
+    posts.push({ name, team: p.team, text: fill(pick(PLAYER_POSTS[key]), p, item), mine: true, key });
+  }
+  for (const m of results.slice(0, 2)) if (!posts.some(x => x.name === m.mvp)) { const p = s.players[m.mvp]; posts.push({ name: m.mvp, team: p.team, text: fill(pick(PLAYER_POSTS.mvp), p) }); }
+  return posts.slice(0, 4);
+}
+
 export function standings(s) {
   return Object.entries(s.teams).map(([id, t]) => ({ id, ...t })).sort((x, y) => (y.w - x.w) || ((y.gw - y.gl) - (x.gw - x.gl)));
 }
@@ -123,6 +147,7 @@ export function applyAction(s, ev) {
     let dm = ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood);
     // 知耻后勇：被骂有概率反而振作（心态好时概率高）
     if (dm < 0 && rand.r() < 0.12 + p.mood / 600) { dm = Math.abs(dm) * 0.5; ev.backfire = true; }
+    noteInfluence(s, p.name, item.name, ev.kind, dm);
     p.mood = clamp(p.mood + dm, 0, 100);
     if (ev.kind === 'support') p.votes += item.impact * 120;
     else p.votes = Math.max(0, p.votes - item.impact * 30);
@@ -132,6 +157,13 @@ export function applyAction(s, ev) {
   ev.repeat = s.used[key] || 0;
   s.used[key] = ev.repeat + 1;
   return ev;
+}
+
+// 记录玩家这周对某个选手做了什么（比赛日展示因果链）
+export function noteInfluence(s, name, label, kind, dm) {
+  const p = s.players[name]; if (!p) return;
+  const inf = (s.influence ||= {})[name] ||= { moodBefore: Math.round(p.mood), acts: [] };
+  inf.acts.push({ label, kind, dm: Math.round(dm) });
 }
 
 // ---------- 发帖曝光 ----------

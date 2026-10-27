@@ -3,6 +3,7 @@ import { Actor } from './actors.js';
 import { Vehicle } from '../player/vehicle.js';
 import { textTex } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
+import { noteInfluence } from '../sim/sim.js';
 
 // 每晚的限时机会事件：选手下班、记者采访、对手粉头的卡车、街头主播。
 // 它们给玩家在 3D 世界里"赶时间、抢镜头"的理由，并产生特殊的照片标签。
@@ -205,6 +206,7 @@ export class Opportunities {
   react(e, ev, subj) {
     const g = this.g, p = this.s.players[e.player];
     const d = ev.kind === 'support' ? 6 : -6;
+    noteInfluence(this.s, e.player, '下班时亲眼看到', ev.kind, d);
     p.mood = THREE.MathUtils.clamp(p.mood + d, 0, 100);
     e.reacted = { eventId: ev.id, kind: ev.kind, obj: subj.obj, until: g.time + 6 };
     (this.s.weekStory ||= []).push({ t: `${e.player} 下班时看到了你的${ev.kind === 'support' ? '应援' : '抗议'}，${ev.kind === 'support' ? '笑着点了点头' : '摇了摇头，表情很难看'}（心态 ${d > 0 ? '+' : ''}${d}）`, c: ev.kind === 'support' ? 'good' : 'bad', player: e.player });
