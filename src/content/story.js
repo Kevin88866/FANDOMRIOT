@@ -150,6 +150,7 @@ export function rewardText(r) { return [r.money && `₩${(r.money / 10000).toLoc
 
 // ---------- 成就 ----------
 export const ACHIEVEMENTS = [
+  { id: 'tutorial', name: '入坑', desc: '完成新手引导' },
   { id: 'first_post', name: '初出茅庐', desc: '发出第一条帖子' },
   { id: 'viral', name: '一夜爆红', desc: '第一次爆款' },
   { id: 'viral5', name: '流量密码', desc: '累计 5 次爆款' },
@@ -167,6 +168,7 @@ export const ACHIEVEMENTS = [
   { id: 'allstar', name: '造星', desc: '把目标选手捧进全明星' },
   { id: 'champion', name: '冠军粉', desc: '主队拿下总冠军' },
   { id: 'missions', name: '商单达人', desc: '累计完成 10 个商单' },
+  { id: 'ending', name: '饭圈风云', desc: '打完三个赛季，看到结局' },
 ];
 
 const ACH_KEY = 'fr_ach_v1';

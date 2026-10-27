@@ -209,8 +209,8 @@ export class Vehicle {
   // 玩家驾驶
   drive(input, dt, city) {
     const T = this.T;
-    const throttle = (input.up ? 1 : 0) - (input.down ? 1 : 0);
-    const steerIn = (input.left ? 1 : 0) - (input.right ? 1 : 0);
+    const throttle = (+input.up || 0) - (+input.down || 0);       // 手柄扳机 / 摇杆是 0..1 的模拟量
+    const steerIn = (+input.left || 0) - (+input.right || 0);
     if (throttle) this.speed += throttle * T.accel * dt * (Math.sign(throttle) !== Math.sign(this.speed) && Math.abs(this.speed) > 0.5 ? 2.2 : 1);
     else this.speed *= Math.pow(0.45, dt);
     if (input.brake) this.speed *= Math.pow(0.05, dt);

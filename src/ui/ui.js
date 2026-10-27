@@ -1,6 +1,8 @@
 import { TEAMS, ITEMS, PLATFORMS, TONES, SKILLS, VEHICLES, LEAGUE, SLOGANS, BALANCE as B } from '../content/data.js';
 import * as Sim from '../sim/sim.js';
 import { Screens } from './screens.js';
+import { Menus } from './menus.js';
+import { deleteSlot } from '../engine/saves.js';
 import { itemThumb } from './thumbs.js';
 import { pickStory, STORIES, rollMissions, missionText, rewardText, MISSIONS, ACHIEVEMENTS, achGrant, achLoad } from '../content/story.js';
 
@@ -12,7 +14,6 @@ const itemOf = id => ITEMS.find(i => i.id === id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const UNLOCK = [0, 1500, 6000, 15000, 35000, 60000, 100000];
 export const unlockLevel = fans => UNLOCK.filter(x => fans >= x).length - 1;
-const SAVE = 'fr_save_v1';
 const DRIVER_FEE = 300000;
 const sentTag = p => p.sentiment < -0.3 ? '<span class="neg">挨骂中</span>' : p.sentiment > 0.4 ? '<span class="pos">被夸中</span>' : '<span style="color:var(--dim)">平静</span>';
 const meter = (v, col) => `<span class="meter"><i style="width:${Math.max(0, Math.min(100, v))}%;background:${col}"></i></span>`;
@@ -65,6 +66,8 @@ export class UI {
     this.g.releaseMouse();
     this.modal.innerHTML = `<div class="panel ${cls}">${html}</div>`; this.modal.classList.remove('hidden');
     this.modal.querySelector('.panel').scrollTop = 0;
+    this.settingsTab = null; this.slotDelete = null;
+    this.g.focus?.reset();
     return this.modal.querySelector('.panel');
   }
   // 关闭面板；inDay=true 时回到 3D 行动
@@ -76,17 +79,6 @@ export class UI {
   confirm(msg, yes, no = () => this.close()) {
     this.open(`<h2>确认</h2><p>${msg}</p><div class="row"><button class="btn pri" id="y">确定</button><button class="btn" id="n">取消</button></div>`, { esc: no });
     $('y').onclick = () => { this.close(false); yes(); }; $('n').onclick = no;
-  }
-
-  save() { try { localStorage.setItem(SAVE, JSON.stringify(this.s)); } catch (e) { console.warn(e); } }
-  saveSoon() { clearTimeout(this.st); this.st = setTimeout(() => this.save(), 500); }
-  load() {
-    try {
-      const s = JSON.parse(localStorage.getItem(SAVE)); if (!s || s.v !== 1) return null;
-      // 旧存档补字段
-      s.flags ||= {}; s.club ??= 30; s.storySeen ||= []; s.missions ||= []; s.missionsDone ??= 0; s.handle ||= '@饭圈观察员'; s.inventory ||= [];
-      return s;
-    } catch { return null; }
   }
 
   achieve(id) {
@@ -176,32 +168,11 @@ export class UI {
   goalLines() { return this.goals().map(g => `<span class="${g.done ? 'done' : ''}">${g.done ? '✔' : '○'} ${esc(g.t)}</span>${g.sub ? `<div class="sub">${esc(g.sub)}</div>` : ''}`); }
 
   // ================= 标题 =================
-  title() {
-    this.g.mode = 'menu'; this.showHud(false); this.g.day = null;
-    this.g.audio.music('menu');
-    const sv = this.load(), has = !!sv;
-    const card = has ? `<div class="save-card"><div class="dim">继续上次的进度</div><b>${esc(sv.handle || '@饭圈观察员')}</b>
-      <div class="kv2"><span>赛季</span><b>S${sv.season} · 第 ${sv.week} 周</b><span>粉丝</span><b>${num(sv.fans)}</b><span>资金</span><b>${won(sv.money)}</b><span>主队</span><b>${esc(teamOf(sv.fav).name)}</b></div></div>` : '';
-    this.open(`<div class="title-screen">
-      <div class="ts-left">
-        <div class="logo left">饭圈风云<small>FANDOM RIOT · SEOUL</small></div>
-        <p class="tag">首尔夜晚的电竞饭圈。LED 卡车、花圈、烟花、无人机灯光秀……<br>用镜头把这一切变成流量。</p>
-        <div class="title-menu left">
-          ${has ? '<button class="btn pri" id="cont">继续游戏</button>' : ''}
-          <button class="btn ${has ? '' : 'pri'}" id="new">新游戏</button>
-          <button class="btn" id="howto">玩法说明</button>
-          <button class="btn" id="ach">成就</button>
-          <button class="btn" id="set">设置</button>
-        </div>
-        <div class="foot dim">战队与选手为恶搞名 · 名字可在 src/content/data.js 修改</div>
-      </div>
-      <div class="ts-right">${card}</div>
-    </div>`, { cinematic: true, cls: 'wide' });
-    if (has) $('cont').onclick = () => { this.g.state = this.load(); this.s.inventory ||= []; this.close(false); this.matchDay(true); };
-    $('new').onclick = () => (has ? this.confirm('开始新游戏会覆盖现有存档，确定？', () => this.newGame(), () => this.title()) : this.newGame());
-    $('howto').onclick = () => this.howto(() => this.title());
-    $('set').onclick = () => this.settings(() => this.title());
-    $('ach').onclick = () => this.achievements(() => this.title());
+  keysLine() {
+    const K = a => this.g.input.K(a);
+    return this.g.input.device === 'pad'
+      ? `左摇杆 移动 · 右摇杆 视角 · RT 奔跑/油门 · LT 刹车 · ${K('vehicle')} 上下车 · ${K('interact')} 互动 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('pause')} 菜单`
+      : `${K('up')}${K('left')}${K('down')}${K('right')} 移动 · ${K('run')} 跑 · ${K('brake')} 刹车 · ${K('vehicle')} 上下车 · ${K('interact')} 互动 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('objective')} 收起目标 · 滚轮 拉近/变焦 · ${K('pause')} 菜单`;
   }
 
   howto(back) {
@@ -214,39 +185,15 @@ export class UI {
       <div class="news">每周开始前可能会收到私信，你的选择会影响钱、粉丝、争议度和选手心态。每周还有 3 个商单任务，完成拿奖励。</div>
       <div class="news bad">争议度：抗议类行动会让争议度上升，每周自然回落。≥50 限流，≥75 随机一个平台封号，≥100 收到俱乐部律师函（赔钱、掉粉）。律师函满 3 次会被全网封杀，游戏结束。</div>
       <div class="news good">你的行动会影响选手心态 → 影响比赛 → 影响热度。把选手骂到下放替补、把喜欢的选手捧进全明星、帮主队夺冠，都靠你。</div>
-      <div class="news">操作：WASD 移动/开车 · Shift 跑 · 空格 刹车 · F 上下车 · E 互动 · C 手机拍照 · Tab 背包 · M 大地图 · H 收起目标面板 · 鼠标 视角 · 滚轮 拉近拉远/变焦 · Esc 菜单</div>
+      <div class="news">操作：${this.keysLine()}</div>
       <div class="row" style="margin-top:14px"><button class="btn pri" id="b">返回</button></div>`, { cinematic: true, esc: back });
     $('b').onclick = back;
-  }
-
-  settings(back) {
-    const q = this.g.renderer.quality;
-    this.open(`<h2>设置</h2>
-      <h3>画质</h3><div class="row"><button class="btn ${q === 'high' ? 'pri' : ''}" data-q="high">高（环境光遮蔽）</button><button class="btn ${q === 'mid' ? 'pri' : ''}" data-q="mid">中（更流畅）</button></div>
-      <h3>音量</h3><input type="range" min="0" max="1" step="0.05" value="${this.g.audio.vol}" id="vol" style="width:300px;pointer-events:auto">
-      <h3>音乐</h3><input type="range" min="0" max="1" step="0.05" value="${localStorage.getItem('fr_mvol') ?? 0.7}" id="mvol" style="width:300px;pointer-events:auto">
-      <div class="row" style="margin-top:18px"><button class="btn pri" id="b">返回</button></div>`, { cinematic: this.g.mode === 'menu', esc: back });
-    this.on('[data-q]', 'click', (e, el) => { if (el.dataset.q !== q) { if (this.s) this.save(); this.g.renderer.setQuality(el.dataset.q); } });
-    $('vol').oninput = e => this.g.audio.setVol(+e.target.value);
-    $('mvol').oninput = e => this.g.audio.setMusicVol(+e.target.value);
-    $('b').onclick = back;
-  }
-
-  pause() {
-    this.open(`<h2>暂停</h2><div class="row" style="flex-direction:column;align-items:stretch;max-width:320px">
-      <button class="btn pri" id="r">继续</button><button class="btn" id="h">玩法说明</button><button class="btn" id="st">设置</button>
-      <button class="btn" id="home">直接回家（结束今天）</button><button class="btn ghost" id="q">保存并回到标题</button></div>`, { esc: () => this.close() });
-    $('r').onclick = () => this.close();
-    $('h').onclick = () => this.howto(() => this.pause());
-    $('st').onclick = () => this.settings(() => this.pause());
-    $('home').onclick = () => { this.close(); this.g.endDay(); };
-    $('q').onclick = () => { this.save(); location.reload(); };
   }
 
   // ================= 新游戏 =================
   newGame() {
     this.open(`<h2>选择你的主队</h2><div class="sub">你是谁的粉丝？主队决定第 3 赛季的目标。${teamOf(LEAGUE.hqA).name} 和 ${teamOf(LEAGUE.hqB).name} 的总部就在地图中央，其余战队在 ${LEAGUE.arena}。</div>
-      <div class="cards">${TEAMS.map(t => `<div class="card" data-t="${t.id}" style="border-left:4px solid ${t.color}"><div class="t">${esc(t.name)}</div><div class="d">${esc(t.full)}<br>${t.players.map(p => esc(p[0])).join(' · ')}</div></div>`).join('')}</div>`, { cinematic: true, esc: () => this.title() });
+      <div class="cards">${TEAMS.map(t => `<div class="card" data-t="${t.id}" style="border-left:4px solid ${t.color}"><div class="t">${esc(t.name)}</div><div class="d">${esc(t.full)}<br>${t.players.map(p => esc(p[0])).join(' · ')}</div></div>`).join('')}</div>`, { cinematic: true, esc: () => this.mainMenu() });
     this.on('[data-t]', 'click', (e, el) => this.pickRoute(el.dataset.t));
   }
 
@@ -276,18 +223,22 @@ export class UI {
       <div class="news">${s.goals.route === 'attack' ? `你的目标：让 <b>${esc(s.goals.target)}</b> 被下放替补。` : `你的目标：把 <b>${esc(s.goals.target)}</b> 捧进全明星。`}</div>
       <div class="news">第一周建议：去用品店（地图粉色点）买花圈或横幅 → 去目标所在的总部门口布置 → 按 C 掏手机拍照（让标语、队标和围观的人都入镜）→ 回家发帖。</div>
       <h3>你的账号名</h3><input class="txt" id="handle" maxlength="16" value="@饭圈观察员">
+      <h3>难度</h3><div class="seg" id="diff"><button data-d="easy">轻松</button><button data-d="normal" class="on">普通</button><button data-d="hard">困难</button></div>
+      <div class="dim" style="font-size:12px;margin-top:6px">轻松：收入 +30%、争议度增长 -30% · 困难：收入 -20%、争议度增长 +25%（之后可以在设置里改）</div>
       <div class="row" style="margin-top:14px"><button class="btn pri" id="go">看第 1 周比赛</button></div>`, { cinematic: true });
+    s.difficulty = 'normal';
+    this.modal.querySelectorAll('#diff button').forEach(b => b.onclick = () => { s.difficulty = b.dataset.d; this.modal.querySelectorAll('#diff button').forEach(x => x.classList.toggle('on', x === b)); this.g.audio.click(); });
     $('handle').onkeydown = e => e.stopPropagation();
-    $('go').onclick = () => { const h = $('handle').value.trim(); s.handle = h ? (h.startsWith('@') ? h : '@' + h) : '@饭圈观察员'; this.save(); this.matchDay(); };
+    $('go').onclick = () => { const h = $('handle').value.trim(); s.handle = h ? (h.startsWith('@') ? h : '@' + h) : '@饭圈观察员'; s.playTime = 0; this.save(true); this.matchDay(); };
   }
 
   gameOver(msg) {
     const s = this.s;
-    localStorage.removeItem(SAVE);
+    deleteSlot('auto');
     this.open(`<h2>游戏结束</h2><div class="news bad">${msg}</div>
       <div class="kv"><span>坚持到</span><b>第 ${s.season} 赛季 第 ${s.week} 周</b><span>最高粉丝</span><b>${num(s.fans)}</b><span>总曝光</span><b>${num(s.totalViews)}</b><span>爆款次数</span><b>${s.viralCount}</b></div>
       <div class="row" style="margin-top:16px"><button class="btn pri" id="t">回到标题</button></div>`, { cinematic: true });
-    $('t').onclick = () => this.title();
+    $('t').onclick = () => this.mainMenu();
   }
 
   // ================= 比赛日 =================
@@ -311,7 +262,7 @@ export class UI {
     this.open(this.matchDayView(), { cinematic: true, cls: 'wide' });
     $('go').onclick = () => this.beforeDay();
     $('pl').onclick = () => this.playerList(() => this.matchDay(true));
-    $('menu').onclick = () => { this.save(); this.title(); };
+    $('menu').onclick = () => this.pause(() => this.matchDay(true));
   }
 
   playerList(back) {
@@ -324,6 +275,7 @@ export class UI {
 
   // ================= 商店 =================
   shop(sel = null) {
+    this.g.tutorial?.event('shopOpen');
     const s = this.s, lvl = unlockLevel(s.fans);
     sel = sel || (this.shopSel && itemOf(this.shopSel).unlock <= lvl ? this.shopSel : ITEMS.find(it => it.unlock <= lvl).id);
     this.shopSel = sel;
@@ -377,7 +329,7 @@ export class UI {
       if (s.money < cost) return;
       s.money -= cost; this.g.audio.coin();
       s.inventory.push({ item: it.id, target: $('tgt').value, text: $('txt').value.trim() || it.name, kind: kindOf() });
-      this.toast(`已购买 ${it.name}`, 'good'); this.saveSoon();
+      this.toast(`已购买 ${it.name}`, 'good'); this.saveSoon(); this.g.tutorial?.event('ordered');
       this.shop(it.id);
     };
   }
@@ -456,7 +408,7 @@ export class UI {
       return { ...r, photo, platform: x.platform, tone: x.tone, ev };
     });
     this.posts = [];
-    if (results.length) this.achieve('first_post');
+    if (results.length) { this.achieve('first_post'); this.g.tutorial?.event('posted'); }
     if (results.some(r => r.viral)) this.achieve('viral'); if ((s.viralCount || 0) >= 5) this.achieve('viral5');
     this.save();
     this.showResults(results);
@@ -538,9 +490,10 @@ export class UI {
       for (const k in s.teams) Object.assign(s.teams[k], { w: 0, l: 0, gw: 0, gl: 0 });
       for (const p of Object.values(s.players)) { p.mood = 70; p.form = 0; p.votes = 0; p.weeksBad = 0; if (!p.sub) p.benched = false; else { p.benched = true; p.replacing = null; } p.skill = Math.max(60, Math.min(97, p.skill + Math.round((Math.random() - 0.5) * 6))); }
       s.rival.fans = Math.max(s.rival.fans, Math.round(s.fans * 1.1));
+      if (s.season === 4 && !s.endingSeen) { s.endingSeen = true; this.save(); return this.ending(() => this.matchDay()); }
       this.save(); this.matchDay();
     };
   }
 }
 
-Object.assign(UI.prototype, Screens);
+Object.assign(UI.prototype, Screens, Menus);

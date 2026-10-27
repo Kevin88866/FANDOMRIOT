@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS, vsignAtlas } from '../engine/textures.js';
+import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS, vsignAtlas, SignAtlas } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
 import { hasModel, instanced, partGeos, model } from '../engine/assets.js';
 
@@ -9,6 +9,15 @@ export const ROADS = [-150, -90, -30, 30, 90, 150];
 export const AVENUE_Z = 30;
 export const roadWidth = (axis, v) => (axis === 'z' && v === AVENUE_Z ? 26 : 14);
 const BLOCK = 60, CURB = 0.18, HALF = 165;
+
+// 取 BoxGeometry 的几个面（按 groups），用于把同一个盒子的不同面分到不同材质的合并网格里
+function faces(g, ids) {
+  const idx = [];
+  for (const i of ids) { const gr = g.groups[i]; for (let k = gr.start; k < gr.start + gr.count; k++) idx.push(g.index.getX(k)); }
+  const n = g.clone(); n.setIndex(idx); n.clearGroups(); return n;
+}
+const placeGeo = (g, x, y, z, ry = 0) => g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), new THREE.Vector3(1, 1, 1)));
+const remapUV = (g, from, r) => { const uv = g.attributes.uv; for (const f of from) for (let i = f * 4; i < f * 4 + 4; i++) uv.setXY(i, r.u0 + uv.getX(i) * (r.u1 - r.u0), r.v0 + uv.getY(i) * (r.v1 - r.v0)); };
 
 // 路灯杆上的竖旗：联赛标志
 function flagTex() {
@@ -39,6 +48,25 @@ export class City {
     this.vsigns = [];        // 竖排招牌：[矩阵, 图集格子]
     this.rnd = mulberry(2024);
     this.build();
+  }
+
+  // 静态几何按材质合并：整座城市的楼体、店面、招牌最后只剩几十个网格（绘制调用从上千降到几十）
+  addStatic(mat, geo, cast = true) {
+    const b = (this.buckets ||= new Map());
+    if (!b.has(mat)) b.set(mat, { geos: [], cast: false });
+    const e = b.get(mat); e.geos.push(geo); e.cast ||= cast;
+  }
+  sharedFacade(style, seed) {
+    const k = style + '_' + (seed % 3), c = (this.facCache ||= {});
+    return c[k] || (c[k] = this.facadeMat(style, seed, FACADE_TILE.w, FACADE_TILE.h));
+  }
+  get signs2() {
+    if (!this.signAtlas) {
+      this.signAtlas = new SignAtlas();
+      this.signMat = new THREE.MeshStandardMaterial({ map: this.signAtlas.tex, emissiveMap: this.signAtlas.tex, emissive: 0xffffff, emissiveIntensity: 1.8, roughness: 0.4 });
+      this.signMat.userData.night = true; this.nightMats.push(this.signMat);
+    }
+    return this.signAtlas;
   }
 
   addCollider(cx, cz, w, d) { this.colliders.push({ minX: cx - w / 2, maxX: cx + w / 2, minZ: cz - d / 2, maxZ: cz + d / 2 }); }
@@ -87,10 +115,9 @@ export class City {
     // 世界坐标 UV，避免拉伸
     const uv = geo.attributes.uv, pos = geo.attributes.position;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + mx) * 0.25, (pos.getZ(i) + mz) * 0.25);
-    const sw = new THREE.Mesh(geo, this.swMat);
-    sw.material.map.repeat.set(1, 1);
-    sw.position.set(mx, CURB / 2, mz); sw.receiveShadow = true;
-    this.group.add(sw);
+    this.swMat.map.repeat.set(1, 1);
+    geo.translate(mx, CURB / 2, mz);
+    this.addStatic(this.swMat, geo, false);
 
     const key = `${cx},${cz}`;
     const special = { '0,60': 'A', '0,0': 'B', '-60,0': 'shop', '60,60': 'billboard', '-120,60': 'home', '120,0': 'garage' }[key];
@@ -154,26 +181,26 @@ export class City {
     const roofMat = this.roofMat || (this.roofMat = new THREE.MeshStandardMaterial({ color: 0x45474d, roughness: 0.92 }));
     const darkMat = this.darkMat || (this.darkMat = new THREE.MeshStandardMaterial({ color: 0x24262b, roughness: 0.6, metalness: 0.3 }));
     // 一楼：深色框架 + 朝街的店面玻璃
-    const ground = new THREE.Mesh(new THREE.BoxGeometry(L.w - 0.3, GROUND, L.d - 0.3), darkMat);
-    ground.position.set(L.x, GROUND / 2 + CURB, L.z); ground.receiveShadow = true; this.group.add(ground);
+    const g0 = new THREE.BoxGeometry(L.w - 0.3, GROUND, L.d - 0.3); g0.translate(L.x, GROUND / 2 + CURB, L.z);
+    this.addStatic(darkMat, g0);
     this.storefront(L, r, GROUND);
-    // 楼身（高楼有一定概率做成"裙楼 + 塔楼"）
+    // 楼身（高楼有一定概率做成"裙楼 + 塔楼"）。侧面 UV 按整数格贴楼面贴图，所有同款楼共用一个材质
     const tower = !billboard && floors >= 9 && r() < 0.55;
     const podiumFloors = tower ? 2 + (r() * 2 | 0) : floors;
-    const mat = this.facadeMat(style, seed, L.w, FACADE_TILE.h);
+    const mat = this.sharedFacade(style, seed);
     const body = (w, d, y0, y1, m) => {
-      const hh = y1 - y0, mm = m.clone();
-      for (const k of ['map', 'emissiveMap', 'normalMap', 'roughnessMap']) { mm[k] = m[k].clone(); mm[k].repeat.set(Math.max(1, Math.round(w / FACADE_TILE.w)), hh / FACADE_TILE.h); mm[k].offset.set(0, 0); mm[k].needsUpdate = true; }
-      mm.metalnessMap = mm.roughnessMap; mm.userData.night = true; this.nightMats.push(mm);
-      const b = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), [mm, mm, roofMat, roofMat, mm, mm]);
-      b.position.set(L.x, CURB + y0 + hh / 2, L.z); b.castShadow = true; b.receiveShadow = true; this.group.add(b);
-      return b;
+      const hh = y1 - y0, g = new THREE.BoxGeometry(w, hh, d), uv = g.attributes.uv;
+      const rx = [Math.max(1, Math.round(d / FACADE_TILE.w)), Math.max(1, Math.round(w / FACADE_TILE.w))], ry = hh / FACADE_TILE.h;
+      for (let i = 0; i < 24; i++) { const f = i >> 2; if (f === 2 || f === 3) continue; uv.setXY(i, uv.getX(i) * rx[f < 2 ? 0 : 1], uv.getY(i) * ry); }
+      g.translate(L.x, CURB + y0 + hh / 2, L.z);
+      this.addStatic(m, faces(g, [0, 1, 4, 5]));
+      this.addStatic(roofMat, faces(g, [2, 3]));
     };
     body(L.w, L.d, GROUND, GROUND + podiumFloors * FLOOR, mat);
     let topW = L.w, topD = L.d;
     if (tower) {
       topW = Math.max(6, L.w - 2.4); topD = Math.max(6, L.d - 2.4);
-      const tm = this.facadeMat(r() < 0.5 ? 3 : 0, seed + 1, topW, FACADE_TILE.h);
+      const tm = this.sharedFacade(r() < 0.5 ? 3 : 0, seed + 1);
       body(topW, topD, GROUND + podiumFloors * FLOOR, h, tm);
       this.parapet(L.x, L.z, L.w, L.d, GROUND + podiumFloors * FLOOR);
     }
@@ -280,28 +307,29 @@ export class City {
   roofSign(L, r, y, w, d) {
     const words = ['모텔', 'HOTEL', '노래연습장', '치킨', '한의원', '교회', 'PC방', '찜질방', '24H', '호프'];
     const t = words[r() * words.length | 0], hue = r() < 0.5 ? 0 : r() * 360 | 0;
-    const tx = textTex(t, { w: 1024, h: 256, bg: '#05050a', fg: `hsl(${hue},90%,62%)`, glow: 30, size: 0.68 });
-    const m = new THREE.MeshStandardMaterial({ map: tx, emissiveMap: tx, emissive: 0xffffff, emissiveIntensity: 2.2, roughness: 0.5 });
-    m.userData.night = true; this.nightMats.push(m);
+    const cell = this.signs2.cell(t, hue);
     const sw = Math.min(w * 0.9, 12), sh = sw / 4;
     const off = { S: [0, -1], N: [0, 1], W: [-1, 0], E: [1, 0] }[L.facing];
-    const sign = new THREE.Mesh(new THREE.BoxGeometry(sw, sh, 0.3), [this.darkMat, this.darkMat, this.darkMat, this.darkMat, m, m]);
-    sign.position.set(L.x + off[0] * (w / 2 - 0.6), y + sh / 2 + 0.8, L.z + off[1] * (d / 2 - 0.6));
-    sign.rotation.y = { S: Math.PI, N: 0, W: -Math.PI / 2, E: Math.PI / 2 }[L.facing];
-    this.group.add(sign);
+    const g = new THREE.BoxGeometry(sw, sh, 0.3);
+    remapUV(g, [4, 5], cell);
+    placeGeo(g, L.x + off[0] * (w / 2 - 0.6), y + sh / 2 + 0.8, L.z + off[1] * (d / 2 - 0.6), { S: Math.PI, N: 0, W: -Math.PI / 2, E: Math.PI / 2 }[L.facing]);
+    this.addStatic(this.signMat, faces(g, [4, 5]), false);
+    this.addStatic(this.darkMat, faces(g, [0, 1, 2, 3]));
   }
 
   // 朝街一面的一楼店面玻璃（夜里亮）
   storefront(L, r, GROUND) {
-    const t = storefront(r() * 40 | 0);
-    const m = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.15, metalness: 0.1 });
-    m.userData.night = true; this.nightMats.push(m);
+    const vi = (r() * 40 | 0) % 12, mats = (this.sfMats ||= []);
+    if (!mats[vi]) {   // 12 种店面，所有楼共用
+      const t = storefront(vi);
+      const m = mats[vi] = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.15, metalness: 0.1 });
+      m.userData.night = true; this.nightMats.push(m);
+    }
     const off = { S: [0, -1], N: [0, 1], W: [-1, 0], E: [1, 0] }[L.facing];
     const along = L.facing === 'S' || L.facing === 'N' ? L.w : L.d;
-    const pl = new THREE.Mesh(new THREE.PlaneGeometry(along - 1, GROUND - 1.1), m);
-    pl.position.set(L.x + off[0] * (L.w / 2 - 0.1), CURB + (GROUND - 1.1) / 2 + 0.15, L.z + off[1] * (L.d / 2 - 0.1));
-    pl.rotation.y = { S: Math.PI, N: 0, W: -Math.PI / 2, E: Math.PI / 2 }[L.facing];
-    this.group.add(pl);
+    const g = new THREE.PlaneGeometry(along - 1, GROUND - 1.1);
+    placeGeo(g, L.x + off[0] * (L.w / 2 - 0.1), CURB + (GROUND - 1.1) / 2 + 0.15, L.z + off[1] * (L.d / 2 - 0.1), { S: Math.PI, N: 0, W: -Math.PI / 2, E: Math.PI / 2 }[L.facing]);
+    this.addStatic(mats[vi], g, false);
   }
 
   // 把零碎几何（女儿墙、屋顶设备）各自合并成一个网格
@@ -309,8 +337,13 @@ export class City {
     if (this.parapetGeos?.length) { const m = new THREE.Mesh(mergeGeometries(this.parapetGeos), this.roofMat); m.castShadow = m.receiveShadow = true; this.group.add(m); }
     if (this.roofGeos?.length) { const m = new THREE.Mesh(mergeGeometries(this.roofGeos.map(g => g.index ? g.toNonIndexed() : g)), new THREE.MeshStandardMaterial({ color: 0x8a8d93, roughness: 0.7, metalness: 0.2 })); m.castShadow = m.receiveShadow = true; this.group.add(m); }
     this.parapetGeos = this.roofGeos = null;
+    for (const [mat, e] of this.buckets || []) {
+      const m = new THREE.Mesh(mergeGeometries(e.geos), mat); m.castShadow = e.cast; m.receiveShadow = true; this.group.add(m);
+    }
+    this.buckets = null;
     // Blender 细节模块（实例化）
-    for (const [name, mats] of Object.entries(this.inst)) instanced(name, mats, this.group, o => o.name.startsWith('sign_v'));
+    const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser']);   // 小件不投影，省一遍阴影绘制
+    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'))) if (NOSHADOW.has(name)) im.castShadow = false;
     if (this.ledges.length) {
       const lg = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), this.ledges.length);
       this.ledges.forEach(([m, c], i) => { lg.setMatrixAt(i, m); lg.setColorAt(i, c); });
@@ -335,21 +368,22 @@ export class City {
   shopSign(L, r, text) {
     const t = text || KOREAN_SIGNS[r() * KOREAN_SIGNS.length | 0];
     const hue = r() * 360 | 0;
-    const tx = textTex(t, { w: 512, h: 128, bg: `hsl(${hue},55%,12%)`, fg: `hsl(${hue},95%,72%)`, glow: 18, size: 0.62 });
-    const m = new THREE.MeshStandardMaterial({ map: tx, emissiveMap: tx, emissive: 0xffffff, emissiveIntensity: 1.6, roughness: 0.4 });
-    m.userData.night = true; this.nightMats.push(m);
+    const cell = this.signs2.cell(t, hue);
     const sw = Math.min(L.w * 0.8, 7), sh = sw / 4;
-    const sign = new THREE.Mesh(new THREE.BoxGeometry(sw, sh, 0.25), [this.curbMat, this.curbMat, this.curbMat, this.curbMat, m, m]);
     const off = { S: [0, -1], N: [0, 1], W: [-1, 0], E: [1, 0] }[L.facing];
     // 招牌朝向街道：S 侧楼的正面朝 -z
-    const fx = L.x + off[0] * (L.w / 2 + 0.15), fz = L.z + off[1] * (L.d / 2 + 0.15);
-    sign.position.set(fx, 4.2, fz);
-    sign.rotation.y = { S: Math.PI, N: 0, W: -Math.PI / 2, E: Math.PI / 2 }[L.facing];
-    this.group.add(sign);
-    // 雨棚
-    const aw = new THREE.Mesh(new THREE.BoxGeometry(sw, 0.12, 1.4), new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue / 360, 0.5, 0.35), roughness: 0.7 }));
-    aw.position.set(fx + off[0] * 0.7, 3.1, fz + off[1] * 0.7); aw.rotation.y = sign.rotation.y; aw.castShadow = true;
-    this.group.add(aw);
+    const fx = L.x + off[0] * (L.w / 2 + 0.15), fz = L.z + off[1] * (L.d / 2 + 0.15), ry = { S: Math.PI, N: 0, W: -Math.PI / 2, E: Math.PI / 2 }[L.facing];
+    const g = new THREE.BoxGeometry(sw, sh, 0.25);
+    remapUV(g, [4, 5], cell);
+    placeGeo(g, fx, 4.2, fz, ry);
+    this.addStatic(this.signMat, faces(g, [4, 5]), false);
+    this.addStatic(this.curbMat, faces(g, [0, 1, 2, 3]), false);
+    // 雨棚（8 种颜色）
+    const ai = Math.round(hue / 45) % 8, am = (this.awnMats ||= []);
+    am[ai] ||= new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(ai / 8, 0.5, 0.35), roughness: 0.7 });
+    const ag = new THREE.BoxGeometry(sw, 0.12, 1.4);
+    placeGeo(ag, fx + off[0] * 0.7, 3.1, fz + off[1] * 0.7, ry);
+    this.addStatic(am[ai], ag);
   }
 
   billboardScreen(L, h) {

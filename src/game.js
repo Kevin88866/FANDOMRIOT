@@ -4,6 +4,11 @@ import { Audio } from './engine/audio.js';
 import { City } from './world/city.js';
 import { loadActors } from './world/actors.js';
 import { loadModels, MODEL_LIST, model } from './engine/assets.js';
+import { settings, onSettings } from './engine/settings.js';
+import { Input, actionOf, codesFor, PAD } from './engine/input.js';
+import { migrateOldSave } from './engine/saves.js';
+import { Focus } from './ui/focus.js';
+import { Tutorial } from './ui/tutorial.js';
 import { Crowd } from './world/npc.js';
 import { Props } from './world/props.js';
 import { FX } from './fx/fx.js';
@@ -25,15 +30,36 @@ export class Game {
     this.scene = this.renderer.scene; this.camera = this.renderer.camera;
     this.audio = new Audio();
     this.time = 0; this.charScale = 1;
-    this.input = { up: 0, down: 0, left: 0, right: 0, run: 0, brake: 0, mouseActive: false };
+    this.input = new Input();      // 键鼠 + 手柄（同时也是本帧的移动状态：up/down/left/right/run/brake）
+    this.keyState = {};
     this.mode = 'menu';           // menu | play | photo | place | ui
     this.vehicles = [];           // 场景内车辆（玩家载具、订购卡车、警车）
     this.ui = new UI(this);
+    this.focus = new Focus(this.ui);
+    this.tutorial = new Tutorial(this);
+    this.input.toastPad = t => this.ui.toast(t, 'good');
+    const keysBar = () => {
+      document.getElementById('keys').innerHTML = this.ui.keysLine();
+      const K = a => this.input.K(a);
+      document.getElementById('photo-hint').innerHTML = this.input.device === 'pad' ? `${K('run')} 或 <kbd class="pad">A</kbd> 拍照 · ${K('rotL')}${K('rotR')} 变焦 · <kbd class="pad">B</kbd> 退出` : `鼠标左键 拍照 · 滚轮 变焦 · ${K('photo')} / 右键 退出`;
+    };
+    keysBar(); this.input.onDevice(keysBar); onSettings(keysBar);
+    this.applyUiSettings(); onSettings(() => this.applyUiSettings());
+  }
+
+  // 界面缩放、帧率显示
+  applyUiSettings() {
+    document.documentElement.style.setProperty('--ui-scale', settings.uiScale);
+    let f = document.getElementById('fps');
+    if (settings.showFps && !f) { f = document.createElement('div'); f.id = 'fps'; document.body.appendChild(f); }
+    if (f) f.classList.toggle('hidden', !settings.showFps);
   }
 
   async boot() {
     const bar = document.getElementById('lbar'), txt = document.getElementById('ltext');
     const step = (p, t) => { bar.style.width = (p * 100) + '%'; txt.textContent = t; };
+    migrateOldSave();
+    this.startTips();
     step(0.05, '加载天空…');
     await this.renderer.loadEnv('assets/hdr/venice_sunset_1k.hdr', 'assets/hdr/night.exr');
     step(0.15, '加载模型…');
@@ -64,38 +90,73 @@ export class Game {
     this.last = performance.now();
     requestAnimationFrame(t => this.loop(t));
     const l = document.getElementById('loading'); l.style.opacity = 0; setTimeout(() => l.remove(), 800);
-    this.ui.title();
+    clearInterval(this.tipTimer);
+    if (sessionStorage.getItem('fr_to_menu')) { sessionStorage.removeItem('fr_to_menu'); this.ui.mainMenu(); }
+    else this.ui.splash();
   }
+
+  // 加载界面的小贴士
+  startTips() {
+    const TIPS = ['骂刚打崩的选手，大家会认同；骂刚拿 MVP 的选手，会被反噬掉粉。', 'LED 卡车的标语是滚动的，等它滚到屏幕中间再按快门。', '拍到选手亲眼看到你的道具，是最值钱的名场面。',
+      '争议度太高会被限流、封号，甚至收到律师函。每周会自然回落。', '花圈排成一排、正对街道，"排面"会更好看。', '同一招反复用，看的人越来越少——换着花样来。',
+      '偶尔会莫名其妙爆火，也会石沉大海。这就是流量。', '粉丝团人数越多，集会和应援的场面越大。', '手柄也能玩：A 互动、Y 拍照、X 上下车、☰ 菜单。'];
+    const el = document.getElementById('ltip'); if (!el) return;
+    let i = Math.random() * TIPS.length | 0;
+    const show = () => { el.style.opacity = 0; setTimeout(() => { el.textContent = '💡 ' + TIPS[i++ % TIPS.length]; el.style.opacity = 1; }, 300); };
+    show(); this.tipTimer = setInterval(show, 3600);
+  }
+
+  // 回到主菜单：重新载入页面（场景、车辆、道具全部复位），跳过启动画面
+  leaveToMenu() { sessionStorage.setItem('fr_to_menu', '1'); location.reload(); }
 
   // ================= 输入 =================
   bindInput() {
-    const map = { KeyW: 'up', ArrowUp: 'up', KeyS: 'down', ArrowDown: 'down', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right', ShiftLeft: 'run', ShiftRight: 'run', Space: 'brake' };
+    const MOVE = ['up', 'down', 'left', 'right', 'run', 'brake'];
     addEventListener('keydown', e => {
       this.audio.init();
-      if (map[e.code]) { this.input[map[e.code]] = 1; if (e.code === 'Space') e.preventDefault(); }
+      if (this.ui.skipSplash) return;
+      if (this.ui.anyKey) { e.preventDefault(); this.ui.anyKey(); return; }
+      const act = actionOf(e.code);
+      // 菜单 / 面板：方向键移动焦点，回车确认，Esc 返回
+      if ((this.mode === 'ui' || this.mode === 'menu') && !this.ui.modal.classList.contains('hidden')) {
+        const t = e.target, typing = t && ((t.tagName === 'INPUT' && t.type === 'text') || t.tagName === 'TEXTAREA');
+        if (!typing) {
+          const nav = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.code];
+          if (nav) { e.preventDefault(); this.focus.move(...nav); return; }
+          if ((e.code === 'Enter' || e.code === 'NumpadEnter') && this.focus.cur) { e.preventDefault(); this.focus.activate(); return; }
+          if (e.code === 'Delete' && this.ui.slotDelete && this.focus.cur) { this.ui.slotDelete(this.focus.cur); return; }
+          if (this.ui.settingsTab && (e.code === 'KeyQ' || e.code === 'KeyE') && !e.repeat) { this.ui.cycleSettingsTab(e.code === 'KeyQ' ? -1 : 1); return; }
+        }
+        if (e.code === 'Escape' && !e.repeat) this.ui.escape?.();
+        if (e.code === 'Tab') e.preventDefault();
+        return;
+      }
+      if (MOVE.includes(act)) { this.keyState[act] = 1; if (e.code === 'Space') e.preventDefault(); }
+      if (e.code === 'Tab') e.preventDefault();
       if (e.repeat) return;
       if (this.mode === 'play') {
-        if (e.code === 'KeyE') this.interact();
-        if (e.code === 'KeyF') this.toggleVehicle();
-        if (e.code === 'KeyC') this.enterPhoto();
-        if (e.code === 'Tab') { e.preventDefault(); this.ui.inventory(); }
-        if (e.code === 'KeyM') this.bigMap = !this.bigMap;
-        if (e.code === 'KeyH') document.getElementById('objective').classList.toggle('collapsed');
-        if (e.code === 'Escape') this.ui.pause();
+        if (act === 'interact') this.interact();
+        else if (act === 'vehicle') this.toggleVehicle();
+        else if (act === 'photo') this.enterPhoto();
+        else if (act === 'inventory') this.ui.inventory();
+        else if (act === 'map') this.bigMap = !this.bigMap;
+        else if (act === 'objective') document.getElementById('objective').classList.toggle('collapsed');
+        else if (act === 'pause') this.ui.pause();
       } else if (this.mode === 'photo') {
-        if (e.code === 'KeyC' || e.code === 'Escape') this.exitPhoto();
+        if (act === 'photo' || act === 'pause') this.exitPhoto();
       } else if (this.mode === 'place') {
-        if (e.code === 'KeyQ') this.placer.rotate(0.2618);
-        if (e.code === 'KeyE') this.placer.rotate(-0.2618);
-        if (e.code === 'Escape') this.placer.cancel();
-      } else if (this.mode === 'ui' && e.code === 'Escape') this.ui.escape?.();
-      if (e.code === 'Tab') e.preventDefault();
+        if (codesFor('rotL').includes(e.code)) this.placer.rotate(0.2618);
+        else if (codesFor('rotR').includes(e.code)) this.placer.rotate(-0.2618);
+        else if (act === 'pause') this.placer.cancel();
+      }
     });
-    addEventListener('keyup', e => { if (map[e.code]) this.input[map[e.code]] = 0; });
+    addEventListener('keyup', e => { const act = actionOf(e.code); if (MOVE.includes(act)) this.keyState[act] = 0; });
+    addEventListener('blur', () => { this.keyState = {}; });
     addEventListener('pointerdown', () => this.audio.init());   // 浏览器要求用户交互后才能出声
     const cv = this.renderer.r.domElement;
     cv.addEventListener('mousedown', e => {
       this.audio.init();
+      if (this.ui.anyKey) return this.ui.anyKey();
       if (this.mode === 'place') return this.placer.click(e.button);
       if (this.mode === 'play' || this.mode === 'photo') {
         if (document.pointerLockElement !== cv) { cv.requestPointerLock?.(); return; }
@@ -105,10 +166,64 @@ export class Game {
     cv.addEventListener('contextmenu', e => e.preventDefault());
     addEventListener('mousemove', e => {
       if (document.pointerLockElement !== cv) return;
-      if (this.mode === 'play') { this.player.look(e.movementX, e.movementY); this.input.mouseActive = true; clearTimeout(this.mt); this.mt = setTimeout(() => this.input.mouseActive = false, 1200); }
-      else if (this.mode === 'photo') this.photo.look(e.movementX, e.movementY);
+      const k = settings.mouseSens, iy = settings.invertY ? -1 : 1;
+      if (this.mode === 'play') { this.player.look(e.movementX * k, e.movementY * k * iy); this.input.mouseActive = true; clearTimeout(this.mt); this.mt = setTimeout(() => this.input.mouseActive = false, 1200); }
+      else if (this.mode === 'photo') this.photo.look(e.movementX * k, e.movementY * k * iy);
     });
     addEventListener('wheel', e => { if (this.mode === 'place') this.placer.rotate(Math.sign(e.deltaY) * 0.2618); else if (this.mode === 'photo') this.photo.zoom(e.deltaY); else if (this.mode === 'play') this.player.camDist = THREE.MathUtils.clamp(this.player.camDist + e.deltaY * 0.005, 2.5, 18); });
+  }
+
+  // 每帧：合并键盘和手柄的移动输入；处理手柄按键（游戏内动作 / 菜单导航）
+  pollPad(dt, now) {
+    const I = this.input, down = I.poll(), [lx, ly, rx, ry] = I.axes, ks = this.keyState;
+    if (this.ui.skipSplash) { if (down.size) this.ui.skipSplash(); return; }
+    if (this.ui.anyKey) { if (down.size) this.ui.anyKey(); return; }
+    const veh = !!this.player?.vehicle;
+    I.up = Math.max(ks.up || 0, ly < 0 ? -ly : 0, veh ? I.rt || 0 : 0);
+    I.down = Math.max(ks.down || 0, ly > 0 ? ly : 0, veh ? I.lt || 0 : 0);
+    I.left = Math.max(ks.left || 0, lx < 0 ? -lx : 0);
+    I.right = Math.max(ks.right || 0, lx > 0 ? lx : 0);
+    I.run = Math.max(ks.run || 0, !veh && (I.rt || 0) > 0.5 ? 1 : 0);
+    I.brake = Math.max(ks.brake || 0, veh && I.isHeld(PAD.B) ? 1 : 0);
+    if (!I.pad) return;
+    const menuOpen = (this.mode === 'ui' || this.mode === 'menu') && !this.ui.modal.classList.contains('hidden');
+    if (menuOpen) {
+      const dx = lx || (I.isHeld(PAD.RIGHT) ? 1 : I.isHeld(PAD.LEFT) ? -1 : 0), dy = ly || (I.isHeld(PAD.DOWN) ? 1 : I.isHeld(PAD.UP) ? -1 : 0);
+      this.focus.stick(dx, dy, now);
+      if (down.has(PAD.A)) this.focus.activate();
+      if (down.has(PAD.B) || down.has(PAD.MENU)) this.ui.escape?.();
+      if (down.has(PAD.X) && this.ui.slotDelete && this.focus.cur) this.ui.slotDelete(this.focus.cur);
+      if (down.has(PAD.LB)) this.ui.cycleSettingsTab(-1);
+      if (down.has(PAD.RB)) this.ui.cycleSettingsTab(1);
+      if (Math.abs(ry) > 0.2) { const p = this.ui.modal.querySelector('.panel'); if (p) p.scrollTop += ry * 900 * dt; }
+      return;
+    }
+    const sens = settings.padSens, iy = settings.invertY ? -1 : 1;
+    if (this.mode === 'play') {
+      if (rx || ry) { this.player.look(rx * 950 * dt * sens, ry * 650 * dt * sens * iy); I.mouseActive = true; clearTimeout(this.mt); this.mt = setTimeout(() => I.mouseActive = false, 1200); }
+      if (down.has(PAD.A)) this.interact();
+      if (down.has(PAD.X)) this.toggleVehicle();
+      if (down.has(PAD.Y)) this.enterPhoto();
+      if (down.has(PAD.DOWN)) this.ui.inventory();
+      if (down.has(PAD.VIEW)) this.bigMap = !this.bigMap;
+      if (down.has(PAD.UP)) document.getElementById('objective').classList.toggle('collapsed');
+      if (down.has(PAD.MENU)) this.ui.pause();
+    } else if (this.mode === 'photo') {
+      const ax = rx || lx, ay = ry || ly;
+      if (ax || ay) this.photo.look(ax * 700 * dt * sens, ay * 480 * dt * sens * iy);
+      if (I.isHeld(PAD.LB)) this.photo.zoom(500 * dt);
+      if (I.isHeld(PAD.RB)) this.photo.zoom(-500 * dt);
+      if (down.has(PAD.RT) || down.has(PAD.A)) { this.photo.shoot(); I.rumble(0.15, 0.35, 70); }
+      if (down.has(PAD.B) || down.has(PAD.Y) || down.has(PAD.MENU)) this.exitPhoto();
+    } else if (this.mode === 'place') {
+      const m = this.placer.mouse;
+      m.x = THREE.MathUtils.clamp(m.x + lx * dt * 1.1 * sens, -1, 1); m.y = THREE.MathUtils.clamp(m.y - ly * dt * 1.1 * sens, -1, 1);
+      if (down.has(PAD.A) || down.has(PAD.RT)) this.placer.click(0);
+      if (down.has(PAD.B)) this.placer.click(2);
+      if (down.has(PAD.LB)) this.placer.rotate(0.2618);
+      if (down.has(PAD.RB)) this.placer.rotate(-0.2618);
+      if (down.has(PAD.MENU)) this.placer.cancel();
+    }
   }
 
   releaseMouse() { if (document.pointerLockElement) document.exitPointerLock(); }
@@ -116,7 +231,14 @@ export class Game {
 
   // ================= 主循环 =================
   loop(now) {
+    requestAnimationFrame(t => this.loop(t));
+    if (settings.fpsCap && now - (this.lastDraw || 0) < 1000 / settings.fpsCap - 1.5) return;
+    this.lastDraw = now;
     const raw = (now - this.last) / 1000, dt = Math.min(0.05, raw); this.last = now;
+    this.pollPad(dt, now);
+    if (this.state && this.mode !== 'menu') this.state.playTime = (this.state.playTime || 0) + Math.min(raw, 1);
+    this.tutorial.update(dt);
+    if (settings.showFps) { this.fpsT = (this.fpsT || 0) + raw; this.fpsF = (this.fpsF || 0) + 1; if (this.fpsT > 0.5) { const f = document.getElementById('fps'); if (f) f.textContent = Math.round(this.fpsF / this.fpsT) + ' FPS'; this.fpsT = 0; this.fpsF = 0; } }
     this.watchFps(raw);
     this.time += dt;
     if (this.mode === 'play' || this.mode === 'photo') this.tickDay(dt);
@@ -145,16 +267,15 @@ export class Game {
     if (this.state && (this.mode === 'play' || this.mode === 'photo')) this.ui.hud();
     const v = this.player.vehicle; this.audio.setEngine(!!v && this.mode !== 'ui', v ? Math.abs(v.speed) : 0);
     this.renderer.render();
-    requestAnimationFrame(t => this.loop(t));
   }
 
   // 高画质下持续卡顿（<30 帧）时，提示一次切换到中画质
   watchFps(raw) {
-    if (this.fpsHinted || this.renderer.quality !== 'high' || this.mode !== 'play') return;
+    if (this.fpsHinted || !['high', 'ultra'].includes(settings.preset) || this.mode !== 'play') return;
     this.fpsAcc = (this.fpsAcc || 0) + raw; this.fpsN = (this.fpsN || 0) + 1;
     if (this.fpsAcc > 6) {
       const fps = this.fpsN / this.fpsAcc; this.fpsAcc = 0; this.fpsN = 0;
-      if (fps < 30) { this.fpsHinted = true; this.ui.push('画面有点卡？', `当前约 ${Math.round(fps)} 帧。可以在 Esc → 设置 里切换到"中"画质`, ''); }
+      if (fps < 30) { this.fpsHinted = true; this.ui.push('画面有点卡？', `当前约 ${Math.round(fps)} 帧。可以在 菜单 → 设置 → 画面 里降低画质预设或渲染分辨率`, ''); }
     }
   }
 
@@ -168,7 +289,8 @@ export class Game {
 
   shake(amount, pos) {
     const d = pos ? pos.distanceTo(this.camera.position) : 0;
-    this.player.shake = Math.max(this.player.shake || 0, amount * Math.max(0.1, 1 - d / 120));
+    this.player.shake = Math.max(this.player.shake || 0, amount * settings.shake * Math.max(0.1, 1 - d / 120));
+    if (amount > 0.2) this.input.rumble(Math.min(1, amount), Math.min(1, amount * 0.6), 160);
   }
 
   // ================= 一天的流程 =================
@@ -197,7 +319,7 @@ export class Game {
     this.lockMouse();
     this.audio.music('night');
     this.toast(`第 ${s.week} 周 · 行动日开始（18:00 - 24:00）`, 'big');
-    if (s.week === 1 && s.season === 1) setTimeout(() => this.toast('先去「应援 & 抗议用品店」买东西（地图上的粉色点）', ''), 2500);
+    if (s.week === 1 && s.season === 1 && !this.tutorial.active) setTimeout(() => this.toast('先去「应援 & 抗议用品店」买东西（地图上的粉色点）', ''), 2500);
   }
 
   tickDay(dt) {
@@ -210,6 +332,7 @@ export class Game {
 
   endDay() {
     if (this.ending) return; this.ending = true;
+    this.tutorial.event('dayEnd');
     if (this.mode === 'photo') this.exitPhoto();
     if (this.mode === 'place') this.placer.cancel();
     for (const e of this.opps.list) if (e.state === 'active') this.opps.finish(e);
@@ -284,12 +407,12 @@ export class Game {
   updatePrompt() {
     const el = document.getElementById('prompt');
     const pt = this.nearestPoint(); let txt = '';
-    if (!this.player.vehicle && this.opps.nearStreamer(this.player.pos)) txt = '<kbd>E</kbd>接受街头主播的直播采访';
+    if (!this.player.vehicle && this.opps.nearStreamer(this.player.pos)) txt = `${this.input.K('interact')}接受街头主播的直播采访`;
     else if (pt) {
-      if (pt.kind === 'hq') txt = this.player.vehicle?.order ? `<kbd>E</kbd>把卡车停在 ${pt.label} 门口展示` : `<kbd>E</kbd>在 ${pt.label} 使用道具`;
-      else if (pt.kind === 'shop') txt = `<kbd>E</kbd>进入 ${pt.label}`;
-      else if (pt.kind === 'garage') txt = `<kbd>E</kbd>${pt.label}`;
-      else if (pt.kind === 'home') txt = `<kbd>E</kbd>回家（结束今天，去发帖）`;
+      if (pt.kind === 'hq') txt = this.player.vehicle?.order ? `${this.input.K('interact')}把卡车停在 ${pt.label} 门口展示` : `${this.input.K('interact')}在 ${pt.label} 使用道具`;
+      else if (pt.kind === 'shop') txt = `${this.input.K('interact')}进入 ${pt.label}`;
+      else if (pt.kind === 'garage') txt = `${this.input.K('interact')}${pt.label}`;
+      else if (pt.kind === 'home') txt = `${this.input.K('interact')}回家（结束今天，去发帖）`;
     } else if (!this.player.vehicle) {
       const nv = this.vehicles.find(v => !v.ai && !v.npc && v.root.position.distanceTo(this.player.pos) < 4.5);
       if (nv) txt = `<kbd>F</kbd>上车`;
@@ -340,6 +463,7 @@ export class Game {
   consume(order) { const inv = this.state.inventory; const i = inv.indexOf(order); if (i >= 0) inv.splice(i, 1); }
 
   useItem(order, hqId) {
+    this.tutorial.event('used');
     const item = ITEMS.find(i => i.id === order.item), hq = this.city.hq[hqId];
     const support = order.kind === 'support';
     this.consume(order);
@@ -381,6 +505,7 @@ export class Game {
 
   // 摆放完成：生成事件，按排面分加权拍照主体
   finishPlacement(c, sc) {
+    this.tutorial.event('placed');
     const { order, hqId, hq, item, placed } = c;
     const ev = this.newEvent(order, hqId);
     ev.layout = sc.score; ev.blockDoor = sc.blockDoor;
@@ -509,7 +634,7 @@ export class Game {
     } else {
       v.root.position.set(g.x, 0, g.z - 9); v.heading = -Math.PI / 2; v.root.rotation.y = v.heading;
       this.addVehicle(v); this.player.enter(v);
-      this.toast('开着卡车去目标总部门口，按 E 停车展示', 'good');
+      this.toast(`开着卡车去目标总部门口，按 ${this.input.K('interact')} 停车展示`, 'good');
     }
     this.ui.saveSoon();
   }

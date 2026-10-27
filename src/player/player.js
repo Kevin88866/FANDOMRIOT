@@ -46,7 +46,8 @@ export class Player {
         this.yaw += d * Math.min(1, dt * 2.2) * Math.min(1, Math.abs(v.speed) / 3);
       }
     } else {
-      const fwd = (input.up ? 1 : 0) - (input.down ? 1 : 0), side = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+      let fwd = (+input.up || 0) - (+input.down || 0), side = (+input.right || 0) - (+input.left || 0);
+      if (Math.hypot(fwd, side) < 0.2) fwd = side = 0;
       const run = input.run;
       const speed = run ? 6.2 : 2.1;
       if (fwd || side) {
@@ -86,7 +87,7 @@ export class Player {
     this.camPos.lerp(want, 1 - Math.pow(0.0005, dt));
     if (this.camPos.lengthSq() === 0 || this.snapCam) { this.camPos.copy(want); this.snapCam = false; }
     cam.position.copy(this.camPos);
-    if (this.shake > 0) { cam.position.x += (Math.random() - 0.5) * this.shake; cam.position.y += (Math.random() - 0.5) * this.shake; this.shake *= Math.pow(0.02, dt); }
+    if (this.shake > 0.002) { cam.position.x += (Math.random() - 0.5) * this.shake; cam.position.y += (Math.random() - 0.5) * this.shake; this.shake *= Math.pow(0.02, dt); }
     cam.lookAt(focus);
   }
 }

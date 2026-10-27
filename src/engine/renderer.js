@@ -9,6 +9,7 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import { settings, onSettings } from './settings.js';
 
 // 暗角 + 轻微色调
 const GradeShader = {
@@ -22,7 +23,7 @@ const GradeShader = {
 export class Renderer {
   constructor(canvas) {
     const r = this.r = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    r.setPixelRatio(this.pixelRatio());
     r.setSize(innerWidth, innerHeight);
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = 0.85;
@@ -30,13 +31,42 @@ export class Renderer {
     r.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 900);
-    this.quality = localStorage.getItem('fr_quality') || 'high';
-    if (this.quality === 'mid') r.setPixelRatio(1);   // 中画质：降低分辨率倍率、阴影精度，去掉环境光遮蔽
+    this.camera = new THREE.PerspectiveCamera(settings.fov, innerWidth / innerHeight, 0.1, 900);
+    this.quality = settings.preset;
 
     this.setupLights();
     this.setupComposer();
+    this.applySettings();
+    onSettings(() => this.applySettings());
     addEventListener('resize', () => this.resize());
+  }
+
+  pixelRatio() { return THREE.MathUtils.clamp(settings.renderScale, 0.5, 2); }
+
+  // 设置即时生效：渲染分辨率、阴影、环境光遮蔽、辉光、抗锯齿、视野
+  applySettings() {
+    const S = settings, r = this.r;
+    this.quality = S.preset;
+    const pr = this.pixelRatio();
+    if (Math.abs(r.getPixelRatio() - pr) > 1e-3) { r.setPixelRatio(pr); this.composer.setPixelRatio(pr); this.resize(); }
+    const sm = { off: 0, low: 1024, mid: 1536, high: 2048, ultra: 4096 }[S.shadows] ?? 2048;
+    if (r.shadowMap.enabled !== sm > 0) {
+      r.shadowMap.enabled = sm > 0; this.sun.castShadow = sm > 0;
+      this.scene.traverse(o => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; });
+    }
+    if (sm && this.sun.shadow.mapSize.x !== sm) { this.sun.shadow.mapSize.set(sm, sm); this.sun.shadow.map?.dispose(); this.sun.shadow.map = null; }
+    this.shadowSize = sm || 2048;
+    if (S.ao && !this.gtao) {
+      const g = this.gtao = new GTAOPass(this.scene, this.camera, innerWidth, innerHeight);
+      g.output = GTAOPass.OUTPUT.Default; g.blendIntensity = 0.85;
+      g.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 1.5, scale: 1 });
+      this.composer.insertPass(g, 1);
+    }
+    if (this.gtao) this.gtao.enabled = !!S.ao;
+    this.bloom.enabled = !!S.bloom;
+    this.smaa.enabled = !!S.aa;
+    this.baseFov = S.fov;
+    if (!this.fovLocked && this.camera.fov !== S.fov) { this.camera.fov = S.fov; this.camera.updateProjectionMatrix(); }
   }
 
   setupLights() {
@@ -51,8 +81,7 @@ export class Renderer {
     s.add(this.hemi);
     const sun = this.sun = new THREE.DirectionalLight(0xffc89a, 2.2);
     sun.castShadow = true;
-    const sm = this.quality === 'mid' ? 1024 : 2048;
-    sun.shadow.mapSize.set(sm, sm);
+    sun.shadow.mapSize.set(2048, 2048);
     const sc = sun.shadow.camera; sc.left = -70; sc.right = 70; sc.top = 70; sc.bottom = -70; sc.near = 1; sc.far = 400;
     sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
     s.add(sun, sun.target);
@@ -142,7 +171,7 @@ export class Renderer {
   followShadow(target) {
     // 阴影相机跟随玩家，按 texel 对齐防闪烁
     const d = (this.lightDir || this.sunDir).clone(); if (d.y < 0.15) d.y = 0.15; d.normalize();
-    const step = 140 / 2048;
+    const step = 140 / (this.shadowSize || 2048);
     const tx = Math.round(target.x / step) * step, tz = Math.round(target.z / step) * step;
     this.sun.target.position.set(tx, 0, tz);
     this.sun.position.set(tx + d.x * 150, d.y * 150, tz + d.z * 150);
@@ -152,22 +181,14 @@ export class Renderer {
     const w = innerWidth, h = innerHeight, r = this.r;
     const c = this.composer = new EffectComposer(r);
     c.addPass(new RenderPass(this.scene, this.camera));
-    if (this.quality === 'high') {
-      this.gtao = new GTAOPass(this.scene, this.camera, w, h);
-      this.gtao.output = GTAOPass.OUTPUT.Default;
-      this.gtao.blendIntensity = 0.85;
-      this.gtao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 1.5, scale: 1 });
-      c.addPass(this.gtao);
-    }
     this.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.55, 0.82);
     c.addPass(this.bloom);
     c.addPass(new OutputPass());
     this.grade = new ShaderPass(GradeShader);
     c.addPass(this.grade);
-    c.addPass(new SMAAPass(w * r.getPixelRatio(), h * r.getPixelRatio()));
+    c.addPass(this.smaa = new SMAAPass(w * r.getPixelRatio(), h * r.getPixelRatio()));
   }
 
-  setQuality(q) { this.quality = q; localStorage.setItem('fr_quality', q); location.reload(); }
 
   resize() {
     this.camera.aspect = innerWidth / innerHeight;

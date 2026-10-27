@@ -82,7 +82,7 @@ export const Screens = {
         </div>
       </div>
       <div class="bc-bottom"><div class="goals">${this.goalLines().join(' · ')}</div>
-        <div class="row"><button class="btn ghost" id="menu">标题</button><button class="btn" id="pl">选手一览</button><button class="btn pri" id="go">进入行动日 →</button></div></div>
+        <div class="row"><button class="btn ghost" id="menu">菜单</button><button class="btn" id="pl">选手一览</button><button class="btn pri" id="go">进入行动日 →</button></div></div>
     </div>`;
   },
 

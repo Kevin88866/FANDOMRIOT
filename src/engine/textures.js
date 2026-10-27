@@ -193,3 +193,31 @@ export function vsignAtlas(words = VSIGN_WORDS) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
+
+// 招牌图集：所有一楼霓虹招牌、楼顶招牌画在同一张大贴图上，城市里的招牌合并成一个网格（一次绘制）
+export class SignAtlas {
+  constructor(cols = 8, rows = 24, cw = 320, ch = 80) {
+    Object.assign(this, { cols, rows, cw, ch, n: 0, cells: new Map() });
+    [this.canvas, this.g] = canvas(cols * cw, rows * ch);
+    this.g.fillStyle = '#05050a'; this.g.fillRect(0, 0, cols * cw, rows * ch);
+    this.tex = new THREE.CanvasTexture(this.canvas); this.tex.colorSpace = THREE.SRGBColorSpace; this.tex.anisotropy = 4;
+  }
+  cell(text, hue) {
+    const hq = Math.round(hue / 30) % 12, key = text + '|' + hq;
+    if (this.cells.has(key)) return this.cells.get(key);
+    if (this.n >= this.cols * this.rows) { const all = [...this.cells.values()]; return all[this.n++ % all.length]; }
+    const i = this.n++, x = (i % this.cols) * this.cw, y = Math.floor(i / this.cols) * this.ch, g = this.g, h = hq * 30, W = this.cols * this.cw, H = this.rows * this.ch;
+    g.save(); g.beginPath(); g.rect(x, y, this.cw, this.ch); g.clip();
+    g.fillStyle = `hsl(${h},55%,12%)`; g.fillRect(x, y, this.cw, this.ch);
+    g.strokeStyle = `hsla(${h},90%,60%,.55)`; g.lineWidth = 3; g.strokeRect(x + 4, y + 4, this.cw - 8, this.ch - 8);
+    let fs = this.ch * 0.6;
+    const font = () => `900 ${fs}px "Noto Sans KR","Noto Sans SC","Microsoft YaHei",sans-serif`;
+    g.font = font(); while (g.measureText(text).width > this.cw * 0.86 && fs > 8) { fs *= 0.92; g.font = font(); }
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = `hsl(${h},100%,60%)`; g.shadowBlur = 14;
+    g.fillStyle = `hsl(${h},95%,74%)`; g.fillText(text, x + this.cw / 2, y + this.ch / 2 + 2);
+    g.restore();
+    const pad = 2, r = { u0: (x + pad) / W, u1: (x + this.cw - pad) / W, v0: 1 - (y + this.ch - pad) / H, v1: 1 - (y + pad) / H };
+    this.cells.set(key, r); this.tex.needsUpdate = true;
+    return r;
+  }
+}

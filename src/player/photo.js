@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { settings } from '../engine/settings.js';
 
 // 手机拍照：第一人称取景，按画面内容打分
 const TAG_NAMES = { subject: '主体', text: '标语清晰', logo: '队标入镜', crowd: '围观人群', explosion: '名场面', night: '夜景', star: '选手本人', reaction: '选手反应', press: '记者入镜' };
@@ -20,13 +21,14 @@ export class PhotoMode {
     const p = this.game.player;
     this.active = true; this.ui.classList.remove('hidden');
     this.yaw = p.yaw + Math.PI; this.pitch = -p.pitch * 0.3 + 0.1; this.fov = 55;
+    this.game.renderer.fovLocked = true;
     p.root.visible = false;
     this.game.audio?.click();
   }
   exit() {
     this.active = false; this.ui.classList.add('hidden');
     this.game.player.root.visible = !this.game.player.vehicle || this.game.player.vehicle.type === 'scooter';
-    this.game.camera.fov = 60; this.game.camera.updateProjectionMatrix();
+    this.game.renderer.fovLocked = false; this.game.camera.fov = settings.fov; this.game.camera.updateProjectionMatrix();
   }
 
   look(dx, dy) { const k = this.fov / 55; this.yaw -= dx * 0.0022 * k; this.pitch = THREE.MathUtils.clamp(this.pitch - dy * 0.0022 * k, -1.2, 1.3); }
@@ -140,6 +142,8 @@ export class PhotoMode {
       star: r.opp?.star || null, reaction: !!r.opp?.reaction, press: !!r.opp?.press, truckSlogan: !!(r.subject?.vehicle && r.tags.includes('text')) };
     if (photo.reaction) g.ui.achieve('reaction'); if (photo.press) g.ui.achieve('press');
     g.day.photos.push(photo);
+    g.lastThumb = img;
+    g.tutorial?.event('photo');
     this.flash.style.transition = 'none'; this.flash.style.opacity = 0.9;
     requestAnimationFrame(() => { this.flash.style.transition = 'opacity .35s'; this.flash.style.opacity = 0; });
     g.audio?.shutter();

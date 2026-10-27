@@ -29,13 +29,13 @@
   <div id="inventory"></div>
   <div id="prompt" class="hidden"></div>
   <div id="minimap"><canvas id="minimap-c" width="180" height="180"></canvas></div>
-  <div id="keys">WASD 移动 · Shift 跑 · E 互动 · F 上/下车 · C 手机拍照 · Tab 背包 · M 地图 · H 收起目标 · Esc 菜单</div>
+  <div id="keys"></div>
 </div>
 
 <div id="photo-ui" class="hidden">
   <div class="frame"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><div class="grid"></div></div>
   <div id="photo-tags"></div>
-  <div id="photo-hint">鼠标左键 拍照 · 滚轮 变焦 · C/右键 退出</div>
+  <div id="photo-hint"></div>
   <div id="photo-count"></div>
   <div id="photo-box"></div>
   <div id="photo-meter"><span>画面质量</span><div><i id="photo-meter-i"></i></div></div>
@@ -51,7 +51,10 @@
   <div class="logo">饭圈风云<small>FANDOM&nbsp;RIOT · SEOUL</small></div>
   <div class="lbar"><i id="lbar"></i></div>
   <div id="ltext">正在加载首尔...</div>
+  <div id="ltip"></div>
 </div>
+<div id="err" class="hidden"><div class="err-box"><h2>出错了 😵</h2><p>游戏遇到了一个错误。你可以继续游戏（可能不稳定），或者重新载入（会回到上次的自动存档）。</p>
+  <pre id="err-msg"></pre><div class="row"><button class="btn" id="err-copy">复制错误信息</button><button class="btn" id="err-go">继续游戏</button><button class="btn pri" id="err-reload">重新载入</button></div></div></div>
 
 <script type="module" src="src/main.js"></script>
 </body>

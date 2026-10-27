@@ -179,7 +179,7 @@ export function buildStreetDetails(game) {
   // ---------- 大路中央护栏、人行道花坛、消防栓 ----------
   const railMats = [];
   for (let x = -160; x <= 160; x += 3.8) { if (ROADS.some(rx => Math.abs(x - rx) < 9)) continue; railMats.push(place(x, 0.03, AVENUE_Z)); }
-  instanced('st_rail', railMats, grp);
+  for (const im of instanced('st_rail', railMats, grp)) im.castShadow = false;
   const planterMats = [];
   for (let x = -150; x <= 150; x += 15) for (const side of [-1, 1]) {
     if (ROADS.some(rx => Math.abs(x - rx) < 10)) continue;
@@ -187,7 +187,7 @@ export function buildStreetDetails(game) {
     planterMats.push(place(x + 7, CURB, z));
     city.colliders.push({ minX: x + 6.2, maxX: x + 7.8, minZ: z - 0.35, maxZ: z + 0.35, small: true });
   }
-  instanced('st_planter', planterMats, grp);
+  for (const im of instanced('st_planter', planterMats, grp)) im.castShadow = false;
   for (const [x, side] of [[-104, 1], [-16, -1], [44, 1], [104, -1], [134, 1]]) add('st_hydrant', x, CURB, AVENUE_Z + side * (roadWidth('z', AVENUE_Z) / 2 + 0.7), r() * 6);
 
   // ---------- 总部门前广场：两侧长椅 + 垃圾桶 + 花坛，靠路边一排护柱 ----------

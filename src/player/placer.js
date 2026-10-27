@@ -114,7 +114,7 @@ export class Placer {
     const sc = placed.length ? this.layoutScore() : null;
     const stars = sc ? '★'.repeat(Math.round((sc.score - 0.6) / 0.65 * 5)).padEnd(5, '☆') : '';
     this.ui.innerHTML = `<div class="place-card"><b>摆放 ${item.name}</b>　还剩 ${left} 件${sc ? `　排面 <span class="stars">${stars}</span>${sc.blockDoor ? '　<span class="neg">⚠ 堵住了大门</span>' : ''}` : ''}
-      <div class="sub">鼠标移动 · 左键 放下 · Q / E 或滚轮 旋转 · 右键 取消（退回背包）<br>小技巧：正对街道、排成一排、间距均匀，排面更好。堵门曝光更高，但保安会来清理。</div></div>`;
+      <div class="sub">${this.game.input.device === 'pad' ? '左摇杆 移动 · <kbd class="pad">A</kbd> 放下 · <kbd class="pad">LB</kbd><kbd class="pad">RB</kbd> 旋转 · <kbd class="pad">B</kbd> 取消（退回背包）' : '鼠标移动 · 左键 放下 · Q / E 或滚轮 旋转 · 右键 取消（退回背包）'}<br>小技巧：正对街道、排成一排、间距均匀，排面更好。堵门曝光更高，但保安会来清理。</div></div>`;
   }
 
   finish() {

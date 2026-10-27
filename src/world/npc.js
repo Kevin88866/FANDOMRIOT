@@ -52,8 +52,13 @@ export class Crowd {
     const cam = this.game.camera.position;
     for (const p of this.list) {
       const root = p.a.root, pos = root.position;
-      const far = pos.distanceToSquared(cam) > 110 * 110;
+      const d2 = pos.distanceToSquared(cam), far = d2 > 110 * 110;
       root.visible = !far;
+      // 只有镜头附近的路人投影（蒙皮模型很重，远处的阴影也看不清）
+      const near = d2 < 38 * 38;
+      // 远处的 Xbot 不画关节球（2 万多个三角形，远了看不出来）
+      if (p.a.kind === 'xbot') { p.joints ||= p.a.root.getObjectByName('Beta_Joints') || {}; p.joints.visible = d2 < 45 * 45; }
+      if (p.shadow !== near) { p.shadow = near; (p.meshes ||= (() => { const l = []; root.traverse(o => { if (o.isMesh) l.push(o); }); return l; })()).forEach(o => { o.castShadow = near; }); }
       let tgt = null, spd = p.speed;
       if (p.state === 'walk') tgt = p.loop[p.idx];
       else if (p.state === 'goto' || p.state === 'flee') { tgt = p.target; spd = p.state === 'flee' ? 5.5 : 2.6; }

@@ -137,13 +137,17 @@ export function standings(s) {
 }
 
 // ---------- 行动效果 ----------
+// 难度：收入倍率、争议度增长倍率
+export const DIFFICULTY = { easy: { income: 1.3, heat: 0.7 }, normal: { income: 1, heat: 1 }, hard: { income: 0.8, heat: 1.25 } };
+const diff = s => DIFFICULTY[s.difficulty] || DIFFICULTY.normal;
+
 export function itemCost(s, item) { return Math.round(item.price * (1 - 0.08 * s.skills.net)); }
 
 export function applyAction(s, ev) {
   // ev: {item, target(player name), kind}
   const item = ITEMS.find(i => i.id === ev.item), p = s.players[ev.target];
   const stealthK = 1 - 0.12 * s.skills.stealth;
-  s.heat = clamp(s.heat + item.heat * (s.patrol && ev.kind !== 'support' ? 1.5 : 1) * stealthK * (ev.kind === 'support' ? 0.3 : 1), 0, 120);
+  s.heat = clamp(s.heat + item.heat * (s.patrol && ev.kind !== 'support' ? 1.5 : 1) * stealthK * (ev.kind === 'support' ? 0.3 : 1) * diff(s).heat, 0, 120);
   if (p) {
     let dm = ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood);
     // 知耻后勇：被骂有概率反而振作（心态好时概率高）
@@ -214,7 +218,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   // 涨粉：观点越被认同涨得越多；反噬会掉粉
   let fans = Math.round(views * B.fanConv * Math.min(1.6, parts.match) / (1 + s.fans / B.fanSoftCap));
   if (backlash > 0) { const lost = Math.round(s.fans * backlash * 0.12 * T.backlash); fans = Math.round(fans * 0.4) - lost; }
-  const money = Math.round(views * B.wonPerView * P.cpm);
+  const money = Math.round(views * B.wonPerView * P.cpm * diff(s).income);
   return { views, fans, money, viral, flop, backlash, parts };
 }
 
@@ -231,7 +235,7 @@ export function endOfWeek(s, dayViews) {
   // 商单：粉丝多且关注度不高
   if (s.fans >= 5000) {
     const k = s.heat > 60 ? 0 : s.heat > 35 ? 0.5 : 1;
-    const inc = Math.round(s.fans * 12 * k * (1 + 0.1 * s.skills.net));
+    const inc = Math.round(s.fans * 12 * k * (1 + 0.1 * s.skills.net) * diff(s).income);
     if (inc > 0) { s.money += inc; log.push({ t: `品牌商单收入 ₩${inc.toLocaleString()}`, c: 'good' }); }
     else log.push({ t: '关注度太高，品牌方暂停了合作', c: 'bad' });
   }
