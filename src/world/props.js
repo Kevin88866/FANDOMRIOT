@@ -116,6 +116,17 @@ export class Props {
     this.place(m); return m;
   }
 
+  // 集会：8 个举牌的人站成两排（整体作为一个可摆放的道具）
+  rallyGroup(pos, faceRy, text, kind) {
+    const g = new THREE.Group();
+    for (let i = 0; i < 8; i++) {
+      const p = this.picket(new THREE.Vector3(-5.25 + i * 1.5, 0, (i % 2) * 1.1), Math.PI + (Math.random() - 0.5) * 0.3, text, kind);
+      this.scene.remove(p); this.list = this.list.filter(x => x !== p); g.add(p);
+    }
+    g.position.copy(pos); g.rotation.y = faceRy;
+    this.place(g); return g;
+  }
+
   // 集会用的手举牌
   picket(pos, faceRy, text, kind) {
     const g = new THREE.Group();

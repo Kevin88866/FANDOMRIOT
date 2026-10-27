@@ -25,6 +25,36 @@ export class UI {
     setTimeout(() => { el.style.transition = 'opacity .5s'; el.style.opacity = 0; setTimeout(() => el.remove(), 500); }, cls === 'big' ? 3800 : 2800);
   }
   showHud(on) { $('hud').classList.toggle('hidden', !on); }
+
+  // 手机推送式通知
+  push(title, sub = '', cls = '') {
+    const el = document.createElement('div'); el.className = 'push ' + cls;
+    const m = Math.floor(this.g.clockMin || 0);
+    el.innerHTML = `<div class="app"><span>${cls === 'bad' ? '⚠ 饭圈热搜' : '📱 饭圈热搜'}</span><span>${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}</span></div><b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}`;
+    const box = $('pushes'); box.prepend(el);
+    while (box.children.length > 3) box.lastChild.remove();
+    this.g.audio?.notify();
+    setTimeout(() => { el.style.transition = 'opacity .6s, transform .6s'; el.style.opacity = 0; el.style.transform = 'translateX(-20px)'; setTimeout(() => el.remove(), 600); }, cls === 'big' ? 7000 : 5500);
+  }
+
+  // 街头主播的直播采访：一句话选择
+  streamerInterview(e) {
+    const s = this.s;
+    e.interviewed = true;
+    const hot = s.trending[0] || Object.keys(s.players)[0];
+    this.open(`<h2>🔴 直播采访</h2><div class="sub">"各位家人们，我在战队总部门口遇到一位大粉！来聊两句？" —— 直播间 ${num(2000 + Math.random() * 8000)} 人在线</div>
+      <div class="cards" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="card" data-a="praise"><span class="tag good">夸</span><div class="t">"${esc(hot)} 最近真的很拼"</div><div class="d">温和、讨喜，涨粉稳定</div></div>
+        <div class="card" data-a="rant"><span class="tag evil">骂</span><div class="t">"${esc(hot)} 再这样打就别上了"</div><div class="d">直播间炸锅，涨粉多，争议度 +8</div></div>
+        <div class="card" data-a="no"><span class="tag">婉拒</span><div class="t">"不好意思，不方便露脸"</div><div class="d">什么也不发生</div></div>
+      </div>`, { esc: () => this.close() });
+    this.on('[data-a]', 'click', (ev, el) => {
+      const a = el.dataset.a, base = 200 + s.fans * 0.03;
+      if (a === 'praise') { const f = Math.round(base); s.fans += f; this.toast(`直播间好评如潮，粉丝 +${f}`, 'good'); }
+      if (a === 'rant') { const f = Math.round(base * (1.4 + Math.random())); s.fans += f; s.heat = Math.min(120, s.heat + 8); this.toast(`直播间吵翻了，粉丝 +${f}，争议度 +8`, 'bad'); }
+      this.close();
+    });
+  }
   open(html, { cinematic = false, esc: escFn = null } = {}) {
     if (this.g.mode !== 'menu') this.g.mode = 'ui';
     this.cinematic = cinematic; this.escape = escFn;
@@ -64,6 +94,9 @@ export class UI {
       h.obj.innerHTML = `<h4>赛季目标</h4>${this.goalLines().join('<br>')}<div class="sub" style="margin-top:6px">今日：照片 ${g.day.photos.length} 张 · 行动 ${g.day.events.length} 次 · 争议度 ${Math.round(s.heat)}</div>`;
       h.inv.innerHTML = s.inventory.slice(0, 6).map(o => `<div class="inv"><b>${itemOf(o.item).name}</b> → ${esc(o.target)}</div>`).join('') + (s.inventory.length > 6 ? `<div class="inv">+${s.inventory.length - 6}</div>` : '');
       this.minimap();
+      const opps = g.opps.hudList();
+      $('opps').innerHTML = opps.map(o => `<div class="opp ${o.live ? 'live' : ''}"><span class="ic">${o.icon}</span><div><b>${esc(o.title)}</b><div class="w">${o.live ? '进行中 · ' : o.time + ' · '}${esc(o.where)}</div></div></div>`).join('');
+      $('opps').style.top = (h.obj.offsetHeight + 28) + 'px';
     }
   }
 
@@ -86,6 +119,12 @@ export class UI {
       const p = pts[k]; if (!col[p.kind]) continue; const [a, b] = P(p.pos.x, p.pos.z);
       x.fillStyle = col[p.kind]; x.beginPath(); x.arc(a, b, big ? 7 : 5, 0, 7); x.fill();
       if (big) { x.fillStyle = '#fff'; x.font = '12px sans-serif'; x.fillText(p.label, a + 9, b + 4); }
+    }
+    for (const o of g.opps.hudList()) {
+      if (!o.pos) continue; const [a, b] = P(o.pos.x, o.pos.z);
+      const pulse = o.live ? 6 + Math.sin(g.time * 6) * 2 : 5;
+      x.strokeStyle = o.type === 'rival' ? '#27e1ff' : '#ffd34d'; x.lineWidth = 2; x.beginPath(); x.arc(a, b, pulse + 3, 0, 7); x.stroke();
+      x.font = `${big ? 16 : 12}px sans-serif`; x.fillText(o.icon, a - 7, b + 5);
     }
     for (const v of g.vehicles) { if (v === g.player.vehicle) continue; const [a, b] = P(v.root.position.x, v.root.position.z); x.fillStyle = v.order || v.shown || v.ai ? '#ff8a00' : '#888'; x.fillRect(a - 3, b - 3, 6, 6); }
     const [a, b] = P(me.x, me.z), hd = g.player.vehicle ? g.player.vehicle.heading : g.player.facing;

@@ -112,3 +112,25 @@ table.t tr.me{background:rgba(255,45,85,.12)}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .6s;z-index:40}
 .title-menu{display:flex;flex-direction:column;gap:12px;margin-top:40px;align-items:center}
 .title-menu .btn{width:260px;font-size:16px;padding:13px}
+
+/* ---------- v0.3：机会事件 / 推送 / 摆放 / 取景 ---------- */
+#opps{position:absolute;top:150px;right:18px;width:300px;display:flex;flex-direction:column;gap:6px}
+.opp{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:12px;display:flex;gap:10px;align-items:center;backdrop-filter:blur(8px)}
+.opp .ic{font-size:18px}.opp b{font-size:13px}.opp .w{color:var(--dim)}
+.opp.live{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 14px rgba(255,45,85,.55) inset}}
+#pushes{position:absolute;top:92px;left:18px;width:330px;display:flex;flex-direction:column;gap:8px}
+.push{background:rgba(245,247,252,.94);color:#111;border-radius:14px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:pin .35s cubic-bezier(.2,1.4,.4,1)}
+.push .app{font-size:11px;color:#666;display:flex;justify-content:space-between}
+.push b{display:block;font-size:14px;margin-top:2px}.push span{font-size:12px;color:#444}
+.push.good{border-left:4px solid #1fbf6a}.push.bad{border-left:4px solid #e0283c}.push.big{border-left:4px solid #ff2d55}
+@keyframes pin{from{opacity:0;transform:translateX(-30px)}to{opacity:1}}
+#place-ui{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:15}
+.place-card{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 18px;font-size:15px;min-width:520px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.place-card .sub{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.6}
+.stars{color:#ffd34d;letter-spacing:2px}
+#photo-box{position:absolute;display:none;border:2px solid rgba(255,211,77,.9);border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+#photo-box::after{content:attr(data-label);position:absolute;left:-2px;top:-24px;background:rgba(255,211,77,.92);color:#111;font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap}
+#photo-meter{position:absolute;right:9%;bottom:8%;display:flex;align-items:center;gap:8px;font-size:12px;background:rgba(0,0,0,.55);padding:6px 10px;border-radius:8px}
+#photo-meter div{width:160px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden}
+#photo-meter i{display:block;height:100%;width:0;transition:width .2s}

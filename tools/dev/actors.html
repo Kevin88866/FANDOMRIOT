@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- 开发用：检查所有人物 × 动画的组合是否正常（npm run serve 后打开 /tools/dev/actors.html） -->
+<html><head><meta charset="utf-8"><base href="../../"><style>body{margin:0;background:#222}</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three-build/three.module.min.js", "three/addons/": "./vendor/jsm/" } }</script></head>
+<body><script type="module">
+import * as THREE from 'three';
+import { loadActors, Actor, Models } from './src/world/actors.js';
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x30343c);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 2.5));
+const cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100); cam.position.set(0, 1.6, 9); cam.lookAt(0, 1.0, 0);
+await loadActors();
+const clips = (new URLSearchParams(location.search).get('clips') || 'idle,walk,run,agree,headshake,sambadance').split(',');
+const kinds = (new URLSearchParams(location.search).get('kinds') || 'michelle,soldier,xbot').split(',');
+const actors = [];
+kinds.forEach((k, row) => clips.forEach((c, col) => {
+  const a = new Actor(k); a.root.position.set((col - (clips.length - 1) / 2) * 2.2, 0, -row * 2.6); if (c === 'ref') { const tp = Models[k].tpose; if (tp) a.mixer.clipAction(tp).play(); } else if (c !== 'rest') a.play(c, 0); scene.add(a.root); actors.push(a);
+}));
+let t = performance.now();
+function loop(now) { const dt = Math.min(0.05, (now - t) / 1000); t = now; actors.forEach(a => a.update(dt)); r.render(scene, cam); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+window.ready = true;
+</script></body></html>

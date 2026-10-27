@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // 手机拍照：第一人称取景，按画面内容打分
-const TAG_NAMES = { subject: '主体', text: '标语清晰', logo: '队标入镜', crowd: '围观人群', explosion: '名场面', night: '夜景' };
+const TAG_NAMES = { subject: '主体', text: '标语清晰', logo: '队标入镜', crowd: '围观人群', explosion: '名场面', night: '夜景', star: '选手本人', reaction: '选手反应', press: '记者入镜' };
 
 export class PhotoMode {
   constructor(game) {
@@ -13,6 +13,7 @@ export class PhotoMode {
     this.countEl = document.getElementById('photo-count');
     this.flash = document.getElementById('flash');
     this.small = document.createElement('canvas'); this.small.width = 480; this.small.height = 300;
+    this.meter = document.getElementById('photo-meter-i'); this.boxEl = document.getElementById('photo-box');
   }
 
   enter() {
@@ -42,9 +43,14 @@ export class PhotoMode {
     this.tick = (this.tick || 0) + 1;
     if (this.tick % 10 === 0) {
       const r = this.evaluate(false);
-      const show = this.game.state.skills.photo >= 1 ? Object.keys(TAG_NAMES) : ['subject', 'explosion'];
+      const show = Object.keys(TAG_NAMES).filter(k => k !== 'night' && (k !== 'star' && k !== 'reaction' && k !== 'press' || r.tags.includes(k)));
       this.tagsEl.innerHTML = show.map(k => `<span class="${r.tags.includes(k) ? 'on' : ''}">${TAG_NAMES[k]}</span>`).join('') + (r.subject ? `<span class="on">${r.subject.label}</span>` : '');
       this.countEl.textContent = `今日照片 ${this.game.day.photos.length}/12`;
+      this.meter.style.width = Math.min(100, r.q / 1.6 * 100) + '%';
+      this.meter.style.background = r.q > 1.1 ? 'var(--good)' : r.q > 0.7 ? 'var(--warn)' : 'var(--bad)';
+      const bx = this.boxEl;
+      if (r.box) { Object.assign(bx.style, { display: 'block', left: r.box.x + 'px', top: r.box.y + 'px', width: r.box.w + 'px', height: r.box.h + 'px' }); bx.dataset.label = r.subject.label; }
+      else bx.style.display = 'none';
     }
   }
 
@@ -79,7 +85,7 @@ export class PhotoMode {
       const centered = 1 - Math.min(1, Math.hypot(c.x, c.y)) * 0.35;
       const sc = sizeScore * centered * occl * (s.weight || 1);
       if (sc > bestScore) { bestScore = sc; best = { ...s, area, dist, occl, centered, sizeScore }; }
-      if (s.text && area > 0.02 && dist < 40 && occl > 0.5) tags.add('text');
+      if (s.text && area > 0.02 && dist < 40 && occl > 0.5 && (!s.vehicle || s.vehicle.sloganVisible())) tags.add('text');
     }
     if (best) tags.add('subject');
     // 队标 / 总部招牌入镜
@@ -94,13 +100,32 @@ export class PhotoMode {
     // 名场面：爆炸 / 烟花 / 无人机成形
     if (g.time - (g.lastSpectacle?.t ?? -99) < 2.2 && frustum.containsPoint(g.lastSpectacle.pos)) tags.add('explosion');
     if (g.renderer.night > 0.6) tags.add('night');
+    // 机会事件：选手本人 / 选手看到你的道具 / 记者
+    const inFrame = o => { const b = new THREE.Box3().setFromObject(o); return !b.isEmpty() && frustum.intersectsBox(b); };
+    const opp = g.opps ? g.opps.photoTags(frustum, cam, inFrame) : { tags: [] };
+    for (const t of opp.tags) tags.add(t);
+    if (opp.reaction) tags.add('explosion');
 
     let q = best ? 0.25 + bestScore * 0.75 : 0.12;
     if (tags.has('text')) q += 0.15; if (tags.has('logo')) q += 0.18; if (tags.has('crowd')) q += Math.min(0.3, crowd * 0.04);
     if (tags.has('explosion')) q += 0.45; if (tags.has('night') && best?.glow) q += 0.1;
+    if (tags.has('star')) q += 0.25; if (tags.has('reaction')) q += 0.3; if (tags.has('press')) q += 0.15;
+    if (best?.layout) q *= best.layout;
     q *= 1 + 0.08 * g.state.skills.photo;
     q = THREE.MathUtils.clamp(q, 0.1, 1.6);
-    return { q, tags: [...tags], subject: best, crowd };
+    return { q, tags: [...tags], subject: best, crowd, opp, box: best ? this.screenBox(best.obj, cam) : null };
+  }
+
+  // 主体在屏幕上的包围框（像素）
+  screenBox(obj, cam) {
+    const box = new THREE.Box3().setFromObject(obj); if (box.isEmpty()) return null;
+    let x0 = 1, y0 = 1, x1 = -1, y1 = -1;
+    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+      const p = new THREE.Vector3(x, y, z).project(cam); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
+    }
+    const c = v => THREE.MathUtils.clamp(v, -1, 1);
+    x0 = c(x0); x1 = c(x1); y0 = c(y0); y1 = c(y1);
+    return { x: (x0 + 1) / 2 * innerWidth, y: (1 - y1) / 2 * innerHeight, w: (x1 - x0) / 2 * innerWidth, h: (y1 - y0) / 2 * innerHeight };
   }
 
   shoot() {
@@ -111,12 +136,14 @@ export class PhotoMode {
     const ctx = this.small.getContext('2d');
     ctx.drawImage(g.renderer.r.domElement, 0, 0, this.small.width, this.small.height);
     const img = this.small.toDataURL('image/jpeg', 0.82);
-    const photo = { img, q: r.q, tags: r.tags, eventId: r.subject?.eventId ?? null, label: r.subject?.label || '街景', t: g.clockMin, crowd: r.crowd };
+    const photo = { img, q: r.q, tags: r.tags, eventId: r.subject?.eventId ?? r.opp?.reaction?.eventId ?? null, label: r.subject?.label || (r.opp?.star ? `${r.opp.star} 本人` : '街景'), t: g.clockMin, crowd: r.crowd,
+      star: r.opp?.star || null, reaction: !!r.opp?.reaction, press: !!r.opp?.press };
     g.day.photos.push(photo);
     this.flash.style.transition = 'none'; this.flash.style.opacity = 0.9;
     requestAnimationFrame(() => { this.flash.style.transition = 'opacity .35s'; this.flash.style.opacity = 0; });
     g.audio?.shutter();
     const stars = '★'.repeat(Math.max(1, Math.round(r.q * 3))).padEnd(5, '☆');
-    g.toast(`📸 ${photo.label} · ${stars}${r.tags.includes('explosion') ? ' · 名场面！' : ''}`, r.q > 1 ? 'good' : '');
+    const extra = photo.reaction ? ' · 选手反应名场面！' : r.tags.includes('explosion') ? ' · 名场面！' : photo.star ? ` · 拍到了 ${photo.star}` : photo.press ? ' · 记者入镜' : '';
+    g.toast(`📸 ${photo.label} · ${stars}${extra}`, r.q > 1 ? 'good' : '');
   }
 }

@@ -9,6 +9,9 @@ import { FX } from './fx/fx.js';
 import { Player } from './player/player.js';
 import { Vehicle } from './player/vehicle.js';
 import { PhotoMode } from './player/photo.js';
+import { Placer } from './player/placer.js';
+import { Opportunities, Walker } from './world/opportunities.js';
+import { Actor } from './world/actors.js';
 import { ITEMS, TEAMS, VEHICLES, LEAGUE, BALANCE as B } from './content/data.js';
 import * as Sim from './sim/sim.js';
 import { UI } from './ui/ui.js';
@@ -20,7 +23,7 @@ export class Game {
     this.audio = new Audio();
     this.time = 0; this.charScale = 1;
     this.input = { up: 0, down: 0, left: 0, right: 0, run: 0, brake: 0, mouseActive: false };
-    this.mode = 'menu';           // menu | play | photo | ui
+    this.mode = 'menu';           // menu | play | photo | place | ui
     this.vehicles = [];           // 场景内车辆（玩家载具、订购卡车、警车）
     this.ui = new UI(this);
   }
@@ -42,6 +45,8 @@ export class Game {
     this.crowd = new Crowd(this, 28);
     this.player = new Player(this);
     this.photo = new PhotoMode(this);
+    this.placer = new Placer(this);
+    this.opps = new Opportunities(this);
     this.player.pos.set(-120, 0.18, 28 - 13);
     this.renderer.applyEnvIntensity();
     step(0.95, '编译着色器…');
@@ -71,6 +76,10 @@ export class Game {
         if (e.code === 'Escape') this.ui.pause();
       } else if (this.mode === 'photo') {
         if (e.code === 'KeyC' || e.code === 'Escape') this.exitPhoto();
+      } else if (this.mode === 'place') {
+        if (e.code === 'KeyQ') this.placer.rotate(0.2618);
+        if (e.code === 'KeyE') this.placer.rotate(-0.2618);
+        if (e.code === 'Escape') this.placer.cancel();
       } else if (this.mode === 'ui' && e.code === 'Escape') this.ui.escape?.();
       if (e.code === 'Tab') e.preventDefault();
     });
@@ -78,6 +87,7 @@ export class Game {
     const cv = this.renderer.r.domElement;
     cv.addEventListener('mousedown', e => {
       this.audio.init();
+      if (this.mode === 'place') return this.placer.click(e.button);
       if (this.mode === 'play' || this.mode === 'photo') {
         if (document.pointerLockElement !== cv) { cv.requestPointerLock?.(); return; }
         if (this.mode === 'photo') { if (e.button === 0) this.photo.shoot(); else if (e.button === 2) this.exitPhoto(); }
@@ -89,7 +99,7 @@ export class Game {
       if (this.mode === 'play') { this.player.look(e.movementX, e.movementY); this.input.mouseActive = true; clearTimeout(this.mt); this.mt = setTimeout(() => this.input.mouseActive = false, 1200); }
       else if (this.mode === 'photo') this.photo.look(e.movementX, e.movementY);
     });
-    addEventListener('wheel', e => { if (this.mode === 'photo') this.photo.zoom(e.deltaY); else if (this.mode === 'play') this.player.camDist = THREE.MathUtils.clamp(this.player.camDist + e.deltaY * 0.005, 2.5, 18); });
+    addEventListener('wheel', e => { if (this.mode === 'place') this.placer.rotate(Math.sign(e.deltaY) * 0.2618); else if (this.mode === 'photo') this.photo.zoom(e.deltaY); else if (this.mode === 'play') this.player.camDist = THREE.MathUtils.clamp(this.player.camDist + e.deltaY * 0.005, 2.5, 18); });
   }
 
   releaseMouse() { if (document.pointerLockElement) document.exitPointerLock(); }
@@ -110,8 +120,10 @@ export class Game {
     this.props.update(dt, this.time);
     this.fx.update(dt);
     this.updateTimers(dt);
+    this.updateGuards(dt);
     this.updateFade(dt);
-    if (this.mode === 'photo') this.photo.updateCamera(this.camera);
+    if (this.mode === 'place') this.placer.update();
+    else if (this.mode === 'photo') this.photo.updateCamera(this.camera);
     else if (this.mode === 'menu' || (this.mode === 'ui' && this.ui.cinematic)) this.cinematicCam(dt);
     else this.player.updateCamera(this.camera, dt);
     const focus = this.player.vehicle ? this.player.vehicle.root.position : this.player.pos;
@@ -155,6 +167,8 @@ export class Game {
     own.root.position.set(home.x - 3, 0, home.z - 5); own.heading = Math.PI / 2; own.root.rotation.y = own.heading; own.owned = true;
     this.addVehicle(own); this.myRide = own;
     this.crowd.list.forEach(p => { p.state = 'walk'; });
+    this.guards = [];
+    this.opps.plan();
     this.mode = 'play'; this.ui.showHud(true);
     this.lockMouse();
     this.toast(`第 ${s.week} 周 · 行动日开始（18:00 - 24:00）`, 'big');
@@ -165,12 +179,15 @@ export class Game {
     this.clockMin += dt / B.realSecPerGameMin;
     this.renderer.setTime(this.clockMin / 60);
     this.city.updateNight(this.renderer.night);
+    this.opps.update(dt);
     if (this.clockMin >= 24 * 60 && !this.ending) { this.toast('已经午夜了，回家发帖吧', 'big'); this.endDay(); }
   }
 
   endDay() {
     if (this.ending) return; this.ending = true;
     if (this.mode === 'photo') this.exitPhoto();
+    if (this.mode === 'place') this.placer.cancel();
+    for (const e of this.opps.list) if (e.state === 'active') this.opps.finish(e);
     this.fade(() => { this.ending = false; this.mode = 'ui'; this.ui.showHud(false); this.releaseMouse(); this.ui.posting(); });
   }
 
@@ -186,6 +203,7 @@ export class Game {
   }
 
   toast(text, cls = '') { this.ui.toast(text, cls); }
+  itemOf(id) { return ITEMS.find(i => i.id === id); }
 
   // ================= 车辆 =================
   addVehicle(v) { this.scene.add(v.root); this.vehicles.push(v); return v; }
@@ -194,7 +212,7 @@ export class Game {
   toggleVehicle() {
     const p = this.player;
     if (p.vehicle) { if (Math.abs(p.vehicle.speed) > 3) return this.toast('先停车（空格刹车）'); p.exit(); return; }
-    const near = this.vehicles.filter(v => !v.ai).map(v => [v, v.root.position.distanceTo(p.pos)]).filter(([, d]) => d < 4.5).sort((a, b) => a[1] - b[1])[0];
+    const near = this.vehicles.filter(v => !v.ai && !v.npc).map(v => [v, v.root.position.distanceTo(p.pos)]).filter(([, d]) => d < 4.5).sort((a, b) => a[1] - b[1])[0];
     if (near) { p.enter(near[0]); this.audio.click(); }
   }
 
@@ -226,19 +244,22 @@ export class Game {
   updatePrompt() {
     const el = document.getElementById('prompt');
     const pt = this.nearestPoint(); let txt = '';
-    if (pt) {
+    if (!this.player.vehicle && this.opps.nearStreamer(this.player.pos)) txt = '<kbd>E</kbd>接受街头主播的直播采访';
+    else if (pt) {
       if (pt.kind === 'hq') txt = this.player.vehicle?.order ? `<kbd>E</kbd>把卡车停在 ${pt.label} 门口展示` : `<kbd>E</kbd>在 ${pt.label} 使用道具`;
       else if (pt.kind === 'shop') txt = `<kbd>E</kbd>进入 ${pt.label}`;
       else if (pt.kind === 'garage') txt = `<kbd>E</kbd>${pt.label}`;
       else if (pt.kind === 'home') txt = `<kbd>E</kbd>回家（结束今天，去发帖）`;
     } else if (!this.player.vehicle) {
-      const nv = this.vehicles.find(v => !v.ai && v.root.position.distanceTo(this.player.pos) < 4.5);
+      const nv = this.vehicles.find(v => !v.ai && !v.npc && v.root.position.distanceTo(this.player.pos) < 4.5);
       if (nv) txt = `<kbd>F</kbd>上车`;
     } else txt = '';
     el.innerHTML = txt; el.classList.toggle('hidden', !txt);
   }
 
   interact() {
+    const st = !this.player.vehicle && this.opps.nearStreamer(this.player.pos);
+    if (st) return this.ui.streamerInterview(st);
     const pt = this.nearestPoint(); if (!pt) return;
     this.audio.click();
     if (pt.kind === 'shop') return this.ui.shop();
@@ -271,6 +292,7 @@ export class Game {
     const item = ITEMS.find(i => i.id === order.item), hq = this.city.hq[hqId];
     const support = order.kind === 'support';
     this.consume(order);
+    if (Placer.supports(item.prop)) return this.placer.start(order, hqId, item);
     const ev = this.newEvent(order, hqId);
     const label = `${item.name}→${order.target}`;
     const face = hq.faceRy;
@@ -306,10 +328,63 @@ export class Game {
     this.ui.saveSoon();
   }
 
+  // 摆放完成：生成事件，按排面分加权拍照主体
+  finishPlacement(c, sc) {
+    const { order, hqId, hq, item, placed } = c;
+    const ev = this.newEvent(order, hqId);
+    ev.layout = sc.score; ev.blockDoor = sc.blockDoor;
+    const label = `${item.name}→${order.target}`;
+    for (const o of placed) this.props.addSubject(o, { eventId: ev.id, label, text: true, weight: item.prop === 'banner' ? 1.1 : item.prop === 'rally' ? 1.2 : 1, layout: sc.score });
+    this.crowd.attract(hq.plaza, 80, item.prop === 'rally' ? 22 : 12, order.kind === 'support' ? 'cheer' : 'angry');
+    const stars = '★'.repeat(Math.round((sc.score - 0.6) / 0.65 * 5)).padEnd(5, '☆');
+    this.toast(`${item.name} 已布置 · 排面 ${stars}　掏出手机（C）拍照`, 'good');
+    if (sc.blockDoor) {
+      this.state.heat = Math.min(120, this.state.heat + 5);
+      this.ui.push('🚪 你把大门堵住了', '曝光 +30%，争议度 +5。保安一会儿会出来清理 —— 那也是名场面', 'bad');
+      setTimeout(() => this.callGuard(hq, placed, ev), 20000);
+    }
+    this.mode = 'play'; this.ui.showHud(true); this.lockMouse(); this.player.snapCam = true;
+    this.ui.saveSoon();
+  }
+
+  cancelPlacement(c) {
+    this.state.inventory.push(c.order);
+    this.mode = 'play'; this.ui.showHud(true); this.lockMouse(); this.player.snapCam = true;
+    this.toast('已取消，道具退回背包');
+  }
+
+  // 保安出来清理堵门的道具（期间拍到就是名场面）
+  callGuard(hq, pieces, ev) {
+    if (!this.day || !pieces.some(p => p.parent)) return;
+    const a = new Actor('soldier', { tint: new THREE.Color(0.55, 0.6, 0.7) });
+    const door = new THREE.Vector3(hq.cx, 0.18, hq.face + hq.dir * 0.8);
+    a.root.position.copy(door); this.scene.add(a.root);
+    const near = pieces.filter(p => p.parent && Math.abs(p.position.x - hq.cx) < 4 && (p.position.z - hq.face) * hq.dir < 5);
+    const path = near.map(p => ({ pos: p.position.clone().add(new THREE.Vector3(0, 0, -hq.dir * 0.9)).setY(0.18), wait: 2.6, anim: 'headshake', face: p.position.clone(), onArrive: () => { this.lastSpectacle = { t: this.time, pos: p.position.clone().setY(1.5) }; setTimeout(() => this.removeProp(p), 2400); } }));
+    path.push({ pos: door });
+    this.guards.push({ w: new Walker(this, a, path, 1.4), a });
+    this.ui.push('👮 保安出来清理大门口了', '现在拍照是名场面！', 'big');
+    (this.state.weekStory ||= []).push({ t: `${hq.team.name} 的保安清理了你堵在门口的道具`, c: 'bad' });
+  }
+
+  updateGuards(dt) {
+    for (const gd of this.guards || []) { gd.w.update(dt); if (gd.w.done && !gd.gone) { gd.gone = true; this.scene.remove(gd.a.root); } }
+    if (this.guards) this.guards = this.guards.filter(g => !g.gone);
+  }
+
+  removeProp(p) {
+    (this.anims ||= []).push({ obj: p, t: 0, s: p.scale.clone(), out: true });
+    setTimeout(() => { this.scene.remove(p); this.props.list = this.props.list.filter(x => x !== p); this.props.subjects = this.props.subjects.filter(su => su.obj !== p); }, 500);
+  }
+
   popIn(obj, delay = 0) { const s = obj.scale.clone(); obj.scale.setScalar(0.001); (this.anims ||= []).push({ obj, t: -delay, s }); }
 
   updateTimers(dt) {
-    for (const a of this.anims || []) { a.t += dt; const k = THREE.MathUtils.clamp(a.t / 0.45, 0, 1); const e = 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2); a.obj.scale.copy(a.s).multiplyScalar(Math.max(0.001, k > 0 ? e : 0.001)); }
+    for (const a of this.anims || []) {
+      a.t += dt; const k = THREE.MathUtils.clamp(a.t / 0.45, 0, 1);
+      const e = a.out ? 1 - k : 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
+      a.obj.scale.copy(a.s).multiplyScalar(Math.max(0.001, a.out || k > 0 ? e : 0.001));
+    }
     this.anims = (this.anims || []).filter(a => a.t < 0.5);
     if (this.droneShowT && this.time < this.droneShowT.until && this.droneShowT.obj.userData.formed) this.lastSpectacle = { t: this.time, pos: this.droneShowT.obj.position.clone() };
   }
@@ -356,6 +431,7 @@ export class Game {
   enterPhoto() {
     if (this.player.vehicle && Math.abs(this.player.vehicle.speed) > 2) return;
     this.mode = 'photo'; this.photo.enter();
+    document.getElementById('prompt').classList.add('hidden');
   }
   exitPhoto() { this.photo.exit(); this.mode = 'play'; this.player.snapCam = true; }
 
@@ -372,7 +448,7 @@ export class Game {
       v.root.position.copy(v.path[0]); v.heading = Math.PI / 2;
       const team = this.state.players[order.target].team; const hqId = this.city.hq[team] ? team : 'ARENA';
       const ev = this.newEvent(order, hqId);
-      this.props.addSubject(v.root, { eventId: ev.id, label: `${item.name}→${order.target}`, text: true, glow: true, weight: 1.3 });
+      this.props.addSubject(v.root, { eventId: ev.id, label: `${item.name}→${order.target}`, text: true, glow: true, weight: 1.3, vehicle: v });
       this.addVehicle(v);
       this.crowd.attract(new THREE.Vector3(0, 0, 30), 90, 10, support ? 'cheer' : 'angry');
       this.toast('司机已出发！卡车会沿大路来回经过两家总部，去路边拍它吧', 'good');
@@ -390,7 +466,7 @@ export class Game {
     const ev = this.newEvent(order, hqId);
     v.order = null; v.shown = true;
     this.player.exit();
-    this.props.addSubject(v.root, { eventId: ev.id, label: `${item.name}→${order.target}`, text: true, glow: true, weight: 1.4 });
+    this.props.addSubject(v.root, { eventId: ev.id, label: `${item.name}→${order.target}`, text: true, glow: true, weight: 1.4, vehicle: v });
     this.crowd.attract(v.root.position, 80, 12, order.kind === 'support' ? 'cheer' : 'angry');
     this.toast('卡车就位！LED 屏亮起来了 —— 拍照！', 'good');
   }

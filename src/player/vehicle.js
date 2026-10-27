@@ -179,6 +179,9 @@ export class Vehicle {
     return false;
   }
 
+  // LED 屏滚动时，标语正好在屏幕中间的时刻（拍照要抓这个时机）
+  sloganVisible() { if (!this.screenTex) return true; const o = ((this.screenTex.offset.x % 1) + 1) % 1; return o < 0.16 || o > 0.84; }
+
   update(dt, t) {
     if (this.screenTex) this.screenTex.offset.x = (t * 0.12) % 1;
   }

@@ -161,6 +161,8 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   parts.platform = pref;
   parts.trend = p && s.trendTopic === p.name ? 1.8 : (p && s.trending[0] === p.name ? 1.4 : 1);
   parts.limit = s.heat >= B.heatLimit ? 0.5 : 1;
+  // 名场面：选手亲眼看到你的道具 / 记者入镜 / 拍到选手本人 / 堵门
+  parts.moment = (photo.reaction ? 1.8 : 1) * (photo.press ? 1.4 : 1) * (photo.star && !photo.reaction ? 1.15 : 1) * (ev?.blockDoor ? 1.3 : 1);
   // 运气
   const editK = s.skills.edit;
   let luck = Math.exp(rand.normal() * B.luckSigma);
@@ -173,7 +175,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   parts.luck = luck;
   // 粉丝带来的基础触达是次线性的，避免滚雪球式指数增长
   const base = parts.impact * B.viewsPerImpact + B.fanReach * Math.pow(s.fans, B.fanReachExp);
-  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * luck;
+  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * parts.moment * luck;
   views = Math.round(views);
   // 涨粉：观点越被认同涨得越多；反噬会掉粉
   let fans = Math.round(views * B.fanConv * Math.min(1.6, parts.match) / (1 + s.fans / B.fanSoftCap));
