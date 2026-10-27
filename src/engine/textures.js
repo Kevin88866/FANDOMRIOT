@@ -175,3 +175,21 @@ export function logoTex(team) {
 }
 
 export const KOREAN_SIGNS = ['편의점', '치킨', '노래방', 'PC방', '카페', '약국', '한식당', '고기집', '부동산', '병원', '커피', '떡볶이', '호프', '24시', '김밥천국', '올리브영', '은행', '네일', '헤어샵', '편의점 GS', '맥주', '소주', '라면'];
+
+// 竖排招牌（세로 간판）图集：8 格，每格 128×640，一格一个店名
+export const VSIGN_WORDS = ['치킨', '노래방', 'PC방', '약국', '호프', '당구장', '한의원', '미용실'];
+export function vsignAtlas(words = VSIGN_WORDS) {
+  const [c, g] = canvas(1024, 640);
+  words.slice(0, 8).forEach((w, i) => {
+    const x0 = i * 128, hue = (i * 47 + 10) % 360;
+    g.fillStyle = `hsl(${hue},55%,9%)`; g.fillRect(x0, 0, 128, 640);
+    g.strokeStyle = `hsl(${hue},90%,60%)`; g.lineWidth = 6; g.strokeRect(x0 + 7, 7, 114, 626);
+    const chars = [...w].slice(0, 5), fs = Math.min(92, 560 / chars.length * 0.82);
+    g.font = `900 ${fs}px "Noto Sans KR","Noto Sans SC",sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = `hsl(${hue},100%,60%)`; g.shadowBlur = 16; g.fillStyle = `hsl(${hue},100%,80%)`;
+    chars.forEach((ch, k) => g.fillText(ch, x0 + 64, 320 + (k - (chars.length - 1) / 2) * fs * 1.1));
+    g.shadowBlur = 0;
+  });
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}

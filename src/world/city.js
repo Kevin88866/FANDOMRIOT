@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS } from '../engine/textures.js';
+import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS, vsignAtlas } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
-import { hasModel, instanced } from '../engine/assets.js';
+import { hasModel, instanced, partGeos, model } from '../engine/assets.js';
 
 // 首尔街区：6x6 路网，中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
 export const ROADS = [-150, -90, -30, 30, 90, 150];
@@ -34,6 +34,9 @@ export class City {
     this.lamps = [];
     this.signs = [];
     this.nightMats = [];
+    this.inst = {};          // Blender 细节模块的实例矩阵：模型名 → [Matrix4]
+    this.ledges = [];        // 楼层腰线（实例化的长条）
+    this.vsigns = [];        // 竖排招牌：[矩阵, 图集格子]
     this.rnd = mulberry(2024);
     this.build();
   }
@@ -176,10 +179,11 @@ export class City {
     }
     this.addCollider(L.x, L.z, L.w, L.d);
     this.parapet(L.x, L.z, topW, topD, h);
-    this.rooftop(L, r, h, topW, topD);
+    this.rooftop(L, r, h, topW, topD, floors);
+    this.facadeDetails(L, r, style, GROUND, FLOOR, tower ? podiumFloors : floors, tower ? floors - podiumFloors : 0, topW, topD);
     // 一楼招牌（霓虹）
     this.shopSign(L, r);
-    if (billboard) this.billboardScreen(L, h);
+    if (billboard) { this.billboardScreen(L, h); this.arenaFront(L, h); }
   }
 
   // 女儿墙（楼顶一圈矮墙），合并进一个大网格减少绘制次数
@@ -190,15 +194,75 @@ export class City {
     }
   }
 
-  rooftop(L, r, h, w, d) {
-    const y = CURB + h, parts = (this.roofGeos ||= []);
-    const n = 1 + (r() * 3 | 0);
-    for (let i = 0; i < n; i++) {   // 空调外机 / 设备间
-      const bw = 1.2 + r() * 2.5, bd = 1.2 + r() * 2, bh = 0.8 + r() * 1.6;
-      const g = new THREE.BoxGeometry(bw, bh, bd); g.translate(L.x + (r() - 0.5) * (w - bw - 1), y + bh / 2, L.z + (r() - 0.5) * (d - bd - 1)); parts.push(g);
+  // 楼面细节：每层腰线、外挂空调、竖排招牌（只做朝街的一面）
+  facadeFrame(L, w, d) {
+    const f = { S: [0, -1, Math.PI], N: [0, 1, 0], W: [-1, 0, -Math.PI / 2], E: [1, 0, Math.PI / 2] }[L.facing];
+    const c = new THREE.Vector3(L.x + f[0] * w / 2, 0, L.z + f[1] * d / 2), q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), f[2]);
+    return { along: f[0] ? d : w, q, at: (u, y, o) => new THREE.Vector3(u, y, o).applyQuaternion(q).add(c) };
+  }
+
+  facadeDetails(L, r, style, GROUND, FLOOR, lowFloors, highFloors, topW, topD) {
+    if (!hasModel('bd_ac')) return;
+    const LEDGE = ['#a3abb5', '#efe9dd', '#cfc6b8', null, '#86898f', '#dedbd4'][style];
+    const BAYS = [6, 4, 4, 8, 3, 5][style];
+    const resid = style === 1 || style === 2 || style === 5;
+    const one = new THREE.Vector3(1, 1, 1);
+    const part = (F, y0, n) => {
+      if (LEDGE) for (let k = 0; k <= n; k++) {
+        const depth = resid ? 0.16 : 0.09;
+        this.ledges.push([new THREE.Matrix4().compose(F.at(0, y0 + k * FLOOR + 0.09, depth / 2), F.q, new THREE.Vector3(F.along + 0.12, 0.17, depth)), new THREE.Color(LEDGE)]);
+      }
+      if (!resid && style !== 4) return;
+      const tiles = Math.max(1, Math.round(F.along / FACADE_TILE.w)), bays = tiles * BAYS, bw = F.along / bays;
+      for (let k = 0; k < n; k++) for (let b = 0; b < bays; b++) {
+        if (r() > 0.2) continue;
+        const u = -F.along / 2 + (b + 0.5) * bw + (r() - 0.5) * bw * 0.3;
+        (this.inst.bd_ac ||= []).push(new THREE.Matrix4().compose(F.at(u, y0 + k * FLOOR + 0.28, 0), F.q, one));
+      }
+    };
+    const F = this.facadeFrame(L, L.w, L.d);
+    part(F, CURB + GROUND, lowFloors);
+    if (highFloors) part(this.facadeFrame(L, topW, topD), CURB + GROUND + lowFloors * FLOOR, highFloors);
+    // 竖排招牌：住宅/砖楼/瓷砖楼，3 层以上，楼角伸出
+    if (resid && lowFloors >= 3 && r() < 0.5) {
+      for (const side of r() < 0.3 ? [-1, 1] : [r() < 0.5 ? -1 : 1]) {
+        this.vsigns.push([new THREE.Matrix4().compose(F.at(side * (F.along / 2 - 0.45), CURB + GROUND + 0.4, 0), F.q, one), r() * 8 | 0]);
+      }
     }
-    if (r() < 0.45) { const g = new THREE.CylinderGeometry(1, 1, 2, 12); g.translate(L.x + (r() - 0.5) * (w - 3), y + 1.6, L.z + (r() - 0.5) * (d - 3)); parts.push(g); }
-    if (r() < 0.3) { const g = new THREE.CylinderGeometry(0.05, 0.08, 6 + r() * 6, 5); g.translate(L.x + (r() - 0.5) * w * 0.5, y + 4, L.z + (r() - 0.5) * d * 0.5); parts.push(g); }
+  }
+
+  rooftop(L, r, h, w, d, floors = 5) {
+    const y = CURB + h, parts = (this.roofGeos ||= []);
+    if (hasModel('bd_stair')) {   // Blender 楼顶设备：楼梯间、冷凝机、水箱、卫星锅、天线（实例化）
+      const one = new THREE.Vector3(1, 1, 1), slots = [[-1, -1], [1, -1], [-1, 1], [1, 1]].sort(() => r() - 0.5);
+      const small = w * d < 90;
+      const rot = { S: Math.PI, N: 0, W: -Math.PI / 2, E: Math.PI / 2 }[L.facing] + (r() < 0.5 ? 0 : Math.PI);
+      const put = (name, k, ry = rot) => {
+        const [sx, sz] = slots[k];
+        const p = new THREE.Vector3(L.x + sx * Math.max(0, w / 2 - 2.2), y, L.z + sz * Math.max(0, d / 2 - 2.2));
+        (this.inst[name] ||= []).push(new THREE.Matrix4().compose(p, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), one));
+      };
+      if (floors > 3) put('bd_stair', 0);
+      put('bd_condenser', 1, rot + Math.PI / 2 * (r() * 4 | 0));
+      if (!small) {
+        if (r() < 0.6) put('bd_tank', 2);
+        if (r() < 0.35) put('bd_dish', 3, r() * 6);
+        else if (r() < 0.35) put('bd_antenna', 3);
+      }
+    } else {
+      const n = 1 + (r() * 3 | 0);
+      for (let i = 0; i < n; i++) {   // 空调外机 / 设备间
+        const bw = 1.2 + r() * 2.5, bd = 1.2 + r() * 2, bh = 0.8 + r() * 1.6;
+        const g = new THREE.BoxGeometry(bw, bh, bd); g.translate(L.x + (r() - 0.5) * (w - bw - 1), y + bh / 2, L.z + (r() - 0.5) * (d - bd - 1)); parts.push(g);
+      }
+      if (r() < 0.45) { const g = new THREE.CylinderGeometry(1, 1, 2, 12); g.translate(L.x + (r() - 0.5) * (w - 3), y + 1.6, L.z + (r() - 0.5) * (d - 3)); parts.push(g); }
+      if (r() < 0.3) { const g = new THREE.CylinderGeometry(0.05, 0.08, 6 + r() * 6, 5); g.translate(L.x + (r() - 0.5) * w * 0.5, y + 4, L.z + (r() - 0.5) * d * 0.5); parts.push(g); }
+    }
+    this.rooftopSigns(L, r, h, w, d);
+  }
+
+  rooftopSigns(L, r, h, w, d) {
+    const y = CURB + h;
     // 首尔特色：楼顶红色霓虹十字架 / 楼顶招牌
     const roll = r();
     if (h > 14 && h < 45 && roll < 0.12) this.neonCross(L.x + (r() - 0.5) * w * 0.4, y, L.z + (r() - 0.5) * d * 0.4);
@@ -245,6 +309,27 @@ export class City {
     if (this.parapetGeos?.length) { const m = new THREE.Mesh(mergeGeometries(this.parapetGeos), this.roofMat); m.castShadow = m.receiveShadow = true; this.group.add(m); }
     if (this.roofGeos?.length) { const m = new THREE.Mesh(mergeGeometries(this.roofGeos.map(g => g.index ? g.toNonIndexed() : g)), new THREE.MeshStandardMaterial({ color: 0x8a8d93, roughness: 0.7, metalness: 0.2 })); m.castShadow = m.receiveShadow = true; this.group.add(m); }
     this.parapetGeos = this.roofGeos = null;
+    // Blender 细节模块（实例化）
+    for (const [name, mats] of Object.entries(this.inst)) instanced(name, mats, this.group, o => o.name.startsWith('sign_v'));
+    if (this.ledges.length) {
+      const lg = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), this.ledges.length);
+      this.ledges.forEach(([m, c], i) => { lg.setMatrixAt(i, m); lg.setColorAt(i, c); });
+      lg.castShadow = lg.receiveShadow = true; lg.computeBoundingSphere(); this.group.add(lg);
+    }
+    const sp = partGeos('bd_vsign').filter(p => p.name.startsWith('sign_v'));
+    if (this.vsigns.length && sp.length) {   // 竖排招牌文字：按图集格子改 UV，全部合并成一个网格
+      const geos = [];
+      for (const [m, cell] of this.vsigns) for (const p of sp) {
+        const g = p.geometry.clone().applyMatrix4(m), uv = g.attributes.uv;
+        for (let i = 0; i < uv.count; i++) uv.setX(i, (cell + uv.getX(i)) / 8);
+        geos.push(g);
+      }
+      const t = vsignAtlas();
+      const mm = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.5, roughness: 0.4 });
+      mm.userData.night = true; this.nightMats.push(mm);
+      this.group.add(new THREE.Mesh(mergeGeometries(geos), mm));
+    }
+    this.inst = {}; this.ledges = []; this.vsigns = [];
   }
 
   shopSign(L, r, text) {
@@ -399,6 +484,18 @@ export class City {
     const s = this.hqBlocks.A, front = -1;            // 楼在北侧，正面朝南（-z）对着大路
     const id = LEAGUE.hqA, h = this.hqCommon(id, s, front);
     const { cx, bzc, W, D, faceZ, plazaZ, team } = h;
+    const lm = model('lm_t0');
+    if (lm) {   // Blender 地标：黑玻璃塔 + 竖鳍片 + 斜光带 + 顶部光环
+      lm.position.set(cx, CURB, bzc); lm.rotation.y = Math.PI;
+      this.dressLandmark(lm, team.color, this.facadeMat(3, 77, FACADE_TILE.w, FACADE_TILE.h));
+      this.group.add(lm);
+      this.addCollider(cx, bzc, W, D);
+      this.makeHQSign(id, team, cx, 55.5, faceZ - 1.5, Math.PI, 14, 6);
+      const logo = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshStandardMaterial({ map: logoTex(team), emissive: 0xffffff, emissiveMap: logoTex(team), emissiveIntensity: 0.6 }));
+      logo.position.set(cx + 10, 12.5, faceZ - 1.15); logo.rotation.y = Math.PI; this.group.add(logo);
+      this.registerHQ(id, h, Math.PI, logo);
+      return;
+    }
     const glass = new THREE.MeshStandardMaterial({ color: 0x0d0f14, metalness: 0.9, roughness: 0.12 });
     glass.userData.envMul = 1.6;
     const towerMat = this.facadeMat(3, 77, W, 62);
@@ -424,6 +521,18 @@ export class City {
     const s = this.hqBlocks.B, front = 1;             // 楼在南侧，正面朝北（+z）
     const id = LEAGUE.hqB, h = this.hqCommon(id, s, front);
     const { cx, bzc, W, D, faceZ, team } = h;
+    const lm = model('lm_hwl');
+    if (lm) {   // Blender 地标：浅色办公楼 + 战队色竖鳍片 + 大雨棚 + 退台楼顶
+      lm.position.set(cx, CURB, bzc);
+      this.dressLandmark(lm, team.color, this.facadeMat(0, 31, FACADE_TILE.w, FACADE_TILE.h));
+      this.group.add(lm);
+      this.addCollider(cx, bzc, W, D);
+      this.makeHQSign(id, team, cx, 34, faceZ + 1.5, 0, 18, 5);
+      const logo = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4.5), new THREE.MeshStandardMaterial({ map: logoTex(team), emissive: 0xffffff, emissiveMap: logoTex(team), emissiveIntensity: 0.6 }));
+      logo.position.set(cx - 11, 9.5, faceZ + 1.3); this.group.add(logo);
+      this.registerHQ(id, h, 0, logo);
+      return;
+    }
     const mat = this.facadeMat(0, 31, W, 44);
     const body = new THREE.Mesh(new THREE.BoxGeometry(W, 44, D), mat);
     body.position.set(cx, 22 + CURB, bzc); body.castShadow = body.receiveShadow = true; this.group.add(body);
@@ -439,6 +548,40 @@ export class City {
     const logo = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4.5), new THREE.MeshStandardMaterial({ map: logoTex(team), emissive: 0xffffff, emissiveMap: logoTex(team), emissiveIntensity: 0.6 }));
     logo.position.set(cx - 12, 8, faceZ + 1.3); this.group.add(logo);
     this.registerHQ(id, h, 0, logo);
+  }
+
+  // 地标模型换材质：facade → 楼面贴图（带夜间窗灯），emit_team → 战队色发光，paint → 战队色
+  dressLandmark(obj, color, fac) {
+    const tc = new THREE.Color(color);
+    const f = fac.clone(); f.vertexColors = true; f.userData.night = true; this.nightMats.push(f);
+    const glow = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: tc, emissiveIntensity: 2.6 });
+    glow.userData.night = true; this.nightMats.push(glow);
+    const paints = new Map();
+    obj.traverse(o => {
+      if (!o.isMesh) return;
+      const n = o.material.name || '';
+      if (n.startsWith('facade')) o.material = f;
+      else if (n === 'emit_team') o.material = glow;
+      else if (n === 'paint') { if (!paints.has(o.material)) { const m = o.material.clone(); m.color.copy(tc); paints.set(o.material, m); } o.material = paints.get(o.material); }
+      else if (n.startsWith('emit_') && !o.material.userData.night) { o.material.userData.night = true; this.nightMats.push(o.material); }
+    });
+  }
+
+  arenaFront(L, h) {
+    const lm = model('lm_arena');
+    if (!lm) return;
+    lm.position.set(L.x, CURB, L.z - L.d / 2 - 0.05); lm.rotation.y = Math.PI;
+    this.dressLandmark(lm, '#27e1ff', this.facadeMat(3, 1, FACADE_TILE.w, FACADE_TILE.h));
+    const c = document.createElement('canvas'); c.width = 128; c.height = 544; const g = c.getContext('2d');
+    g.fillStyle = '#05070c'; g.fillRect(0, 0, 128, 544); g.strokeStyle = '#27e1ff'; g.lineWidth = 6; g.strokeRect(6, 6, 116, 532);
+    g.fillStyle = '#ffffff'; g.font = '900 64px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const chars = [...LEAGUE.name, '·', ...'ARENA'].slice(0, 9), fs = Math.min(64, 500 / chars.length);
+    g.font = `900 ${fs}px "Noto Sans KR",sans-serif`; chars.forEach((ch, i) => g.fillText(ch, 64, 272 + (i - (chars.length - 1) / 2) * fs * 1.02));
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const pm = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.4 });
+    pm.userData.night = true; this.nightMats.push(pm);
+    lm.traverse(o => { if (o.isMesh && o.name.startsWith('sign_pylon')) o.material = pm; });
+    this.group.add(lm);
   }
 
   makeHQSign(id, team, x, y, z, ry, w, hgt) {

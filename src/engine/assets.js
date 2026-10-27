@@ -8,6 +8,8 @@ export const MODEL_LIST = [
   'st_lamp', 'st_signal', 'st_busstop', 'st_vending', 'st_pole', 'st_rail', 'st_planter', 'st_bench', 'st_bin',
   'st_bollard', 'st_hydrant', 'st_cone',
   'pr_wreath_w', 'pr_wreath_p', 'pr_basket', 'pr_banner', 'pr_picket', 'pr_fireworks',
+  'bd_ac', 'bd_vsign', 'bd_tank', 'bd_stair', 'bd_condenser', 'bd_dish', 'bd_antenna',
+  'lm_t0', 'lm_hwl', 'lm_arena',
 ];
 const store = {};
 const EMIT = { emit_head: 3, emit_tail: 2.5, emit_amber: 2, emit_warm: 1.6 };
@@ -32,8 +34,8 @@ function prepare(root) {
   root.traverse(o => {
     if (!o.isMesh) return;
     o.castShadow = true; o.receiveShadow = true;
-    if (TEXT_SURFACE.test(o.name)) flipV(o.geometry);
     const m = o.material;
+    if (TEXT_SURFACE.test(o.name) || m.name.startsWith('facade')) flipV(o.geometry);
     if (EMIT[m.name] !== undefined) m.emissiveIntensity = EMIT[m.name];
     if (m.name === 'glass') { m.envMapIntensity = 1.4; }
   });
@@ -101,4 +103,14 @@ export function registerNight(obj, city) {
     const m = o.material;
     if (o.isMesh && m && m.name && m.name.startsWith('emit_') && !set.has(m)) { set.add(m); m.userData.night = true; city.nightMats.push(m); }
   });
+}
+
+// 模型各部件的几何体（已变换到模型坐标系），用于手动合并（比如竖排招牌的文字面要按图集改 UV）
+export function partGeos(name) {
+  const src = store[name];
+  if (!src) return [];
+  src.updateMatrixWorld(true);
+  const out = [];
+  src.traverse(o => { if (o.isMesh) out.push({ name: o.name, material: o.material, geometry: o.geometry.clone().applyMatrix4(o.matrixWorld) }); });
+  return out;
 }

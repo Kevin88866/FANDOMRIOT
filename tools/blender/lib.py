@@ -207,6 +207,30 @@ def tube(name, pts, r, material=None, parent=None, res=8):
     return o
 
 
+def uvbox(name, size, loc=(0, 0, 0), material=None, tile=(12.0, 22.4), parent=None, faces='all'):
+    """贴楼面贴图用的盒子：UV 按世界尺寸（一格 = 一块立面贴图），上下叠放的盒子贴图能对齐。"""
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.scale(bm, vec=size, verts=bm.verts)
+    bmesh.ops.translate(bm, vec=loc, verts=bm.verts)
+    uv = bm.loops.layers.uv.new('UVMap')
+    tw, th = tile
+    for f in bm.faces:
+        n = f.normal
+        for l in f.loops:
+            x, y, z = l.vert.co
+            if abs(n.x) > 0.5:
+                l[uv].uv = ((y if n.x > 0 else -y) / tw, z / th)
+            elif abs(n.y) > 0.5:
+                l[uv].uv = ((-x if n.y > 0 else x) / tw, z / th)
+            else:
+                l[uv].uv = (x / tw, y / tw)
+    if faces == 'sides':
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if abs(f.normal.z) > 0.5], context='FACES')
+    o = link(name, bm, material, parent)
+    return o
+
+
 def extrude_profile(name, pts, width, material, parent=None, bevel=0.0, seg=3, angle=35, x0=None):
     """侧面轮廓（y, z 点列）沿 X 方向挤出成实体，宽 width。"""
     bm = bmesh.new()
@@ -278,7 +302,7 @@ def join(objs, name):
 
 # ---------------- 烘焙 / 导出 / 预览 ----------------
 KEEP_PREFIX = ('screen', 'sign_', 'ribbon', 'cloth', 'lamp_', 'keep_')
-SPECIAL_MAT = ('paint', 'glass', 'emit_', 'screen', 'cloth', 'leaf', 'skin')
+SPECIAL_MAT = ('paint', 'glass', 'emit_', 'screen', 'cloth', 'leaf', 'skin', 'facade')
 
 
 def _special(m):
@@ -471,14 +495,14 @@ def preview(name, res=(560, 360), samples=40, elev=18, azims=(-38, 145), dist_k=
         bpy.data.objects.remove(o, do_unlink=True)
 
 
-def build(name, fn, ao=True, prev=True, merge=True, **kw):
+def build(name, fn, ao=True, prev=True, merge=True, max_len=0.45, **kw):
     """标准流程：清场 → 建模 → 烘焙 AO → 导出 → 预览。"""
     t = time.time()
     print(f'[{name}]')
     reset()
     fn(**kw)
     if merge:
-        optimize()
+        optimize(max_len)
     if ao:
         bake_ao()
     export(name, vertex_colors=ao)
