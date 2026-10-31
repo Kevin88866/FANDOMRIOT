@@ -32,7 +32,7 @@ export class Player {
   }
 
   look(dx, dy) {
-    this.yaw -= dx * 0.0025;
+    this.yaw -= dx * 0.0025; this.lastLook = performance.now();
     this.pitch = THREE.MathUtils.clamp(this.pitch + dy * 0.002, -0.35, 1.1);
   }
 
@@ -117,9 +117,9 @@ export class Player {
         this.actor.play('breathe');
       }
       // 车辆模式：相机自动回到车后方
-      if (!input.mouseActive) {
+      if (!input.mouseActive && performance.now() - (this.lastLook || 0) > 800) {
         let d = (v.heading + Math.PI) - this.yaw; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2;
-        this.yaw += d * Math.min(1, dt * 2.2) * Math.min(1, Math.abs(v.speed) / 3);
+        this.yaw += d * Math.min(1, dt * 4.5) * Math.min(1, Math.abs(v.speed) / 3);
       }
     } else {
       let fwd = (+input.up || 0) - (+input.down || 0), side = (+input.right || 0) - (+input.left || 0);
@@ -131,7 +131,7 @@ export class Player {
         const dir = this.yaw + Math.PI - a;
         const target = dir;
         let d = target - this.facing; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2;
-        this.facing += d * Math.min(1, dt * 10);
+        this.facing += d * Math.min(1, dt * 16);
         this.vel.set(Math.sin(this.facing), 0, Math.cos(this.facing)).multiplyScalar(speed);
         if (!this.air) this.actor.play(run ? 'run' : 'walk', 0.2, run ? 1 : 1.0);
       } else {

@@ -156,12 +156,15 @@ export function applyAction(s, ev) {
     st.last = k; if (k === 'support') st.sup++; else st.atk++;
   }
   if (p) {
-    let dm = (ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood)) * (ev.hq === 'PARK' ? 0.5 : 1);
+    // 在选手自己的总部门口（其他战队：竞技场）全额；在别处用，选手只是在网上刷到 → 减半
+    const atHome = !ev.hq || ev.hq === p.team || (ev.hq === 'ARENA' && !LEAGUE.hqs.includes(p.team));
+    const far = atHome ? 1 : 0.5;
+    let dm = (ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood)) * far;
     // 知耻后勇：被骂有概率反而振作（心态好时概率高）
     if (dm < 0 && rand.r() < 0.12 + p.mood / 600) { dm = Math.abs(dm) * 0.5; ev.backfire = true; }
     noteInfluence(s, p.name, item.name, ev.kind, dm);
     p.mood = clamp(p.mood + dm, 0, 100);
-    if (ev.kind === 'support') p.votes += item.impact * 120;
+    if (ev.kind === 'support') p.votes += item.impact * 120 * far;
     else p.votes = Math.max(0, p.votes - item.impact * 30);
     p.heat = clamp(p.heat + item.impact / 6, 0, 100);
   }
@@ -210,7 +213,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0, 
   parts.limit = s.heat >= B.heatLimit ? 0.5 : 1;
   parts.club = 1 + Math.min(0.5, (s.club || 0) / 2000);   // 粉丝团帮你转发
   parts.caption = captionK;                                  // 自己写的文案
-  parts.venue = ev?.hq === 'PARK' && PARK_PROPS.includes(item?.prop) ? 1.35 : ev?.hq === 'CAFE' ? 1.1 : 1;
+  parts.venue = ev?.traffic ?? (ev?.hq === 'PARK' && PARK_PROPS.includes(item?.prop) ? 1.35 : ev?.hq === 'CAFE' ? 1.1 : 1);   // 人流
   parts.print = ev?.printed ? 1.15 : 1;                      // 打印店精印的标语更清楚
   // 名场面：选手亲眼看到你的道具 / 记者入镜 / 拍到选手本人 / 堵门
   parts.moment = (photo.reaction ? 1.8 : 1) * (photo.press ? 1.4 : 1) * (photo.star && !photo.reaction ? 1.15 : 1) * (ev?.blockDoor ? 1.3 : 1) * (photo.broadcast ? 1.6 : 1) * (photo.exclusive ? 1.7 : 1);

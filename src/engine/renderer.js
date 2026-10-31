@@ -191,6 +191,7 @@ export class Renderer {
     const d = (this.lightDir || this.sunDir).clone(); if (d.y < 0.15) d.y = 0.15; d.normalize();
     const step = 140 / (this.shadowSize || 2048);
     const tx = Math.round(target.x / step) * step, tz = Math.round(target.z / step) * step;
+    if (tx !== this.sun.target.position.x || tz !== this.sun.target.position.z) this.shadowDirty = true;   // 阴影相机移动了，这一帧必须重画阴影
     this.sun.target.position.set(tx, 0, tz);
     this.sun.position.set(tx + d.x * 150, d.y * 150, tz + d.z * 150);
   }
@@ -218,6 +219,10 @@ export class Renderer {
   render() {
     if (this.skyGroup) { this.skyGroup.position.copy(this.camera.position); this.stars.material.uniforms.t.value = performance.now() / 1000; }
     this.grade.uniforms.time.value = (performance.now() % 10000) / 1000;
+    // 阴影隔帧更新（静态城市占了阴影的大头，30 次/秒肉眼看不出区别）
+    this.frameN = (this.frameN || 0) + 1;
+    this.r.shadowMap.autoUpdate = false;
+    if (this.frameN % 2 === 0 || this.shadowDirty) { this.r.shadowMap.needsUpdate = true; this.shadowDirty = false; }
     this.composer.render();
   }
 }

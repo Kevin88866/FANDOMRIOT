@@ -10,8 +10,8 @@ export const LEAGUE = {
   full: 'LCK 2026 (恶搞版)',
   arena: 'LCK 竞技场',                   // 其余战队的"总部"（地图上的竞技场）
   billboard: 'LCK 2026 · 롤 파크',       // 竞技场大屏默认文字
-  hqA: 'T0',                            // 大路北侧总部的战队 id
-  hqB: 'HWL',                           // 大路南侧总部的战队 id
+  hqA: 'T0', hqB: 'HWL',                // 两家主角战队（有专门的地标总部）
+  hqs: ['T0', 'HWL', 'GZ', 'DM', 'KC'],  // 地图上有自己总部的战队（位置见 world/city.js 的 SPECIAL），其余战队在竞技场
   defaultFav: 'T0',
 };
 

@@ -13,6 +13,7 @@ export const ACTIONS = [
   ['vehicle', '上车 / 下车', 'KeyF', null, 'X'],
   ['photo', '手机拍照', 'KeyC', null, 'Y'],
   ['inventory', '背包', 'Tab', null, '十字键↓'],
+  ['useHere', '在这里用道具', 'KeyG', null, '十字键→'],
   ['map', '大地图', 'KeyM', null, 'View'],
   ['objective', '收起目标', 'KeyH', null, '十字键↑'],
   ['rotL', '摆放：左转', 'KeyQ', null, 'LB'],

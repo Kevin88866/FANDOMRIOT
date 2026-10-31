@@ -129,10 +129,27 @@ export class UI {
       [a, b] = P(r, 0); x.fillRect(a - 7 * sc, 0, 14 * sc, W);
     }
     const pts = g.city.points, col = { shop: '#ff4f9a', garage: '#27e1ff', home: '#ffd34d', hq: '#ff2d55', print: '#b36bff', cafe: '#ff9f43', metro: '#4cc3ff', pcbang: '#38e08a' };
+    // 地点：小地图只画图标；大地图写短名，标签互相避让（放不下就只留图标）
+    const SHORT = { shop: '用品店', garage: '车行', home: '家', print: '打印店', cafe: '粉丝咖啡', metro: '地铁广告', pcbang: '网吧' };
+    const boxes = [];
     for (const k in pts) {
       const p = pts[k]; if (!col[p.kind]) continue; const [a, b] = P(p.pos.x, p.pos.z);
-      x.fillStyle = col[p.kind]; x.beginPath(); x.arc(a, b, big ? 7 : 5, 0, 7); x.fill();
-      if (big) { x.fillStyle = '#fff'; x.font = '12px sans-serif'; x.fillText(p.label, a + 9, b + 4); }
+      if (a < -8 || b < -8 || a > W + 8 || b > W + 8) continue;
+      x.fillStyle = col[p.kind]; x.strokeStyle = '#0d1018'; x.lineWidth = 2;
+      const r = big ? 7 : 4.5;
+      if (p.kind === 'hq') { x.beginPath(); x.moveTo(a, b - r - 1); x.lineTo(a + r, b); x.lineTo(a, b + r + 1); x.lineTo(a - r, b); x.closePath(); x.fill(); x.stroke(); }
+      else { x.beginPath(); x.arc(a, b, r, 0, 7); x.fill(); x.stroke(); }
+      if (!big) continue;
+      const name = SHORT[p.kind] || (p.id === 'PARK' ? '汉江公园' : p.id === 'ARENA' ? '竞技场' : (g.city.hq[p.id]?.team?.name || p.label));
+      x.font = 'bold 12px sans-serif'; const tw = x.measureText(name).width + 6, th = 15;
+      for (const [ox, oy] of [[10, -7], [-tw - 10, -7], [-tw / 2, -th - 9], [-tw / 2, 9]]) {
+        const bx = { x: a + ox, y: b + oy, w: tw, h: th };
+        if (bx.x < 2 || bx.x + tw > W - 2 || bx.y < 2 || bx.y + th > W - 2) continue;
+        if (boxes.some(o => bx.x < o.x + o.w && bx.x + bx.w > o.x && bx.y < o.y + o.h && bx.y + bx.h > o.y)) continue;
+        boxes.push(bx);
+        x.fillStyle = 'rgba(10,12,20,.75)'; x.fillRect(bx.x, bx.y, tw, th);
+        x.fillStyle = '#fff'; x.fillText(name, bx.x + 3, bx.y + 12); break;
+      }
     }
     for (const o of g.opps.hudList()) {
       if (!o.pos) continue; const [a, b] = P(o.pos.x, o.pos.z);
@@ -178,8 +195,8 @@ export class UI {
   keysLine() {
     const K = a => this.g.input.K(a);
     return this.g.input.device === 'pad'
-      ? `左摇杆 移动 · 右摇杆 视角 · RT 奔跑/油门 · LT 刹车 · ${K('vehicle')} 上下车 · ${K('interact')} 互动/跳 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('pause')} 菜单`
-      : `${K('up')}${K('left')}${K('down')}${K('right')} 移动 · ${K('run')} 跑 · ${K('brake')} 跳（开车时刹车）· ${K('vehicle')} 上下车 · ${K('interact')} 互动 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('objective')} 收起目标 · 滚轮 拉近/变焦 · ${K('pause')} 菜单`;
+      ? `左摇杆 移动 · 右摇杆 视角 · RT 奔跑/油门 · LT 刹车 · ${K('vehicle')} 上下车 · ${K('interact')} 互动/跳 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('useHere')} 用道具 · ${K('map')} 地图 · ${K('pause')} 菜单`
+      : `${K('up')}${K('left')}${K('down')}${K('right')} 移动 · ${K('run')} 跑 · ${K('brake')} 跳（开车时刹车）· ${K('vehicle')} 上下车 · ${K('interact')} 互动 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('useHere')} 在这里用道具 · ${K('map')} 地图 · ${K('objective')} 收起目标 · 滚轮 拉近/变焦 · ${K('pause')} 菜单`;
   }
 
   howto(back) {
@@ -196,7 +213,7 @@ export class UI {
 
   // ================= 新游戏 =================
   newGame() {
-    this.open(`<h2>选择你的主队</h2><div class="sub">你是谁的粉丝？主队决定第 3 赛季的目标。${teamOf(LEAGUE.hqA).name} 和 ${teamOf(LEAGUE.hqB).name} 的总部就在地图中央，其余战队在 ${LEAGUE.arena}。</div>
+    this.open(`<h2>选择你的主队</h2><div class="sub">你是谁的粉丝？主队决定第 3 赛季的目标。${LEAGUE.hqs.map(id => teamOf(id).name).join('、')} 的总部分散在城市各处，其余战队在地图中间的 ${LEAGUE.arena}。</div>
       <div class="cards">${TEAMS.map(t => `<div class="card" data-t="${t.id}" style="border-left:4px solid ${t.color}"><div class="t">${esc(t.name)}</div><div class="d">${t.players.map(p => esc(p[0])).join(' · ')}</div></div>`).join('')}</div>`, { cinematic: true, esc: () => this.mainMenu() });
     this.on('[data-t]', 'click', (e, el) => this.pickRoute(el.dataset.t));
   }
@@ -380,12 +397,16 @@ export class UI {
 
   useItems(hqId) {
     const s = this.s, hq = this.g.city.hq[hqId];
-    const here = o => hqId === 'PARK' ? Sim.PARK_PROPS.includes(itemOf(o.item).prop) : this.locationOf(o) === hqId;
-    const list = s.inventory.filter(o => !itemOf(o.item).truck && here(o));
-    const other = s.inventory.filter(o => !itemOf(o.item).truck && !here(o)).length;
-    this.open(`<h2>${esc(hq.team.name)} ${hqId === 'ARENA' || hqId === 'PARK' ? '' : '总部门口'}</h2>${hqId === 'PARK' ? '<div class="news">集会、烟花、无人机、应援棒、灯牌、气球在这里曝光 ×1.35；但选手看不到，心态影响减半。</div>' : ''}
-      <div class="sub">${list.length ? '选择要使用的道具。布置好后记得掏手机拍照（C）。' : '背包里没有能在这里用的道具。'}${other ? ` 还有 ${other} 件道具要去别的地点用。` : ''}</div>
-      <div class="cards">${list.map((o, i) => { const it = itemOf(o.item); return `<div class="card" data-u="${i}"><span class="tag ${o.kind === 'support' ? 'good' : 'evil'}">${o.kind === 'support' ? '应援' : '抗议'}</span><div class="t">${it.name}</div><div class="d">→ ${esc(o.target)}<br>“${esc(o.text)}”</div></div>`; }).join('')}</div>
+    // 道具在哪都能用；只有臭鸡蛋 / 涂鸦 / 投影需要一面墙
+    const WALL = ['eggs', 'graffiti', 'projector'];
+    const ok = o => !itemOf(o.item).truck && (!WALL.includes(itemOf(o.item).prop) || !hq.site || hq.wall) && !(hqId === 'PARK' && WALL.includes(itemOf(o.item).prop));
+    const list = s.inventory.filter(ok);
+    const wallOnly = s.inventory.filter(o => !itemOf(o.item).truck && !ok(o)).length;
+    const best = o => this.locationOf(o) === hqId;
+    const title = hq.site ? '在这里使用道具' : `${esc(hq.team.name)} ${hqId === 'ARENA' || hqId === 'PARK' ? '' : '总部门口'}`;
+    this.open(`<h2>${title}</h2>
+      <div class="sub">${list.length ? '道具在哪都能用：在目标选手的总部门口用，心态影响全额，还可能被他亲眼看到；在别处用，心态影响减半。人越多的地方曝光越高。' : '背包里没有能在这里用的道具。'}${wallOnly ? ` 有 ${wallOnly} 件（臭鸡蛋 / 涂鸦 / 投影）要站在楼前才能用。` : ''}</div>
+      <div class="cards">${list.map((o, i) => { const it = itemOf(o.item), tr = this.g.trafficAt(hqId, it, o.target); return `<div class="card" data-u="${i}"><span class="tag ${o.kind === 'support' ? 'good' : 'evil'}">${o.kind === 'support' ? '应援' : '抗议'}</span><div class="t">${it.name}</div><div class="d">→ ${esc(o.target)}<br>“${esc(o.text)}”<br><span class="${best(o) ? 'pos' : 'dim'}">${best(o) ? '★ 目标总部门口' : '心态影响减半'} · 人流 ×${tr}</span></div></div>`; }).join('')}</div>
       <div class="row" style="margin-top:14px"><button class="btn" id="x">离开</button></div>`, { esc: () => this.close() });
     $('x').onclick = () => this.close();
     this.on('[data-u]', 'click', (e, el) => { const o = list[+el.dataset.u]; this.close(false); this.g.useItem(o, hqId); });
@@ -393,10 +414,12 @@ export class UI {
 
   inventory() {
     const s = this.s;
-    this.open(`<h2>背包</h2>${s.inventory.length ? s.inventory.map(o => { const it = itemOf(o.item); const loc = it.truck ? '车行提车' : this.locationOf(o) === 'ARENA' ? LEAGUE.arena : teamOf(this.locationOf(o)).name + ' 总部'; return `<div class="news"><b>${it.name}</b> → ${esc(o.target)} · “${esc(o.text)}” <span style="color:var(--dim)">· 使用地点：${esc(loc)}</span></div>`; }).join('') : '<div class="sub">空的。去用品店买点东西吧。</div>'}
+    this.open(`<h2>背包</h2>${s.inventory.length ? s.inventory.map(o => { const it = itemOf(o.item); const loc = it.truck ? '车行提车' : this.locationOf(o) === 'ARENA' ? LEAGUE.arena : teamOf(this.locationOf(o)).name + ' 总部'; return `<div class="news"><b>${it.name}</b> → ${esc(o.target)} · “${esc(o.text)}” <span style="color:var(--dim)">· ${it.truck ? '' : '效果最好：'}${esc(loc)}</span></div>`; }).join('') : '<div class="sub">空的。去用品店买点东西吧。</div>'}
+      ${this.g.day && s.inventory.some(o => !itemOf(o.item).truck) ? `<div class="row" style="margin-top:10px"><button class="btn pri" id="here">在这里使用道具（${this.g.input.K('useHere')}）</button></div>` : ''}
       <h3>今日照片（${this.g.day?.photos.length || 0}）</h3><div class="photos">${(this.g.day?.photos || []).map(p => `<div class="photo"><img src="${p.img}"><span class="q">${'★'.repeat(Math.max(1, Math.round(p.q * 3)))} ${esc(p.label)}</span></div>`).join('')}</div>
       <div class="row" style="margin-top:14px"><button class="btn pri" id="x">关闭</button></div>`, { esc: () => this.close() });
     $('x').onclick = () => this.close();
+    if ($('here')) $('here').onclick = () => { this.close(false); this.useItems(this.g.siteHere()); };
   }
 
   // ================= 发帖 =================

@@ -218,13 +218,13 @@ export class Vehicle {
     else this.speed *= Math.pow(0.45, dt);
     if (input.brake) this.speed *= Math.pow(0.05, dt);
     this.speed = THREE.MathUtils.clamp(this.speed, -this.maxSpeed * 0.35, this.maxSpeed);
-    this.steer = THREE.MathUtils.lerp(this.steer, steerIn, Math.min(1, dt * 6));
+    this.steer = THREE.MathUtils.lerp(this.steer, steerIn, Math.min(1, dt * 12));
     this.integrate(dt, city);
   }
 
   integrate(dt, city) {
     const L = this.T.len;
-    const turnRate = this.steer * Math.min(1, Math.abs(this.speed) / 4) * (2.2 / Math.max(2.5, L * 0.55)) * 1.6;
+    const turnRate = this.steer * Math.min(1, Math.abs(this.speed) / 2) * (2.2 / Math.max(2.5, L * 0.55)) * 1.8;
     this.heading += turnRate * Math.sign(this.speed) * dt + this.spin * dt;
     const p = this.root.position;
     p.x += Math.sin(this.heading) * this.speed * dt + this.slide.x * dt;
@@ -248,7 +248,7 @@ export class Vehicle {
       w.children.forEach(c => c.rotation.x += this.speed * dt / 0.45);
       if (w.userData.front) w.rotation.y = this.steer * 0.45;
     }
-    if (city && this.type !== 'scooter') p.y = THREE.MathUtils.lerp(p.y, city.groundY(p.x, p.z), 0.3);
+    if (city) p.y = THREE.MathUtils.lerp(p.y, city.groundY(p.x, p.z), this.type === 'scooter' ? 0.5 : 0.3);
   }
 
   // AI：沿路点行驶

@@ -72,7 +72,7 @@ export class Opportunities {
 
   // 优先挑和玩家有关的人（背包里有针对他的道具、赛季目标）
   pickPlayer(used) {
-    const s = this.s, hqTeams = [LEAGUE.hqA, LEAGUE.hqB];
+    const s = this.s, hqTeams = LEAGUE.hqs;
     const c = Object.values(s.players).filter(p => hqTeams.includes(p.team) && !p.benched && !p.sub && !used.has(p.name));
     const w = p => 1 + p.heat / 30 + (s.inventory.some(o => o.target === p.name) ? 4 : 0) + (s.goals?.target === p.name ? 3 : 0);
     const tot = c.reduce((a, p) => a + w(p), 0); let r = Math.random() * tot;
@@ -88,9 +88,9 @@ export class Opportunities {
       return { type, start, end: start + 45, hqId: p.team, player: p.name, title: `${p.name} 下班`, icon: '🚐', where: `${TEAMS.find(t => t.id === p.team).name} 总部` };
     }
     if (type === 'press') {
-      const ids = [LEAGUE.hqA, LEAGUE.hqB, 'ARENA'];
+      const ids = [...LEAGUE.hqs, 'ARENA'];
       const hot = this.s.inventory.map(o => g.ui.locationOf(o));
-      const hqId = hot.length && Math.random() < 0.6 ? hot[Math.random() * hot.length | 0] : ids[Math.random() * 3 | 0];
+      const hqId = hot.length && Math.random() < 0.6 ? hot[Math.random() * hot.length | 0] : ids[Math.random() * ids.length | 0];
       const start = Math.round(rnd(19, 22) * 60);
       return { type, start, end: start + 50, hqId, title: '电视台记者采访', icon: '🎥', where: hqId === 'ARENA' ? LEAGUE.arena : `${TEAMS.find(t => t.id === hqId).name} 总部` };
     }
@@ -100,7 +100,8 @@ export class Opportunities {
     }
     if (type === 'streamer') {
       const start = Math.round(rnd(18.6, 22) * 60);
-      return { type, start, end: start + 50, title: '街头主播路过', icon: '🔴', where: '两家总部之间' };
+      const hqId = LEAGUE.hqs[Math.random() * LEAGUE.hqs.length | 0];
+      return { type, start, end: start + 50, hqId, title: '街头主播路过', icon: '🔴', where: `${TEAMS.find(t => t.id === hqId).name} 总部门前` };
     }
     return null;
   }
@@ -154,12 +155,11 @@ export class Opportunities {
       e.rivalQ = 0.8 + Math.random() * 0.45 + this.s.week * 0.015 + (this.s.season - 1) * 0.05;
     } else if (e.type === 'streamer') {
       const a = new Actor('sophie');       // 街头主播
-      const A = city.hq[LEAGUE.hqA], Bq = city.hq[LEAGUE.hqB];
-      // 沿两家总部门前的人行道走一圈
+      const A = city.hq[e.hqId || LEAGUE.hqA];
+      // 在一家总部门前的人行道来回走
       const path = [
-        new THREE.Vector3(A.cx - 30, 0.18, A.face + A.dir * 15), new THREE.Vector3(A.cx + 30, 0.18, A.face + A.dir * 15),
-        new THREE.Vector3(Bq.cx + 30, 0.18, Bq.face + Bq.dir * 15), new THREE.Vector3(Bq.cx - 30, 0.18, Bq.face + Bq.dir * 15),
-        new THREE.Vector3(A.cx - 30, 0.18, A.face + A.dir * 15),
+        new THREE.Vector3(A.cx - 26, 0.18, A.face + A.dir * 14.5), new THREE.Vector3(A.cx + 26, 0.18, A.face + A.dir * 14.5),
+        new THREE.Vector3(A.cx - 26, 0.18, A.face + A.dir * 14.5), new THREE.Vector3(A.cx + 26, 0.18, A.face + A.dir * 14.5),
       ].map(pos => ({ pos }));
       a.root.position.copy(path[0].pos); this.add(a.root);
       const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.9, 6), new THREE.MeshStandardMaterial({ color: 0x222222 }));

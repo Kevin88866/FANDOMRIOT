@@ -6,7 +6,7 @@ const STEPS = [
   { until: 'moved', kbd: K => `用 ${K('up')}${K('left')}${K('down')}${K('right')} 走动，移动鼠标转视角，按住 ${K('run')} 奔跑`, pad: () => '左摇杆走动，右摇杆转视角，按住 <kbd class="pad">RT</kbd> 奔跑' },
   { until: 'shopOpen', kbd: K => `去「应援 & 抗议用品店」—— 小地图上的<b class="pk">粉色点</b>，到门口按 ${K('interact')}` },
   { until: 'ordered', kbd: () => '挑一个道具下单。第一次建议买<b>花圈</b>或<b>横幅</b>，写上你的标语' },
-  { until: 'used', kbd: K => `去目标选手所在的总部门口（小地图上的队标），按 ${K('interact')} 使用道具` },
+  { until: 'used', kbd: K => `道具在哪都能用（按 ${K('useHere')}），但去目标选手的总部门口（小地图上的菱形）按 ${K('interact')} 用效果最好` },
   { until: 'placed', kbd: K => `摆放：移动鼠标选位置，左键放下，${K('rotL')} ${K('rotR')} 旋转。排整齐、正对街道排面更好`, pad: K => `摆放：左摇杆移动，${K('interact')} 放下，${K('rotL')} ${K('rotR')} 旋转` },
   { until: 'photo', kbd: K => `按 ${K('photo')} 掏出手机，让道具和标语进入黄框，"画面质量"条越满越好，然后拍照`, pad: K => `按 ${K('photo')} 掏出手机，让道具和标语进入黄框，<kbd class="pad">RT</kbd> 拍照` },
   { until: 'dayEnd', kbd: K => `拍到满意的照片就回家 —— 小地图上的<b class="yl">黄点</b>，按 ${K('interact')} 结束今天` },

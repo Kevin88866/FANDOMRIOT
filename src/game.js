@@ -84,7 +84,7 @@ export class Game {
     this.fx = new FX(this.scene, this);
     this.props = new Props(this);
     step(0.85, '路人出门中…');
-    this.crowd = new Crowd(this, 84);
+    this.crowd = new Crowd(this, 70);
     this.applyUiSettings();
     this.player = new Player(this);
     this.photo = new PhotoMode(this);
@@ -130,6 +130,7 @@ export class Game {
   bindInput() {
     const MOVE = ['up', 'down', 'left', 'right', 'run', 'brake'];
     addEventListener('keydown', e => {
+      if (e.code === 'F3') { e.preventDefault(); this.perfOn = !this.perfOn; document.getElementById('perf')?.classList.toggle('hidden', !this.perfOn); return; }
       this.audio.init();
       if (this.ui.skipSplash) return;
       if (this.ui.anyKey) { e.preventDefault(); this.ui.anyKey(); return; }
@@ -157,6 +158,7 @@ export class Game {
         else if (act === 'vehicle') this.toggleVehicle();
         else if (act === 'photo') this.enterPhoto();
         else if (act === 'inventory') this.ui.inventory();
+        else if (act === 'useHere' && this.mode === 'play' && !this.player.vehicle) this.ui.useItems(this.siteHere());
         else if (act === 'map') this.bigMap = !this.bigMap;
         else if (act === 'objective') document.getElementById('objective').classList.toggle('collapsed');
         else if (act === 'pause') this.ui.pause();
@@ -223,6 +225,7 @@ export class Game {
       if (down.has(PAD.X)) this.toggleVehicle();
       if (down.has(PAD.Y)) this.enterPhoto();
       if (down.has(PAD.DOWN)) this.ui.inventory();
+      if (down.has(PAD.RIGHT) && !this.player.vehicle) this.ui.useItems(this.siteHere());
       if (down.has(PAD.VIEW)) this.bigMap = !this.bigMap;
       if (down.has(PAD.UP)) document.getElementById('objective').classList.toggle('collapsed');
       if (down.has(PAD.MENU)) this.ui.pause();
@@ -253,7 +256,7 @@ export class Game {
   loop(now) {
     requestAnimationFrame(t => this.loop(t));
     if (settings.fpsCap > 0 && now - (this.lastDraw || 0) < 1000 / settings.fpsCap - 1.5) return;
-    this.lastDraw = now;
+    this.lastDraw = now; this.tA = performance.now();
     const raw = (now - this.last) / 1000, dt = Math.min(0.05, raw); this.last = now;
     this.pollPad(dt, now);
     if (this.state && this.mode !== 'menu') this.state.playTime = (this.state.playTime || 0) + Math.min(raw, 1);
@@ -289,9 +292,25 @@ export class Game {
     const focus = this.player.vehicle ? this.player.vehicle.root.position : this.player.pos;
     this.renderer.followShadow(focus);
     if (this.mode === 'play') this.updatePrompt();
-    if (this.state && (this.mode === 'play' || this.mode === 'photo')) this.ui.hud();
+    // HUD 和小地图是 DOM / Canvas 绘制，没必要每帧刷新（20 次/秒足够）
+    if (this.state && (this.mode === 'play' || this.mode === 'photo') && (this.hudT = (this.hudT || 0) + raw) > 0.05) { this.hudT = 0; this.ui.hud(); }
     const v = this.player.vehicle; this.audio.setEngine(!!v && this.mode !== 'ui', v ? Math.abs(v.speed) : 0);
+    const tB = performance.now();
+    const R = this.renderer.r; R.info.autoReset = false; R.info.reset();
     this.renderer.render();
+    if (this.perfOn) this.perfStats(this.tA, tB, performance.now(), R.info.render);
+  }
+
+  // 性能面板（F3）：帧率、逻辑耗时、渲染提交耗时、绘制调用、三角形数
+  perfStats(t0, tB, tC, info) {
+    const P = this.perf ||= { n: 0, logic: 0, draw: 0, calls: 0, tris: 0, t: 0 };
+    P.n++; P.logic += tB - t0; P.draw += tC - tB; P.calls += info.calls; P.tris += info.triangles;
+    if (tC - P.t < 500) return;
+    let el = document.getElementById('perf');
+    if (!el) { el = document.createElement('div'); el.id = 'perf'; document.body.appendChild(el); }
+    const vis = this.crowd.list.filter(p => p.a.root.visible).length;
+    el.innerHTML = `<b>${Math.round(P.n * 1000 / (tC - P.t))} FPS</b> · 逻辑 ${(P.logic / P.n).toFixed(1)} ms · 渲染提交 ${(P.draw / P.n).toFixed(1)} ms<br>绘制 ${Math.round(P.calls / P.n)} 次 · 三角形 ${(P.tris / P.n / 1e4).toFixed(0)} 万 · 路人可见 ${vis} · 渲染倍率 ${this.renderer.pixelRatio().toFixed(2)} · ${innerWidth}×${innerHeight}`;
+    Object.assign(P, { n: 0, logic: 0, draw: 0, calls: 0, tris: 0, t: tC });
   }
 
   // 高画质下持续卡顿（<30 帧）时，提示一次切换到中画质
@@ -456,8 +475,9 @@ export class Game {
 
   // 订购的卡车：沿大路两侧来回绕圈经过两栋总部
   truckRoute() {
-    const zA = 30 - 7, zB = 30 + 7;   // 大路两条车道（右侧通行）
-    return [[-150, zA], [150, zA], [150, 90 - 4], [150, zB], [-150, zB], [-150, -30 + 4]].map(([x, z]) => new THREE.Vector3(x, 0, z));
+    // 环城一圈（经过各家总部所在的街区），靠右行驶
+    const o = 3.4;
+    return [[-150 + o, -150 + o], [150 - o, -150 + o], [150 - o, 30 - 7], [150 - o, 150 - o], [-150 + o, 150 - o], [-150 + o, 30 + 7]].map(([x, z]) => new THREE.Vector3(x, 0, z));
   }
 
   // ================= 互动 =================
@@ -511,6 +531,45 @@ export class Game {
     }
   }
 
+  // ================= 在哪都能用道具 =================
+  // 以玩家当前位置生成一个"现场"（字段和总部一样），优先贴着最近的楼面（臭鸡蛋 / 涂鸦 / 投影要墙）
+  siteHere() {
+    const city = this.city, p = this.player.vehicle ? this.player.vehicle.root.position : this.player.pos;
+    for (const id in city.hq) { const h = city.hq[id]; if (id !== 'SITE' && h.plaza && h.plaza.distanceTo(p) < 16) return id; }
+    let best = null, bd = 14;
+    for (const c of city.colliders) {
+      if (c.small || p.x < c.minX + 1 || p.x > c.maxX - 1 || c.maxX - c.minX < 6) continue;
+      for (const [z, dir] of [[c.minZ, -1], [c.maxZ, 1]]) { const dist = (p.z - z) * dir; if (dist > 0 && dist < bd) { bd = dist; best = { c, z, dir }; } }
+    }
+    const dir = best ? best.dir : (Math.cos(this.player.facing) >= 0 ? -1 : 1);
+    const face = best ? best.z : p.z - dir * 3;
+    const cx = best ? THREE.MathUtils.clamp(p.x, best.c.minX + 8, best.c.maxX - 8) : p.x;
+    const plaza = new THREE.Vector3(cx, this.city.groundY(cx, face + dir * 4), face + dir * 4);
+    city.hq.SITE = {
+      id: 'SITE', site: true, wall: !!best, team: { id: 'SITE', name: '路边', color: '#ffd34d' }, cx, face, dir, faceRy: dir > 0 ? 0 : Math.PI, plaza, used: 0,
+      slots: Array.from({ length: 10 }, (_, i) => new THREE.Vector3(cx - 9 + i * 2, plaza.y, face + dir * 2.5)),
+      bannerPos: new THREE.Vector3(cx, plaza.y, face + dir * 7), wallPos: new THREE.Vector3(cx - 8, 6, face + dir * 0.08),
+      sign: null, logo: null,
+    };
+    return 'SITE';
+  }
+
+  // 人流系数：这里有多少人会看到（影响曝光）。目标选手总部门口 / 竞技场 1.0；地铁口、大路边更高；偏僻小路低
+  trafficAt(hqId, item, target) {
+    const city = this.city, hq = city.hq[hqId], pos = hq.plaza;
+    const team = this.state.players[target]?.team;
+    let k;
+    if (hqId === team || (hqId === 'ARENA' && !LEAGUE.hqs.includes(team))) k = 1.0;
+    else if (hqId === 'PARK') k = Sim.PARK_PROPS.includes(item.prop) ? 1.35 : 0.9;
+    else if ((city.subways || []).some(v => v.distanceTo(pos) < 25)) k = 1.15;
+    else if (Math.abs(pos.z - 30) < 22) k = 1.08;
+    else if (Object.values(city.points).some(pt => pt.r && pt.pos.distanceTo(pos) < 25)) k = 0.95;
+    else k = 0.8;
+    const n = this.crowd.list.filter(c => c.a.root.position.distanceTo(pos) < 25).length;
+    const crowdK = 0.9 + Math.min(0.3, n * 0.04);
+    return +(k >= 1 && (hqId === team || hqId === 'ARENA') ? Math.max(1, k * crowdK) : k * crowdK).toFixed(2);
+  }
+
   // ================= 道具执行 =================
   hqFor(team) { return this.city.hq[team] ? team : null; }
 
@@ -527,6 +586,7 @@ export class Game {
       this.ui.push('📄 违反赞助合同', 'BOLT 要求退还双倍预付款：-₩4,000,000', 'bad');
     }
     const ev = { id: 'e' + Math.random().toString(36).slice(2, 8), item: order.item, target: order.target, kind: order.kind, text: order.text, hq: hqId, time: this.clockMin };
+    if (this.city.hq[hqId]?.plaza) ev.traffic = this.trafficAt(hqId, ITEMS.find(i => i.id === order.item), order.target);
     if (s.printBoost > 0 && ['banner', 'wreath', 'flowers', 'rally', 'lightboard', 'balloon', 'cake', 'lunch', 'projector', 'busad', 'truck'].includes(ITEMS.find(i => i.id === order.item)?.prop)) { ev.printed = true; s.printBoost--; }
     Sim.applyAction(this.state, ev);
     const cost = ITEMS.find(i => i.id === order.item).cleanup;
@@ -595,8 +655,8 @@ export class Game {
         break;
       }
     }
-    this.crowd.attract(hq.plaza, 80, item.prop === 'rally' ? 22 : 12, support ? 'cheer' : 'angry');
-    this.toast(`${item.name} 已布置！掏出手机（C）拍照`, 'good');
+    this.crowd.attract(hq.plaza, 90, Math.round((item.prop === 'rally' ? 22 : 12) * (ev.traffic || 1)), support ? 'cheer' : 'angry');
+    this.toast(`${item.name} 已布置！掏出手机（C）拍照${ev.traffic ? ` · 人流 ×${ev.traffic}` : ''}`, 'good');
     this.ui.saveSoon();
   }
 
@@ -608,7 +668,7 @@ export class Game {
     ev.layout = sc.score; ev.blockDoor = sc.blockDoor;
     const label = `${item.name}→${order.target}`;
     for (const o of placed) this.props.addSubject(o, { eventId: ev.id, label, text: true, weight: item.prop === 'banner' ? 1.1 : item.prop === 'rally' ? 1.2 : 1, layout: sc.score });
-    this.crowd.attract(hq.plaza, 80, item.prop === 'rally' ? 22 : 12, order.kind === 'support' ? 'cheer' : 'angry');
+    this.crowd.attract(hq.plaza, 90, Math.round((item.prop === 'rally' ? 22 : 12) * (ev.traffic || 1)), order.kind === 'support' ? 'cheer' : 'angry');
     const stars = '★'.repeat(Math.round((sc.score - 0.6) / 0.65 * 5)).padEnd(5, '☆');
     if (sc.score >= 1.18) this.ui.achieve('layout');
     this.toast(`${item.name} 已布置 · 排面 ${stars}　掏出手机（C）拍照`, 'good');

@@ -4,8 +4,8 @@ const KEY = 'fr_settings_v1';
 export const PRESETS = {
   low:   { renderScale: 0.75, shadows: 'low',  ao: false, bloom: false, aa: true },
   mid:   { renderScale: 1.0,  shadows: 'mid',  ao: false, bloom: true,  aa: true },
-  high:  { renderScale: 1.25, shadows: 'high', ao: true,  bloom: true,  aa: true },
-  ultra: { renderScale: 1.5,  shadows: 'ultra', ao: true, bloom: true,  aa: true },
+  high:  { renderScale: 1.0,  shadows: 'high', ao: false, bloom: true,  aa: true },
+  ultra: { renderScale: 1.25, shadows: 'ultra', ao: true, bloom: true,  aa: true },
 };
 
 export const DEFAULTS = {
@@ -38,6 +38,9 @@ function load() {
     if (v !== null) s.master = +v;
     if (mv !== null) s.music = +mv;
   }
+  // v1.3：高画质不再默认 1.25 倍渲染和环境光遮蔽（笔记本上太吃性能）
+  if (!s.v13 && s.preset === 'high') { s.renderScale = 1.0; s.ao = false; }
+  s.v13 = true;
   return { ...DEFAULTS, ...s, keys: { ...(s.keys || {}) } };
 }
 
