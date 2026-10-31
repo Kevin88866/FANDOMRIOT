@@ -29,13 +29,19 @@ Paths are relative to `assets/thirdparty/`.
 | Name | URL | Author | License | Path |
 |---|---|---|---|---|
 | Exterior Aircon Unit | https://polyhaven.com/a/exterior_aircon_unit | Monsta3D | CC0 | `building/polyhaven_exterior_aircon_unit/exterior_aircon_unit.glb` |
+| Industrial Wall Lamp | https://polyhaven.com/a/industrial_wall_lamp | Kuutti Siitonen | CC0 | `building/polyhaven_industrial_wall_lamp/industrial_wall_lamp.glb` |
 | Modular Airduct Rectangular 01 | https://polyhaven.com/a/modular_airduct_rectangular_01 | James Ray Cock | CC0 | `building/polyhaven_modular_airduct_rectangular_01/modular_airduct_rectangular_01.glb` |
+| Modular Electric Cables | https://polyhaven.com/a/modular_electric_cables | Kuutti Siitonen | CC0 | `building/polyhaven_modular_electric_cables/modular_electric_cables.glb` |
 | Modular Fire Escape | https://polyhaven.com/a/modular_fire_escape | Juniix | CC0 | `building/polyhaven_modular_fire_escape/modular_fire_escape.glb` |
 | Modular Metal Gutter | https://polyhaven.com/a/modular_metal_gutter | Maxim Domnin | CC0 | `building/polyhaven_modular_metal_gutter/modular_metal_gutter.glb` |
 | Modular Pipes | https://polyhaven.com/a/modular_pipes | Kuutti Siitonen | CC0 | `building/polyhaven_modular_pipes/modular_pipes.glb` |
+| Modular Urban Apartments Facade | https://polyhaven.com/a/modular_urban_apartments_facade | James Ray Cock | CC0 | `building/polyhaven_modular_urban_apartments_facade/modular_urban_apartments_facade.glb` |
 | Rollershutter Door | https://polyhaven.com/a/rollershutter_door | MP | CC0 | `building/polyhaven_rollershutter_door/rollershutter_door.glb` |
 | Rollershutter Window 01 | https://polyhaven.com/a/rollershutter_window_01 | MP | CC0 | `building/polyhaven_rollershutter_window_01/rollershutter_window_01.glb` |
 | Rollershutter Window 02 | https://polyhaven.com/a/rollershutter_window_02 | MP | CC0 | `building/polyhaven_rollershutter_window_02/rollershutter_window_02.glb` |
+| Security Camera 01 | https://polyhaven.com/a/security_camera_01 | Alexander Otterbeck, Yann Kervran | CC0 | `building/polyhaven_security_camera_01/security_camera_01.glb` |
+| Security Camera 02 | https://polyhaven.com/a/security_camera_02 | Garrison Gager, Yann Kervran | CC0 | `building/polyhaven_security_camera_02/security_camera_02.glb` |
+| Security Light | https://polyhaven.com/a/security_light | Maximilian Schuster | CC0 | `building/polyhaven_security_light/security_light.glb` |
 
 ## textures
 
@@ -43,6 +49,7 @@ Paths are relative to `assets/thirdparty/`.
 |---|---|---|---|---|
 | Asphalt 012 | https://ambientcg.com/view?id=Asphalt012 | ambientCG (Lennart Demes) | CC0 | `textures/ambientcg_Asphalt012` |
 | Carpet 016 | https://ambientcg.com/view?id=Carpet016 | ambientCG (Lennart Demes) | CC0 | `textures/ambientcg_Carpet016` |
+| Fabric 026 | https://ambientcg.com/view?id=Fabric026 | ambientCG (Lennart Demes) | CC0 | `textures/ambientcg_Fabric026` |
 | Facade 001 | https://ambientcg.com/view?id=Facade001 | ambientCG (Lennart Demes) | CC0 | `textures/ambientcg_Facade001` |
 | Facade 006 | https://ambientcg.com/view?id=Facade006 | ambientCG (Lennart Demes) | CC0 | `textures/ambientcg_Facade006` |
 | Ground 050 | https://ambientcg.com/view?id=Ground050 | ambientCG (Lennart Demes) | CC0 | `textures/ambientcg_Ground050` |

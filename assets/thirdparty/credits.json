@@ -137,11 +137,27 @@
  },
  {
   "category": "building",
+  "name": "Industrial Wall Lamp",
+  "url": "https://polyhaven.com/a/industrial_wall_lamp",
+  "author": "Kuutti Siitonen",
+  "license": "CC0",
+  "path": "building/polyhaven_industrial_wall_lamp/industrial_wall_lamp.glb"
+ },
+ {
+  "category": "building",
   "name": "Modular Airduct Rectangular 01",
   "url": "https://polyhaven.com/a/modular_airduct_rectangular_01",
   "author": "James Ray Cock",
   "license": "CC0",
   "path": "building/polyhaven_modular_airduct_rectangular_01/modular_airduct_rectangular_01.glb"
+ },
+ {
+  "category": "building",
+  "name": "Modular Electric Cables",
+  "url": "https://polyhaven.com/a/modular_electric_cables",
+  "author": "Kuutti Siitonen",
+  "license": "CC0",
+  "path": "building/polyhaven_modular_electric_cables/modular_electric_cables.glb"
  },
  {
   "category": "building",
@@ -169,6 +185,14 @@
  },
  {
   "category": "building",
+  "name": "Modular Urban Apartments Facade",
+  "url": "https://polyhaven.com/a/modular_urban_apartments_facade",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "building/polyhaven_modular_urban_apartments_facade/modular_urban_apartments_facade.glb"
+ },
+ {
+  "category": "building",
   "name": "Rollershutter Door",
   "url": "https://polyhaven.com/a/rollershutter_door",
   "author": "MP",
@@ -192,6 +216,30 @@
   "path": "building/polyhaven_rollershutter_window_02/rollershutter_window_02.glb"
  },
  {
+  "category": "building",
+  "name": "Security Camera 01",
+  "url": "https://polyhaven.com/a/security_camera_01",
+  "author": "Alexander Otterbeck, Yann Kervran",
+  "license": "CC0",
+  "path": "building/polyhaven_security_camera_01/security_camera_01.glb"
+ },
+ {
+  "category": "building",
+  "name": "Security Camera 02",
+  "url": "https://polyhaven.com/a/security_camera_02",
+  "author": "Garrison Gager, Yann Kervran",
+  "license": "CC0",
+  "path": "building/polyhaven_security_camera_02/security_camera_02.glb"
+ },
+ {
+  "category": "building",
+  "name": "Security Light",
+  "url": "https://polyhaven.com/a/security_light",
+  "author": "Maximilian Schuster",
+  "license": "CC0",
+  "path": "building/polyhaven_security_light/security_light.glb"
+ },
+ {
   "category": "textures",
   "name": "Asphalt 012",
   "url": "https://ambientcg.com/view?id=Asphalt012",
@@ -206,6 +254,14 @@
   "author": "ambientCG (Lennart Demes)",
   "license": "CC0",
   "path": "textures/ambientcg_Carpet016"
+ },
+ {
+  "category": "textures",
+  "name": "Fabric 026",
+  "url": "https://ambientcg.com/view?id=Fabric026",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Fabric026"
  },
  {
   "category": "textures",
