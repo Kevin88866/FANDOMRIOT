@@ -1,14 +1,14 @@
 {
   "name": "fandom-riot",
   "productName": "饭圈风云",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "main": "electron/main.cjs",
   "scripts": {
     "start": "electron . --dev",
     "serve": "python3 -m http.server 8123",
     "simulate": "node tools/simulate.mjs",
-    "pack:win": "electron-packager . FandomRiot --platform=win32 --arch=x64 --out=dist --overwrite --app-version=1.1.0 --ignore=^/dist --ignore=^/tools --ignore=^/node_modules/.bin --ignore=^/README.md && node tools/prune-pack.mjs dist/FandomRiot-win32-x64/resources/app && node tools/win-resources.mjs",
+    "pack:win": "electron-packager . FandomRiot --platform=win32 --arch=x64 --out=dist --overwrite --app-version=1.2.0 --ignore=^/dist --ignore=^/tools --ignore=^/node_modules/.bin --ignore=^/README.md && node tools/prune-pack.mjs dist/FandomRiot-win32-x64/resources/app && node tools/win-resources.mjs",
     "pack:mac": "electron-packager . FandomRiot --platform=darwin --arch=arm64,x64 --out=dist --overwrite --app-version=1.0.0 --ignore=^/dist --ignore=^/tools"
   },
   "devDependencies": {

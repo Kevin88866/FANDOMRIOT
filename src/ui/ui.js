@@ -186,7 +186,8 @@ export class UI {
     this.open(`<h2>玩法说明</h2>
       <div class="news"><b>每周</b>：看比赛 → 晚上 18:00–24:00 在首尔街头行动 → 回家发帖 → 周结算。</div>
       <div class="news"><b>行动</b>：去用品店买花圈、横幅、LED 卡车等道具，到选手所在的战队总部门口布置；骂谁、捧谁由你决定，随时可以粉转黑、黑转粉。</div>
-      <div class="news"><b>拍照</b>：掏出手机，把道具和标语拍进黄框，回家挑最好的发到社交平台，换粉丝和钱。</div>
+      <div class="news"><b>拍照发帖</b>：掏出手机，把道具和标语拍进黄框；回家挑最好的照片，自己写文案发到社交平台，换粉丝和钱。</div>
+      <div class="news"><b>更多玩法</b>：比赛日可以去现场举牌上直播；选手下班后可以跟着保姆车拍独家；打印店做周边、咖啡店办活动摆摊、地铁站租广告、网吧打榜全明星；汉江公园适合集会和放烟花。</div>
       <div class="news"><b>小心争议度</b>：太出格会被限流、封号，收到 3 封律师函就出局。</div>
       <div class="news">操作：${this.keysLine()}</div>
       <div class="row" style="margin-top:14px"><button class="btn pri" id="b">返回</button></div>`, { cinematic: true, esc: back });
