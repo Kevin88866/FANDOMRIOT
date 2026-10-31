@@ -106,7 +106,7 @@ export const Screens = {
   capHint(x, ev) {
     const r = scoreCaption(x.text, { platform: x.platform, tone: x.tone, ev, s: this.s, history: this.s.capHistory || [] });
     const lim = LIMITS[x.platform];
-    return `<span class="${r.len > lim ? 'neg' : ''}">${r.len}/${lim}</span> · 文案 <b class="${r.k >= 1 ? 'pos' : 'neg'}">×${r.k.toFixed(2)}</b>${r.notes.length ? ` · ${esc(r.notes.slice(0, 2).map(n => n.t).join('，'))}` : ''}`;
+    return `<span class="${r.len > lim ? 'neg' : ''}">${r.len}/${lim}</span>`;   // 只显示字数，文案的加分扣分不公开
   },
 
   postingView() {
@@ -193,11 +193,10 @@ export const Screens = {
     const html = results.map((r, k) => {
       const st = PLAT_STYLE[r.platform], P = PLATFORMS.find(p => p.id === r.platform);
       const badge = r.viral ? '<span class="ob viral">🔥 爆款 · 上热搜</span>' : r.flop ? '<span class="ob flop">石沉大海</span>' : r.backlash ? '<span class="ob bad">评论区翻车</span>' : r.photo.reaction ? '<span class="ob viral">名场面</span>' : '';
-      const chips = [['文案', r.parts.caption], ['照片', r.parts.quality], ['话题', r.parts.topic], ['情绪', r.parts.match], ['新鲜', r.parts.fresh], ['平台', r.parts.platform], ['名场面', r.parts.moment], ['运气', r.parts.luck]].filter(([, v]) => v !== undefined && Math.abs(v - 1) > 0.01);
+      const chips = [['照片', r.parts.quality], ['话题', r.parts.topic], ['情绪', r.parts.match], ['新鲜', r.parts.fresh], ['平台', r.parts.platform], ['名场面', r.parts.moment], ['运气', r.parts.luck]].filter(([, v]) => v !== undefined && Math.abs(v - 1) > 0.01);
       return `<div class="fc" style="--pc:${st.bg};animation-delay:${k * 0.15}s">
         <div class="ph"><span class="av sm" style="background:#ff2d55">我</span><b>${esc(handle)}</b><span class="badge">${st.badge} ${P.name}</span>${badge}</div>
         <div class="cap">${esc(r.text ?? this.caption(r.photo, r.ev, r.tone))}</div>
-        ${r.cap?.notes?.length ? `<div class="capnotes">${r.cap.notes.map(n => `<i class="${n.v >= 0 ? 'up' : 'down'}">${n.v >= 0 ? '+' : ''}${Math.round(n.v * 100)}% ${esc(n.t)}</i>`).join('')}</div>` : ''}
         <img src="${r.photo.img}">
         <div class="counters"><span>👁 <b id="v${k}">0</b></span><span>♥ <b id="l${k}">0</b></span><span>🔁 <b id="r${k}">0</b></span><span>💬 <b id="c${k}">0</b></span></div>
         <canvas class="chart" id="ch${k}" width="600" height="120"></canvas>
