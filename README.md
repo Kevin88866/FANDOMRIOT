@@ -65,7 +65,7 @@ python tools/blender/nature.py
 
 ## 素材
 - 下载的第三方素材在 `assets/thirdparty/`，来源和许可见 `assets/thirdparty/CREDITS.md`：
-  - 人物和动画：Mixamo（Adobe）。**Mixamo 许可不允许转发原始素材，仓库必须保持私有。**
+  - 人物和动画：Mixamo（Adobe）。
   - 贴图、HDR、家具、植物：Poly Haven / ambientCG / Kenney / Poly Pizza（CC0）。
   - 音效：Freesound 等（CC0）。
 - 人物精简版：`tools/blender/chars_lod.py` → `assets/models/chars/`。
