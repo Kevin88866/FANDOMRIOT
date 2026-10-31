@@ -415,3 +415,6 @@ select.txt.sel{min-width:200px;pointer-events:auto}
 .capbar .cnt{margin-left:auto;color:#9aa3b5}.capbar .pos{color:#38e08a}.capbar .neg{color:#ff6b6b}
 .capnotes{display:flex;flex-wrap:wrap;gap:4px;padding:0 10px 8px}.capnotes i{font-style:normal;font-size:11px;border-radius:4px;padding:1px 6px;background:#1d2230}
 .capnotes i.up{color:#38e08a}.capnotes i.down{color:#ff6b6b}
+.vote-big{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px}
+.vote-big .btn{font-size:32px;padding:26px 60px;border-radius:18px}
+.vote-big b{font-size:28px;color:var(--acc2)}

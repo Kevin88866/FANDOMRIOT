@@ -127,22 +127,41 @@ export function named(obj, prefix) {
   return out;
 }
 
-// 大量重复的静态物体（路灯、电线杆、护栏、花坛）：每个部件一个 InstancedMesh
-export function instanced(name, matrices, parent, skip) {
+// 大量重复的静态物体（路灯、电线杆、护栏、花坛、店铺内景、树）：每个部件一个 InstancedMesh。
+// opts.cell：按网格切块（每块单独做视锥剔除）；opts.maxDist：超过这个距离整块隐藏（见 updateCull）
+const cullList = [];
+export function instanced(name, matrices, parent, skip, opts = {}) {
   const src = store[name];
   if (!src || !matrices.length) return [];
   src.updateMatrixWorld(true);
+  const groups = new Map(), p = new THREE.Vector3();
+  for (const m of matrices) {
+    p.setFromMatrixPosition(m);
+    const key = opts.cell ? Math.floor(p.x / opts.cell) + ',' + Math.floor(p.z / opts.cell) : '0';
+    if (!groups.has(key)) groups.set(key, []); groups.get(key).push(m);
+  }
   const out = [];
   src.traverse(o => {
     if (!o.isMesh || (skip && skip(o))) return;
     const g = o.geometry.clone().applyMatrix4(o.matrixWorld);
-    const im = new THREE.InstancedMesh(g, o.material, matrices.length);
-    matrices.forEach((m, i) => im.setMatrixAt(i, m));
-    im.computeBoundingSphere();
-    im.castShadow = true; im.receiveShadow = true; im.name = o.name;
-    parent.add(im); out.push(im);
+    for (const list of groups.values()) {
+      const im = new THREE.InstancedMesh(g, o.material, list.length);
+      list.forEach((m, i) => im.setMatrixAt(i, m));
+      im.computeBoundingSphere();
+      im.castShadow = true; im.receiveShadow = true; im.name = o.name; im.userData.src = name;
+      if (opts.maxDist) { im.userData.maxDist = opts.maxDist; cullList.push(im); }
+      parent.add(im); out.push(im);
+    }
   });
   return out;
+}
+
+// 每隔几帧按相机距离隐藏远处的实例块（远景细节靠雾和楼体本身）
+export function updateCull(camPos, k = 1) {
+  for (const im of cullList) {
+    const bs = im.boundingSphere; if (!bs) continue;
+    im.visible = camPos.distanceTo(bs.center) - bs.radius < im.userData.maxDist * k;
+  }
 }
 
 // 模型里的发光材质交给城市的昼夜系统（夜里更亮）

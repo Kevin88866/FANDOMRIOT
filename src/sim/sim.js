@@ -156,7 +156,7 @@ export function applyAction(s, ev) {
     st.last = k; if (k === 'support') st.sup++; else st.atk++;
   }
   if (p) {
-    let dm = ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood);
+    let dm = (ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood)) * (ev.hq === 'PARK' ? 0.5 : 1);
     // 知耻后勇：被骂有概率反而振作（心态好时概率高）
     if (dm < 0 && rand.r() < 0.12 + p.mood / 600) { dm = Math.abs(dm) * 0.5; ev.backfire = true; }
     noteInfluence(s, p.name, item.name, ev.kind, dm);
@@ -180,6 +180,9 @@ export function noteInfluence(s, name, label, kind, dm) {
 
 // ---------- 发帖曝光 ----------
 // 返回 {views, fans, money, viral, flop, backlash, parts}
+// 汉江公园有加成的道具（大场面）
+export const PARK_PROPS = ['rally', 'fireworks', 'drone', 'lightsticks', 'lightboard', 'balloon'];
+
 export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0, captionK = 1 }) {
   const P = PLATFORMS.find(x => x.id === platform), T = TONES.find(x => x.id === tone);
   const item = ev ? ITEMS.find(i => i.id === ev.item) : null;
@@ -207,6 +210,8 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0, 
   parts.limit = s.heat >= B.heatLimit ? 0.5 : 1;
   parts.club = 1 + Math.min(0.5, (s.club || 0) / 2000);   // 粉丝团帮你转发
   parts.caption = captionK;                                  // 自己写的文案
+  parts.venue = ev?.hq === 'PARK' && PARK_PROPS.includes(item?.prop) ? 1.35 : ev?.hq === 'CAFE' ? 1.1 : 1;
+  parts.print = ev?.printed ? 1.15 : 1;                      // 打印店精印的标语更清楚
   // 名场面：选手亲眼看到你的道具 / 记者入镜 / 拍到选手本人 / 堵门
   parts.moment = (photo.reaction ? 1.8 : 1) * (photo.press ? 1.4 : 1) * (photo.star && !photo.reaction ? 1.15 : 1) * (ev?.blockDoor ? 1.3 : 1);
   // 运气
@@ -221,7 +226,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0, 
   parts.luck = luck;
   // 粉丝带来的基础触达是次线性的，避免滚雪球式指数增长
   const base = parts.impact * B.viewsPerImpact + B.fanReach * Math.pow(s.fans, B.fanReachExp);
-  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * parts.moment * parts.club * parts.caption * luck;
+  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * parts.moment * parts.club * parts.caption * parts.venue * parts.print * luck;
   views = Math.round(views);
   // 涨粉：观点越被认同涨得越多；反噬会掉粉
   let fans = Math.round(views * B.fanConv * Math.min(1.6, parts.match) / (1 + s.fans / B.fanSoftCap));
@@ -288,6 +293,19 @@ export function endOfWeek(s, dayViews) {
   s.club = Math.round(club0 + gained * 0.015 + 2);
   if (s.heat > 60) s.club = Math.round(s.club * 0.94);
   if (s.club !== club0) log.push({ t: `粉丝团 ${club0} → ${s.club} 人`, c: s.club > club0 ? 'good' : 'bad' });
+  // 地铁站广告：每周被动曝光，可能被对手粉头的广告盖掉
+  for (const ad of s.ads || []) {
+    const p = s.players[ad.target];
+    const views = Math.round((15000 + s.fans * 0.25) * diff(s).income);
+    const fans = Math.round(views * B.fanConv * 0.4 / (1 + s.fans / B.fanSoftCap));
+    const money = Math.round(views * B.wonPerView * 0.4);
+    s.fans += fans; s.money += money; s.totalViews += views;
+    if (p) { const dm = ad.kind === 'support' ? 3 : -3; p.mood = clamp(p.mood + dm, 0, 100); if (ad.kind === 'support') p.votes += 1500; noteInfluence(s, p.name, '地铁广告', ad.kind, dm); }
+    log.push({ t: `🚇 地铁广告「${ad.text}」本周曝光 ${views.toLocaleString()}，粉丝 +${fans}，收入 ₩${money.toLocaleString()}`, c: 'good' });
+    ad.weeks--;
+    if (ad.weeks > 0 && rand.r() < 0.2) { ad.weeks = 0; log.push({ t: `${s.rival.name} 买下了同一个广告位，把你的广告盖掉了`, c: 'bad' }); }
+  }
+  s.ads = (s.ads || []).filter(a => a.weeks > 0);
   // 对手粉头
   const rg = Math.round(s.rival.fans * (0.08 + rand.r() * 0.2) + 400);
   s.rival.fans += rg;

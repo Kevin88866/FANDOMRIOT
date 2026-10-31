@@ -3,7 +3,7 @@ import { Renderer } from './engine/renderer.js';
 import { Audio } from './engine/audio.js';
 import { City } from './world/city.js';
 import { loadActors } from './world/actors.js';
-import { loadModels, MODEL_LIST, model, wind } from './engine/assets.js';
+import { loadModels, MODEL_LIST, model, wind, updateCull } from './engine/assets.js';
 import { settings, onSettings } from './engine/settings.js';
 import { Input, actionOf, codesFor, PAD } from './engine/input.js';
 import { migrateOldSave } from './engine/saves.js';
@@ -80,11 +80,11 @@ export class Game {
     this.city = new City(this.scene);
     this.city.finalizeTrees();
     buildStreetDetails(this);
-    this.traffic = new Traffic(this, 16);
+    this.traffic = new Traffic(this, 24);
     this.fx = new FX(this.scene, this);
     this.props = new Props(this);
     step(0.85, '路人出门中…');
-    this.crowd = new Crowd(this, 64);
+    this.crowd = new Crowd(this, 84);
     this.applyUiSettings();
     this.player = new Player(this);
     this.photo = new PhotoMode(this);
@@ -270,6 +270,7 @@ export class Game {
     } });
     this.safe('crowd', () => this.crowd.update(dt));
     wind.value = now * 0.001;
+    if ((this.cullT = (this.cullT || 0) + dt) > 0.2) { this.cullT = 0; updateCull(this.camera.position, settings.viewDist || 1); for (const v of this.vehicles) if (v.traffic) v.root.visible = v.root.position.distanceTo(this.camera.position) < 170 * (settings.viewDist || 1); }
     this.safe('traffic', () => { this.traffic.update(dt); this.bumpTraffic(); });
     this.safe('details', () => this.details?.update(this.time));
     this.safe('props', () => this.props.update(dt, this.time));
@@ -478,6 +479,7 @@ export class Game {
       else if (pt.kind === 'shop') txt = `${this.input.K('interact')}进入 ${pt.label}`;
       else if (pt.kind === 'garage') txt = `${this.input.K('interact')}${pt.label}`;
       else if (pt.kind === 'home') txt = `${this.input.K('interact')}回家（结束今天，去发帖）`;
+      else if (['print', 'cafe', 'metro', 'pcbang'].includes(pt.kind)) txt = `${this.input.K('interact')}进入 ${pt.label}`;
     } else if (!this.player.vehicle) {
       const nv = this.vehicles.find(v => !v.ai && !v.npc && v.root.position.distanceTo(this.player.pos) < 4.5);
       if (nv) txt = `${this.input.K('vehicle')}上车`;
@@ -493,6 +495,10 @@ export class Game {
     this.audio.click();
     if (pt.kind === 'shop') return this.ui.shop();
     if (pt.kind === 'garage') return this.ui.garage();
+    if (pt.kind === 'print') return this.ui.printShop();
+    if (pt.kind === 'cafe') return this.ui.fanCafe();
+    if (pt.kind === 'metro') return this.ui.metroAd();
+    if (pt.kind === 'pcbang') return this.ui.pcBang();
     if (pt.kind === 'home') return this.ui.confirm('结束今天回家？没用掉的道具会留到下周。', () => this.endDay());
     if (pt.kind === 'hq') {
       const v = this.player.vehicle;
@@ -518,6 +524,7 @@ export class Game {
       this.ui.push('📄 违反赞助合同', 'BOLT 要求退还双倍预付款：-₩4,000,000', 'bad');
     }
     const ev = { id: 'e' + Math.random().toString(36).slice(2, 8), item: order.item, target: order.target, kind: order.kind, text: order.text, hq: hqId, time: this.clockMin };
+    if (s.printBoost > 0 && ['banner', 'wreath', 'flowers', 'rally', 'lightboard', 'balloon', 'cake', 'lunch', 'projector', 'busad', 'truck'].includes(ITEMS.find(i => i.id === order.item)?.prop)) { ev.printed = true; s.printBoost--; }
     Sim.applyAction(this.state, ev);
     const cost = ITEMS.find(i => i.id === order.item).cleanup;
     if (cost) { this.state.cleanupDue = (this.state.cleanupDue || 0) + cost; setTimeout(() => this.toast(`物业会找你要清洁费 ₩${cost.toLocaleString()}（周结算扣除）`, 'bad'), 2500); }

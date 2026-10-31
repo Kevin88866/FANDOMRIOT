@@ -48,7 +48,7 @@ def uv_world(o, scale=1.0):
             else: uv.data[li].uv = (v.x / scale, v.z / scale)
 
 
-def imp(cat, name, height=None, loc=(0, 0, 0), rz=0.0, limit=1500, parent=None, width=None, size=None):
+def imp(cat, name, height=None, loc=(0, 0, 0), rz=0.0, limit=700, parent=None, width=None, size=None):
     """导入一个下载的模型：合并、按目标高度（或宽度）缩放、减面、放好位置。"""
     path = glob.glob(os.path.join(TP, cat, name, '*.glb'))[0]
     before = set(bpy.context.scene.objects)
@@ -139,15 +139,22 @@ def gondola(root, x, y, width, rnd, kinds, rows=(0.12, 0.55, 0.98, 1.41), depth=
     for z in rows:
         box(f'gshelf{x}{y}{z}', (width, depth, 0.025), (x, y, z), steel, parent=root)
         box(f'glip{x}{y}{z}', (width, 0.01, 0.05), (x, y + face * depth / 2, z + 0.02), mat('pricetag', (0.95, 0.85, 0.2), rough=0.6), parent=root)
-        k = rnd.choice(kinds); cat, nm, sz = k
-        src = proto(cat, nm, sz)
-        step = max(0.07, src.dimensions.x + 0.015)
-        n = int((width - 0.08) / step)
+        # 商品用极简几何（6 边柱 / 盒子），一排合并成一个网格：远看是满满一排货，三角形很少
+        kind = rnd.choice(('can', 'bottle', 'box', 'bag'))
+        col = rnd.choice(GOODS_COLORS)
+        gm = mat(f'goods_{col[0]:.2f}_{col[1]:.2f}', col, rough=0.45)
+        step = {'can': 0.075, 'bottle': 0.085, 'box': 0.13, 'bag': 0.16}[kind]
+        n = int((width - 0.08) / step); parts = []
         for i in range(n):
-            for d in (-0.1, 0.08):
-                dup(src, (x - width / 2 + 0.06 + i * step, y + d, z + 0.013), rnd.uniform(-0.08, 0.08), root)
+            px = x - width / 2 + 0.06 + i * step
+            if kind == 'can': parts.append(cyl(f'g{x}{y}{z}{i}', 0.03, 0.12, (px, y, z + 0.073), gm, verts=6, parent=root, smooth_angle=None))
+            elif kind == 'bottle': parts.append(cyl(f'g{x}{y}{z}{i}', 0.032, 0.24, (px, y, z + 0.133), gm, verts=6, parent=root, smooth_angle=None))
+            elif kind == 'box': parts.append(box(f'g{x}{y}{z}{i}', (0.11, 0.3, 0.2), (px, y, z + 0.113), gm, parent=root))
+            else: parts.append(box(f'g{x}{y}{z}{i}', (0.14, 0.06, 0.2), (px, y - 0.05, z + 0.113), gm, parent=root))
+        join(parts, f'goods{x}{y}{z}')
 
 
+GOODS_COLORS = [(0.85, 0.15, 0.12), (0.12, 0.45, 0.85), (0.95, 0.75, 0.1), (0.2, 0.65, 0.3), (0.95, 0.95, 0.92), (0.55, 0.2, 0.6), (0.95, 0.5, 0.15)]
 GOODS = [('props', 'kenney_soda_can', 0.13), ('props', 'kenney_soda_bottle', 0.24), ('props', 'kenney_carton', 0.2),
          ('props', 'kenney_bottle_ketchup', 0.18), ('props', 'kenney_chocolate', 0.16), ('props', 'kenney_candy_bar', 0.14)]
 

@@ -8,7 +8,7 @@ export class Crowd {
     this.game = game; this.list = [];
     const r = mulberry(99);
     const blocks = [];
-    for (let bx = -2; bx <= 2; bx++) for (let bz = -2; bz <= 2; bz++) blocks.push(game.city.sidewalkFor(bx * 60, bz * 60));
+    for (let bx = -3; bx <= 3; bx++) for (let bz = -3; bz <= 3; bz++) blocks.push(game.city.sidewalkFor(bx * 60, bz * 60));
     // 优先放在总部附近
     const near = blocks.filter(s => Math.abs((s.xMin + s.xMax) / 2) <= 60 && Math.abs((s.zMin + s.zMax) / 2 - 30) <= 60);
     for (let i = 0; i < count; i++) {
@@ -73,12 +73,16 @@ export class Crowd {
 
   update(dt) {
     this.frame = (this.frame || 0) + 1;
-    const cam = this.game.camera.position;
+    const cam = this.game.camera.position, C = this.game.camera;
+    // 蒙皮模型关掉了自带的视锥剔除（骨骼动起来包围盒不准），这里按人的位置自己剔除
+    const fr = this.fr ||= new THREE.Frustum(), sph = this.sph ||= new THREE.Sphere(new THREE.Vector3(), 1.6);
+    fr.setFromProjectionMatrix((this.pm ||= new THREE.Matrix4()).multiplyMatrices(C.projectionMatrix, C.matrixWorldInverse));
     for (const p of this.list) {
       if (p.off) continue;
       const root = p.a.root, pos = root.position;
       const d2 = pos.distanceToSquared(cam), far = d2 > 110 * 110;
-      root.visible = !far;
+      sph.center.set(pos.x, pos.y + 1, pos.z);
+      root.visible = !far && fr.intersectsSphere(sph);
       // 只有镜头附近的路人投影（蒙皮模型很重，远处的阴影也看不清）
       const near = d2 < 38 * 38;
       // 远处的 Xbot 不画关节球（2 万多个三角形，远了看不出来）

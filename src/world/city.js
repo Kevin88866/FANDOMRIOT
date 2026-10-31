@@ -4,11 +4,15 @@ import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, m
 import { TEAMS, LEAGUE } from '../content/data.js';
 import { hasModel, instanced, partGeos, model, registerNight } from '../engine/assets.js';
 
-// 首尔街区：6x6 路网，中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
-export const ROADS = [-150, -90, -30, 30, 90, 150];
+// 首尔街区：8x8 路网（7x7 个街区），中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
+// 南边（+z）是汉江公园和江面。
+export const ROADS = [-210, -150, -90, -30, 30, 90, 150, 210];
 export const AVENUE_Z = 30;
 export const roadWidth = (axis, v) => (axis === 'z' && v === AVENUE_Z ? 26 : 14);
-const BLOCK = 60, CURB = 0.18, HALF = 165;
+const BLOCK = 60, CURB = 0.18;
+export const HALF = 225;
+export const SPECIAL = { '0,60': 'A', '0,0': 'B', '-60,0': 'shop', '60,60': 'billboard', '-120,60': 'home', '120,0': 'garage',
+  '-60,-60': 'print', '60,-60': 'cafe', '120,60': 'metro', '-120,-60': 'pcbang', '-60,180': 'park', '0,180': 'park', '60,180': 'park' };
 
 // 取 BoxGeometry 的几个面（按 groups），用于把同一个盒子的不同面分到不同材质的合并网格里
 const SHOP_KINDS = ['shop_conv', 'shop_cafe', 'shop_chicken', 'shop_pcbang', 'shop_phone', 'shop_conv', 'shop_cafe'];
@@ -84,7 +88,7 @@ export class City {
   build() {
     this.ground();
     this.roadMarkings();
-    for (let bx = -2; bx <= 2; bx++) for (let bz = -2; bz <= 2; bz++) this.block(bx * BLOCK, bz * BLOCK);
+    for (let bx = -3; bx <= 3; bx++) for (let bz = -3; bz <= 3; bz++) this.block(bx * BLOCK, bz * BLOCK);
     this.streetLamps();
     this.hqA(); this.hqB();
     this.shops();
@@ -103,6 +107,49 @@ export class City {
     // 远处地面
     const far = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshStandardMaterial({ color: 0x1d1f24, roughness: 1 }));
     far.rotation.x = -Math.PI / 2; far.position.y = -0.05; this.group.add(far);
+    // 汉江：南边的江面（光滑、反射城市灯光）+ 江边护栏
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(2000, 520), new THREE.MeshStandardMaterial({ color: 0x0b1a26, roughness: 0.08, metalness: 0.6, envMapIntensity: 1.2 }));
+    water.material.userData.envMul = 2.5;
+    water.rotation.x = -Math.PI / 2; water.position.set(0, 0.03, HALF + 6 + 260); this.group.add(water);
+    const bank = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 40, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x6d6a66, roughness: 0.9 }));
+    bank.position.set(0, -0.2, HALF + 4); this.group.add(bank);
+    const railG = []; for (let x = -HALF; x <= HALF; x += 2.5) { const b = new THREE.BoxGeometry(0.08, 1, 0.08); b.translate(x, 0.5, HALF - 0.5); railG.push(b); }
+    const top = new THREE.BoxGeometry(HALF * 2, 0.06, 0.1); top.translate(0, 1, HALF - 0.5); railG.push(top);
+    const rail = new THREE.Mesh(mergeGeometries(railG), new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 0.7, roughness: 0.35 })); this.group.add(rail);
+  }
+
+  // 汉江公园：草地、步道、树、长椅、路灯；中间那块是可以集会 / 放烟花的广场
+  park(s, main) {
+    const w = s.xMax - s.xMin, d = s.zMax - s.zMin, cx = (s.xMin + s.xMax) / 2, cz = (s.zMin + s.zMax) / 2;
+    if (!this.grassMat) this.grassMat = pbrMat('polyhaven_leafy_grass/leafy_grass', 1, { color: 0x9fb48a });
+    const g = new THREE.BoxGeometry(w, CURB, d), uv = g.attributes.uv, pos = g.attributes.position;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + cx) * 0.25, (pos.getZ(i) + cz) * 0.25);
+    g.translate(cx, CURB / 2, cz); this.addStatic(this.grassMat, faces(g, [2]), false); this.addStatic(this.curbMat || this.swMat, faces(g, [0, 1, 4, 5]), false);
+    // 十字步道
+    for (const [pw, pd] of [[w, 3.2], [3.2, d]]) { const p = new THREE.BoxGeometry(pw, 0.04, pd); const u = p.attributes.uv, ps = p.attributes.position; for (let i = 0; i < u.count; i++) u.setXY(i, (ps.getX(i) + cx) * 0.4, (ps.getZ(i) + cz) * 0.4); p.translate(cx, CURB + 0.02, cz); this.addStatic(this.swMat, p, false); }
+    const r = this.rnd;
+    for (let i = 0; i < 16; i++) {   // 树沿四周和对角
+      const a = r() * Math.PI * 2, rr = 8 + r() * (Math.min(w, d) / 2 - 10);
+      const x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr;
+      if (Math.abs(x - cx) < 3 || Math.abs(z - cz) < 3) continue;
+      this.tree(x, z);
+    }
+    if (main) {
+      // 中央广场（铺装 + 舞台），注册成"使用道具"的地点
+      const pl = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 0.06, 40), this.swMat); pl.position.set(cx, CURB + 0.03, cz); pl.receiveShadow = true; this.group.add(pl);
+      const stage = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 4), new THREE.MeshStandardMaterial({ color: 0x3a3d44, roughness: 0.7 })); stage.position.set(cx, CURB + 0.3, cz - 9); this.group.add(stage);
+      this.addCollider(cx, cz - 9, 10, 4);
+      const t = textTex('한강공원  HAN RIVER PARK', { w: 1024, h: 160, bg: '#0b2a1e', fg: '#7dffb0', glow: 18, size: 0.55 });
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(9, 1.4), new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.5 }));
+      sign.position.set(cx, 2.6, cz - 11.05); this.group.add(sign); sign.material.userData.night = true; this.nightMats.push(sign.material);
+      const plaza = new THREE.Vector3(cx, CURB, cz);
+      this.hq.PARK = {
+        id: 'PARK', team: { id: 'PARK', name: '汉江公园', color: '#38e08a' }, cx, face: cz - 7, dir: 1, faceRy: 0, used: 0, plaza, park: true,
+        slots: Array.from({ length: 10 }, (_, i) => new THREE.Vector3(cx - 9 + i * 2, CURB, cz - 5)),
+        bannerPos: new THREE.Vector3(cx, CURB, cz - 6.5), wallPos: new THREE.Vector3(cx, 3, cz - 11.1), sign, signHome: sign.position.clone(), logo: null,
+      };
+      this.points.hq_PARK = { pos: plaza.clone(), r: 9, label: '汉江公园（集会 / 烟花 / 无人机加成）', kind: 'hq', id: 'PARK' };
+    }
   }
 
   // 人行道块（每个街区一块抬高的人行道）
@@ -129,7 +176,8 @@ export class City {
     this.addStatic(this.swMat, geo, false);
 
     const key = `${cx},${cz}`;
-    const special = { '0,60': 'A', '0,0': 'B', '-60,0': 'shop', '60,60': 'billboard', '-120,60': 'home', '120,0': 'garage' }[key];
+    const special = SPECIAL[key];
+    if (special === 'park') return this.park(s, cx === 0);
     if (special === 'A' || special === 'B') { this.hqBlocks = this.hqBlocks || {}; this.hqBlocks[special] = s; this.fillerRing(s, true, special === 'A' ? -1 : 1); return; }
     if (special) { this.specialBlocks = this.specialBlocks || {}; this.specialBlocks[special] = s; }
     this.fillerRing(s, false, 0, special);
@@ -378,7 +426,7 @@ export class City {
     this.buckets = null;
     // Blender 细节模块（实例化）
     const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser', ...SHOP_KINDS]);   // 小件不投影，省一遍阴影绘制
-    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'))) { if (NOSHADOW.has(name)) im.castShadow = false; if (name.startsWith('shop_')) registerNight(im, this); }
+    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'), name.startsWith('shop_') ? { cell: 120, maxDist: 85 } : { cell: 180, maxDist: 300 })) { if (NOSHADOW.has(name)) im.castShadow = false; if (name.startsWith('shop_')) registerNight(im, this); }
     if (this.ledges.length) {
       const lg = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), this.ledges.length);
       this.ledges.forEach(([m, c], i) => { lg.setMatrixAt(i, m); lg.setColorAt(i, c); });
@@ -498,9 +546,9 @@ export class City {
         this.colliders.push({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.3, maxZ: z + 0.3, small: true });
       });
       kinds.forEach((name, k) => {
-        for (const im of instanced(name, lists[k], this.group)) {
+        for (const im of instanced(name, lists[k], this.group, null, { cell: 120, maxDist: 340 })) {
           if (!im.material.name.startsWith('leaf')) continue;
-          for (let i = 0; i < lists[k].length; i++) {
+          for (let i = 0; i < im.count; i++) {
             if (maple) { const c = AUTUMN[r() * AUTUMN.length | 0], v = 0.85 + r() * 0.3; im.setColorAt(i, new THREE.Color(c[0] * v, c[1] * v, c[2] * v)); }
             else im.setColorAt(i, new THREE.Color(0.82 + r() * 0.3, 0.85 + r() * 0.25, 0.7 + r() * 0.3));
           }
@@ -728,6 +776,10 @@ export class City {
     mk('shop', '应援 & 抗议用品店', 'shop', '응원·항의 용품  SHOP', 0.92);
     mk('garage', '车行 / 司机中介', 'garage', '중고차 · 대리운전', 0.55);
     mk('home', '你的出租屋（结束今天）', 'home', '원룸  HOME', 0.15);
+    mk('print', '打印店（定制标语 / 做周边）', 'print', '인쇄 · 굿즈 제작  PRINT', 0.08);
+    mk('cafe', '粉丝咖啡店（办应援活动）', 'cafe', '팬 카페  FAN CAFE', 0.05);
+    mk('metro', '地铁站广告位', 'metro', '지하철  2호선  광고', 0.33);
+    mk('pcbang', '网吧（全明星投票打榜）', 'pcbang', 'PC방  24시', 0.72);
     // 联盟竞技场：其余 8 支战队的选手都在这里"被应援/被抗议"
     const bb0 = sb.billboard, acx = (bb0.xMin + bb0.xMax) / 2, aface = bb0.zMin + 4.5;
     this.hq.ARENA = {
@@ -744,7 +796,7 @@ export class City {
     // 城市外围：远景楼群 + 不可越过的边界
     const r = this.rnd;
     for (let i = 0; i < 70; i++) {
-      const a = (i / 70) * Math.PI * 2, d = 230 + r() * 120, h = 20 + r() * 90;
+      const a = (i / 70) * Math.PI * 2, d = (Math.sin(a) > 0.3 ? 420 : 290) + r() * 120, h = 20 + r() * 90;   // 南边隔着汉江
       const w = 15 + r() * 25;
       const f = facade(r() * 6 | 0, i + 500);
       const m = new THREE.MeshStandardMaterial({ map: f.map, emissiveMap: f.emissive, emissive: 0xffffff, emissiveIntensity: 1, roughness: 0.6 });

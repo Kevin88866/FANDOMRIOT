@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { ROADS, AVENUE_Z, roadWidth } from './city.js';
+import { ROADS, AVENUE_Z, roadWidth, HALF } from './city.js';
 import { Vehicle } from '../player/vehicle.js';
 import { textTex, mulberry } from '../engine/textures.js';
 import { model, hasModel, instanced, recolor, registerNight } from '../engine/assets.js';
@@ -150,8 +150,8 @@ export function buildStreetDetails(game) {
     }
     pts.forEach(([x, z]) => city.colliders.push({ minX: x - 0.25, maxX: x + 0.25, minZ: z - 0.25, maxZ: z + 0.25, small: true }));
   };
-  for (const x of [-90, 90, -150]) { const pts = []; for (let z = -140; z <= 140; z += 22) if (!ROADS.some(rz => Math.abs(z - rz) < roadWidth('z', rz) / 2 + 3)) pts.push([x + 8.2, z]); poleRow(pts, false); }
-  for (const z of [-90, 90]) { const pts = []; for (let x = -140; x <= 140; x += 22) if (!ROADS.some(rx => Math.abs(x - rx) < 10)) pts.push([x, z - 8.2]); poleRow(pts, true); }
+  for (const x of [-90, 90, -150, 150]) { const pts = []; for (let z = -(HALF - 25); z <= HALF - 25; z += 22) if (!ROADS.some(rz => Math.abs(z - rz) < roadWidth('z', rz) / 2 + 3)) pts.push([x + 8.2, z]); poleRow(pts, false); }
+  for (const z of [-90, 90, -150]) { const pts = []; for (let x = -(HALF - 25); x <= HALF - 25; x += 22) if (!ROADS.some(rx => Math.abs(x - rx) < 10)) pts.push([x, z - 8.2]); poleRow(pts, true); }
   instanced('st_pole', poleMats, grp);
   for (const l of poleLines) grp.add(l);
 
@@ -178,14 +178,14 @@ export function buildStreetDetails(game) {
 
   // ---------- 大路中央护栏、人行道花坛、消防栓 ----------
   const railMats = [];
-  for (let x = -160; x <= 160; x += 3.8) {
+  for (let x = -(HALF - 5); x <= HALF - 5; x += 3.8) {
     if (ROADS.some(rx => Math.abs(x - rx) < 9)) continue;
     railMats.push(place(x, 0.03, AVENUE_Z));
     city.colliders.push({ minX: x - 1.95, maxX: x + 1.95, minZ: AVENUE_Z - 0.15, maxZ: AVENUE_Z + 0.15, small: true });   // 护栏挡人也挡车
   }
   for (const im of instanced('st_rail', railMats, grp)) im.castShadow = false;
   const planterMats = [];
-  for (let x = -150; x <= 150; x += 15) for (const side of [-1, 1]) {
+  for (let x = -(HALF - 15); x <= HALF - 15; x += 15) for (const side of [-1, 1]) {
     if (ROADS.some(rx => Math.abs(x - rx) < 10)) continue;
     const z = AVENUE_Z + side * (roadWidth('z', AVENUE_Z) / 2 + 1.1);
     planterMats.push(place(x + 7, CURB, z));

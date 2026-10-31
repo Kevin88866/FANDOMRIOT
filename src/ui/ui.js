@@ -3,9 +3,11 @@ import * as Sim from '../sim/sim.js';
 import { scoreCaption } from '../sim/caption.js';
 import { Screens } from './screens.js';
 import { Menus } from './menus.js';
+import { Places } from './places.js';
 import { deleteSlot } from '../engine/saves.js';
 import { itemThumb, charThumb } from './thumbs.js';
 import { REAL, CHAR_LABEL } from '../world/actors.js';
+import { ROADS, HALF } from '../world/city.js';
 import { pickStory, STORIES, rollMissions, missionText, rewardText, MISSIONS, ACHIEVEMENTS, achGrant, achLoad } from '../content/story.js';
 
 const $ = id => document.getElementById(id);
@@ -116,17 +118,17 @@ export class UI {
     const c = $('minimap-c'), x = c.getContext('2d'), g = this.g, big = g.bigMap;
     const el = $('minimap'), size = big ? 420 : 180;
     if (c.width !== size) { el.style.width = el.style.height = size + 'px'; el.style.borderRadius = big ? '16px' : '50%'; c.width = c.height = size; }
-    const W = size, sc = big ? W / 340 : W / 160;
+    const W = size, sc = big ? W / 470 : W / 160;
     const me = g.player.vehicle ? g.player.vehicle.root.position : g.player.pos;
     const cx = big ? 0 : me.x, cz = big ? 0 : me.z;
     const P = (px, pz) => [W / 2 + (px - cx) * sc, W / 2 + (pz - cz) * sc];
     x.fillStyle = '#0d1018'; x.fillRect(0, 0, W, W);
     x.fillStyle = '#2b3040';
-    for (const r of [-150, -90, -30, 30, 90, 150]) {
+    for (const r of ROADS) {
       const w = (r === 30 ? 26 : 14) * sc; let [a, b] = P(0, r); x.fillRect(0, b - w / 2, W, w);
       [a, b] = P(r, 0); x.fillRect(a - 7 * sc, 0, 14 * sc, W);
     }
-    const pts = g.city.points, col = { shop: '#ff4f9a', garage: '#27e1ff', home: '#ffd34d', hq: '#ff2d55' };
+    const pts = g.city.points, col = { shop: '#ff4f9a', garage: '#27e1ff', home: '#ffd34d', hq: '#ff2d55', print: '#b36bff', cafe: '#ff9f43', metro: '#4cc3ff', pcbang: '#38e08a' };
     for (const k in pts) {
       const p = pts[k]; if (!col[p.kind]) continue; const [a, b] = P(p.pos.x, p.pos.z);
       x.fillStyle = col[p.kind]; x.beginPath(); x.arc(a, b, big ? 7 : 5, 0, 7); x.fill();
@@ -376,9 +378,10 @@ export class UI {
 
   useItems(hqId) {
     const s = this.s, hq = this.g.city.hq[hqId];
-    const list = s.inventory.filter(o => !itemOf(o.item).truck && this.locationOf(o) === hqId);
-    const other = s.inventory.filter(o => !itemOf(o.item).truck && this.locationOf(o) !== hqId).length;
-    this.open(`<h2>${esc(hq.team.name)} ${hqId === 'ARENA' ? '' : '总部'}门口</h2>
+    const here = o => hqId === 'PARK' ? Sim.PARK_PROPS.includes(itemOf(o.item).prop) : this.locationOf(o) === hqId;
+    const list = s.inventory.filter(o => !itemOf(o.item).truck && here(o));
+    const other = s.inventory.filter(o => !itemOf(o.item).truck && !here(o)).length;
+    this.open(`<h2>${esc(hq.team.name)} ${hqId === 'ARENA' || hqId === 'PARK' ? '' : '总部门口'}</h2>${hqId === 'PARK' ? '<div class="news">集会、烟花、无人机、应援棒、灯牌、气球在这里曝光 ×1.35；但选手看不到，心态影响减半。</div>' : ''}
       <div class="sub">${list.length ? '选择要使用的道具。布置好后记得掏手机拍照（C）。' : '背包里没有能在这里用的道具。'}${other ? ` 还有 ${other} 件道具要去别的地点用。` : ''}</div>
       <div class="cards">${list.map((o, i) => { const it = itemOf(o.item); return `<div class="card" data-u="${i}"><span class="tag ${o.kind === 'support' ? 'good' : 'evil'}">${o.kind === 'support' ? '应援' : '抗议'}</span><div class="t">${it.name}</div><div class="d">→ ${esc(o.target)}<br>“${esc(o.text)}”</div></div>`; }).join('')}</div>
       <div class="row" style="margin-top:14px"><button class="btn" id="x">离开</button></div>`, { esc: () => this.close() });
@@ -498,4 +501,4 @@ export class UI {
   }
 }
 
-Object.assign(UI.prototype, Screens, Menus);
+Object.assign(UI.prototype, Screens, Menus, Places);
