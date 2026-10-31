@@ -43,6 +43,74 @@ Paths are relative to `assets/thirdparty/`.
 | Security Camera 02 | https://polyhaven.com/a/security_camera_02 | Garrison Gager, Yann Kervran | CC0 | `building/polyhaven_security_camera_02/security_camera_02.glb` |
 | Security Light | https://polyhaven.com/a/security_light | Maximilian Schuster | CC0 | `building/polyhaven_security_light/security_light.glb` |
 
+## interior
+
+| Name | URL | Author | License | Path |
+|---|---|---|---|---|
+| Cash Register 01 | https://polyhaven.com/a/CashRegister_01 | Joe Seabuhr | CC0 | `interior/polyhaven_CashRegister_01/CashRegister_01.glb` |
+| Coffee Cart 01 | https://polyhaven.com/a/CoffeeCart_01 | Joe Seabuhr | CC0 | `interior/polyhaven_CoffeeCart_01/CoffeeCart_01.glb` |
+| Television 01 | https://polyhaven.com/a/Television_01 | Gabriel Radić | CC0 | `interior/polyhaven_Television_01/Television_01.glb` |
+| Wet Floor Sign 01 | https://polyhaven.com/a/WetFloorSign_01 | Fran Calvente | CC0 | `interior/polyhaven_WetFloorSign_01/WetFloorSign_01.glb` |
+| Bar Chair Round 01 | https://polyhaven.com/a/bar_chair_round_01 | Dairon Sanchez | CC0 | `interior/polyhaven_bar_chair_round_01/bar_chair_round_01.glb` |
+| Coffee Table Round 01 | https://polyhaven.com/a/coffee_table_round_01 | Ulan Cabanilla | CC0 | `interior/polyhaven_coffee_table_round_01/coffee_table_round_01.glb` |
+| Dining Chair 02 | https://polyhaven.com/a/dining_chair_02 | James Ray Cock | CC0 | `interior/polyhaven_dining_chair_02/dining_chair_02.glb` |
+| Drawer Cabinet | https://polyhaven.com/a/drawer_cabinet | Ulan Cabanilla | CC0 | `interior/polyhaven_drawer_cabinet/drawer_cabinet.glb` |
+| Hanging Industrial Lamp | https://polyhaven.com/a/hanging_industrial_lamp | Kuutti Siitonen | CC0 | `interior/polyhaven_hanging_industrial_lamp/hanging_industrial_lamp.glb` |
+| Korean Fire Extinguisher 01 | https://polyhaven.com/a/korean_fire_extinguisher_01 | UM JOORIN | CC0 | `interior/polyhaven_korean_fire_extinguisher_01/korean_fire_extinguisher_01.glb` |
+| Metal Office Desk | https://polyhaven.com/a/metal_office_desk | Ulan Cabanilla | CC0 | `interior/polyhaven_metal_office_desk/metal_office_desk.glb` |
+| Metal Stool 01 | https://polyhaven.com/a/metal_stool_01 | Ulan Cabanilla | CC0 | `interior/polyhaven_metal_stool_01/metal_stool_01.glb` |
+| Modern Ceiling Lamp 01 | https://polyhaven.com/a/modern_ceiling_lamp_01 | James Ray Cock | CC0 | `interior/polyhaven_modern_ceiling_lamp_01/modern_ceiling_lamp_01.glb` |
+| Mounted Fluorescent Lights | https://polyhaven.com/a/mounted_fluorescent_lights | Ulan Cabanilla | CC0 | `interior/polyhaven_mounted_fluorescent_lights/mounted_fluorescent_lights.glb` |
+| Plastic Monobloc Chair 01 | https://polyhaven.com/a/plastic_monobloc_chair_01 | Kuutti Siitonen | CC0 | `interior/polyhaven_plastic_monobloc_chair_01/plastic_monobloc_chair_01.glb` |
+| Round Wooden Table 01 | https://polyhaven.com/a/round_wooden_table_01 | Ulan Cabanilla | CC0 | `interior/polyhaven_round_wooden_table_01/round_wooden_table_01.glb` |
+| Standing Chalkboard 01 | https://polyhaven.com/a/standing_chalkboard_01 | ParzivalCG | CC0 | `interior/polyhaven_standing_chalkboard_01/standing_chalkboard_01.glb` |
+| Steel Frame Shelves 01 | https://polyhaven.com/a/steel_frame_shelves_01 | James Ray Cock | CC0 | `interior/polyhaven_steel_frame_shelves_01/steel_frame_shelves_01.glb` |
+| Steel Frame Shelves 02 | https://polyhaven.com/a/steel_frame_shelves_02 | James Ray Cock | CC0 | `interior/polyhaven_steel_frame_shelves_02/steel_frame_shelves_02.glb` |
+| Vintage Microwave | https://polyhaven.com/a/vintage_microwave | Adam Nekola | CC0 | `interior/polyhaven_vintage_microwave/vintage_microwave.glb` |
+| Wall Clock | https://polyhaven.com/a/wall_clock | PierreB3D | CC0 | `interior/polyhaven_wall_clock/wall_clock.glb` |
+| Wooden Display Shelves 01 | https://polyhaven.com/a/wooden_display_shelves_01 | James Ray Cock | CC0 | `interior/polyhaven_wooden_display_shelves_01/wooden_display_shelves_01.glb` |
+
+## props
+
+| Name | URL | Author | License | Path |
+|---|---|---|---|---|
+| Camera 01 | https://polyhaven.com/a/Camera_01 | Rajil Jose Macatangay | CC0 | `props/polyhaven_Camera_01/Camera_01.glb` |
+| Megaphone 01 | https://polyhaven.com/a/Megaphone_01 | Ethan Simon-Law | CC0 | `props/polyhaven_Megaphone_01/Megaphone_01.glb` |
+| Bananas | https://polyhaven.com/a/bananas | Alexander Shulha | CC0 | `props/polyhaven_bananas/bananas.glb` |
+| Boombox | https://polyhaven.com/a/boombox | Thomas Paul Mouilleron | CC0 | `props/polyhaven_boombox/boombox.glb` |
+| Cardboard Box 01 | https://polyhaven.com/a/cardboard_box_01 | Rahul Chaudhary | CC0 | `props/polyhaven_cardboard_box_01/cardboard_box_01.glb` |
+| Carrot Cake | https://polyhaven.com/a/carrot_cake | Greg Zaal, James Ray Cock | CC0 | `props/polyhaven_carrot_cake/carrot_cake.glb` |
+| Cigarette Pack | https://polyhaven.com/a/cigarette_pack | Ulrich Büch | CC0 | `props/polyhaven_cigarette_pack/cigarette_pack.glb` |
+| Croissant | https://polyhaven.com/a/croissant | Greg Zaal, Dario Barresi | CC0 | `props/polyhaven_croissant/croissant.glb` |
+| Food Apple 01 | https://polyhaven.com/a/food_apple_01 | Oliver Harries | CC0 | `props/polyhaven_food_apple_01/food_apple_01.glb` |
+| Gamepad | https://polyhaven.com/a/gamepad | Josh Dean | CC0 | `props/polyhaven_gamepad/gamepad.glb` |
+| Long Life Food | https://polyhaven.com/a/long_life_food | Mia Pecina Zorko | CC0 | `props/polyhaven_long_life_food/long_life_food.glb` |
+| Plastic Bottle Gallon | https://polyhaven.com/a/plastic_bottle_gallon | Rahul Chaudhary | CC0 | `props/polyhaven_plastic_bottle_gallon/plastic_bottle_gallon.glb` |
+| Plastic Crate 01 | https://polyhaven.com/a/plastic_crate_01 | PierreB3D | CC0 | `props/polyhaven_plastic_crate_01/plastic_crate_01.glb` |
+| Spray Paint Bottles | https://polyhaven.com/a/spray_paint_bottles | James Ray Cock | CC0 | `props/polyhaven_spray_paint_bottles/spray_paint_bottles.glb` |
+| Spray Paint Bottles 02 | https://polyhaven.com/a/spray_paint_bottles_02 | Riley Queen | CC0 | `props/polyhaven_spray_paint_bottles_02/spray_paint_bottles_02.glb` |
+| Strawberry Chocolate Cake | https://polyhaven.com/a/strawberry_chocolate_cake | Kuutti Siitonen | CC0 | `props/polyhaven_strawberry_chocolate_cake/strawberry_chocolate_cake.glb` |
+| Trashbag | https://polyhaven.com/a/trashbag | Benny Weimer | CC0 | `props/polyhaven_trashbag/trashbag.glb` |
+| Wicker Basket 01 | https://polyhaven.com/a/wicker_basket_01 | Kuutti Siitonen | CC0 | `props/polyhaven_wicker_basket_01/wicker_basket_01.glb` |
+| Wine Bottles 01 | https://polyhaven.com/a/wine_bottles_01 | Rico Cilliers, Jurita Burger | CC0 | `props/polyhaven_wine_bottles_01/wine_bottles_01.glb` |
+| Wooden Crate 01 | https://polyhaven.com/a/wooden_crate_01 | James Ray Cock | CC0 | `props/polyhaven_wooden_crate_01/wooden_crate_01.glb` |
+
+## plants
+
+| Name | URL | Author | License | Path |
+|---|---|---|---|---|
+| Grass Medium 01 | https://polyhaven.com/a/grass_medium_01 | Rob Tuytel, Rico Cilliers | CC0 | `plants/polyhaven_grass_medium_01/grass_medium_01.glb` |
+| Grass Medium 02 | https://polyhaven.com/a/grass_medium_02 | Rico Cilliers | CC0 | `plants/polyhaven_grass_medium_02/grass_medium_02.glb` |
+| Planter Box 01 | https://polyhaven.com/a/planter_box_01 | James Ray Cock | CC0 | `plants/polyhaven_planter_box_01/planter_box_01.glb` |
+| Planter Box 02 | https://polyhaven.com/a/planter_box_02 | James Ray Cock | CC0 | `plants/polyhaven_planter_box_02/planter_box_02.glb` |
+| Potted Plant 01 | https://polyhaven.com/a/potted_plant_01 | Rico Cilliers | CC0 | `plants/polyhaven_potted_plant_01/potted_plant_01.glb` |
+| Potted Plant 02 | https://polyhaven.com/a/potted_plant_02 | Rico Cilliers | CC0 | `plants/polyhaven_potted_plant_02/potted_plant_02.glb` |
+| Potted Plant 04 | https://polyhaven.com/a/potted_plant_04 | James Ray Cock | CC0 | `plants/polyhaven_potted_plant_04/potted_plant_04.glb` |
+| Shrub 01 | https://polyhaven.com/a/shrub_01 | Rico Cilliers | CC0 | `plants/polyhaven_shrub_01/shrub_01.glb` |
+| Shrub 02 | https://polyhaven.com/a/shrub_02 | Rico Cilliers | CC0 | `plants/polyhaven_shrub_02/shrub_02.glb` |
+| Shrub 03 | https://polyhaven.com/a/shrub_03 | Rico Cilliers | CC0 | `plants/polyhaven_shrub_03/shrub_03.glb` |
+| Shrub 04 | https://polyhaven.com/a/shrub_04 | Rico Cilliers | CC0 | `plants/polyhaven_shrub_04/shrub_04.glb` |
+
 ## textures
 
 | Name | URL | Author | License | Path |
@@ -137,6 +205,14 @@ Paths are relative to `assets/thirdparty/`.
 | Urban Street 01 | https://polyhaven.com/a/urban_street_01 | Andreas Mischok | CC0 | `hdri/polyhaven_urban_street_01` |
 | Vignaioli Night | https://polyhaven.com/a/vignaioli_night | Greg Zaal, Rico Cilliers | CC0 | `hdri/polyhaven_vignaioli_night` |
 
+## sfx
+
+| Name | URL | Author | License | Path |
+|---|---|---|---|---|
+| Kenney Impact Sounds | https://kenney.nl/assets/impact-sounds | Kenney | CC0 | `sfx/kenney_impact_sounds` |
+| Kenney Interface Sounds | https://kenney.nl/assets/interface-sounds | Kenney | CC0 | `sfx/kenney_interface_sounds` |
+| Kenney Ui Audio | https://kenney.nl/assets/ui-audio | Kenney | CC0 | `sfx/kenney_ui_audio` |
+
 ## fonts
 
 | Name | URL | Author | License | Path |
@@ -145,3 +221,10 @@ Paths are relative to `assets/thirdparty/`.
 | Black Han Sans (bold Korean display) | https://fonts.google.com/specimen/Black+Han+Sans | Zess Type | OFL-1.1 | `fonts/googlefonts_blackhansans` |
 | Noto Sans KR (variable) | https://fonts.google.com/specimen/Noto+Sans+KR | Google, Adobe | OFL-1.1 | `fonts/googlefonts_notosanskr` |
 | Noto Sans SC (variable) | https://fonts.google.com/specimen/Noto+Sans+SC | Google, Adobe | OFL-1.1 | `fonts/googlefonts_notosanssc` |
+
+## fx
+
+| Name | URL | Author | License | Path |
+|---|---|---|---|---|
+| Kenney Particle Pack | https://kenney.nl/assets/particle-pack | Kenney | CC0 | `fx/kenney_particle_pack` |
+| Kenney Smoke Particles | https://kenney.nl/assets/smoke-particles | Kenney | CC0 | `fx/kenney_smoke_particles` |

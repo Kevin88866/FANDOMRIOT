@@ -240,6 +240,430 @@
   "path": "building/polyhaven_security_light/security_light.glb"
  },
  {
+  "category": "interior",
+  "name": "Cash Register 01",
+  "url": "https://polyhaven.com/a/CashRegister_01",
+  "author": "Joe Seabuhr",
+  "license": "CC0",
+  "path": "interior/polyhaven_CashRegister_01/CashRegister_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Coffee Cart 01",
+  "url": "https://polyhaven.com/a/CoffeeCart_01",
+  "author": "Joe Seabuhr",
+  "license": "CC0",
+  "path": "interior/polyhaven_CoffeeCart_01/CoffeeCart_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Television 01",
+  "url": "https://polyhaven.com/a/Television_01",
+  "author": "Gabriel Radić",
+  "license": "CC0",
+  "path": "interior/polyhaven_Television_01/Television_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Wet Floor Sign 01",
+  "url": "https://polyhaven.com/a/WetFloorSign_01",
+  "author": "Fran Calvente",
+  "license": "CC0",
+  "path": "interior/polyhaven_WetFloorSign_01/WetFloorSign_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Bar Chair Round 01",
+  "url": "https://polyhaven.com/a/bar_chair_round_01",
+  "author": "Dairon Sanchez",
+  "license": "CC0",
+  "path": "interior/polyhaven_bar_chair_round_01/bar_chair_round_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Coffee Table Round 01",
+  "url": "https://polyhaven.com/a/coffee_table_round_01",
+  "author": "Ulan Cabanilla",
+  "license": "CC0",
+  "path": "interior/polyhaven_coffee_table_round_01/coffee_table_round_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Dining Chair 02",
+  "url": "https://polyhaven.com/a/dining_chair_02",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "interior/polyhaven_dining_chair_02/dining_chair_02.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Drawer Cabinet",
+  "url": "https://polyhaven.com/a/drawer_cabinet",
+  "author": "Ulan Cabanilla",
+  "license": "CC0",
+  "path": "interior/polyhaven_drawer_cabinet/drawer_cabinet.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Hanging Industrial Lamp",
+  "url": "https://polyhaven.com/a/hanging_industrial_lamp",
+  "author": "Kuutti Siitonen",
+  "license": "CC0",
+  "path": "interior/polyhaven_hanging_industrial_lamp/hanging_industrial_lamp.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Korean Fire Extinguisher 01",
+  "url": "https://polyhaven.com/a/korean_fire_extinguisher_01",
+  "author": "UM JOORIN",
+  "license": "CC0",
+  "path": "interior/polyhaven_korean_fire_extinguisher_01/korean_fire_extinguisher_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Metal Office Desk",
+  "url": "https://polyhaven.com/a/metal_office_desk",
+  "author": "Ulan Cabanilla",
+  "license": "CC0",
+  "path": "interior/polyhaven_metal_office_desk/metal_office_desk.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Metal Stool 01",
+  "url": "https://polyhaven.com/a/metal_stool_01",
+  "author": "Ulan Cabanilla",
+  "license": "CC0",
+  "path": "interior/polyhaven_metal_stool_01/metal_stool_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Modern Ceiling Lamp 01",
+  "url": "https://polyhaven.com/a/modern_ceiling_lamp_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "interior/polyhaven_modern_ceiling_lamp_01/modern_ceiling_lamp_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Mounted Fluorescent Lights",
+  "url": "https://polyhaven.com/a/mounted_fluorescent_lights",
+  "author": "Ulan Cabanilla",
+  "license": "CC0",
+  "path": "interior/polyhaven_mounted_fluorescent_lights/mounted_fluorescent_lights.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Plastic Monobloc Chair 01",
+  "url": "https://polyhaven.com/a/plastic_monobloc_chair_01",
+  "author": "Kuutti Siitonen",
+  "license": "CC0",
+  "path": "interior/polyhaven_plastic_monobloc_chair_01/plastic_monobloc_chair_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Round Wooden Table 01",
+  "url": "https://polyhaven.com/a/round_wooden_table_01",
+  "author": "Ulan Cabanilla",
+  "license": "CC0",
+  "path": "interior/polyhaven_round_wooden_table_01/round_wooden_table_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Standing Chalkboard 01",
+  "url": "https://polyhaven.com/a/standing_chalkboard_01",
+  "author": "ParzivalCG",
+  "license": "CC0",
+  "path": "interior/polyhaven_standing_chalkboard_01/standing_chalkboard_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Steel Frame Shelves 01",
+  "url": "https://polyhaven.com/a/steel_frame_shelves_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "interior/polyhaven_steel_frame_shelves_01/steel_frame_shelves_01.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Steel Frame Shelves 02",
+  "url": "https://polyhaven.com/a/steel_frame_shelves_02",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "interior/polyhaven_steel_frame_shelves_02/steel_frame_shelves_02.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Vintage Microwave",
+  "url": "https://polyhaven.com/a/vintage_microwave",
+  "author": "Adam Nekola",
+  "license": "CC0",
+  "path": "interior/polyhaven_vintage_microwave/vintage_microwave.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Wall Clock",
+  "url": "https://polyhaven.com/a/wall_clock",
+  "author": "PierreB3D",
+  "license": "CC0",
+  "path": "interior/polyhaven_wall_clock/wall_clock.glb"
+ },
+ {
+  "category": "interior",
+  "name": "Wooden Display Shelves 01",
+  "url": "https://polyhaven.com/a/wooden_display_shelves_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "interior/polyhaven_wooden_display_shelves_01/wooden_display_shelves_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Camera 01",
+  "url": "https://polyhaven.com/a/Camera_01",
+  "author": "Rajil Jose Macatangay",
+  "license": "CC0",
+  "path": "props/polyhaven_Camera_01/Camera_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Megaphone 01",
+  "url": "https://polyhaven.com/a/Megaphone_01",
+  "author": "Ethan Simon-Law",
+  "license": "CC0",
+  "path": "props/polyhaven_Megaphone_01/Megaphone_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Bananas",
+  "url": "https://polyhaven.com/a/bananas",
+  "author": "Alexander Shulha",
+  "license": "CC0",
+  "path": "props/polyhaven_bananas/bananas.glb"
+ },
+ {
+  "category": "props",
+  "name": "Boombox",
+  "url": "https://polyhaven.com/a/boombox",
+  "author": "Thomas Paul Mouilleron",
+  "license": "CC0",
+  "path": "props/polyhaven_boombox/boombox.glb"
+ },
+ {
+  "category": "props",
+  "name": "Cardboard Box 01",
+  "url": "https://polyhaven.com/a/cardboard_box_01",
+  "author": "Rahul Chaudhary",
+  "license": "CC0",
+  "path": "props/polyhaven_cardboard_box_01/cardboard_box_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Carrot Cake",
+  "url": "https://polyhaven.com/a/carrot_cake",
+  "author": "Greg Zaal, James Ray Cock",
+  "license": "CC0",
+  "path": "props/polyhaven_carrot_cake/carrot_cake.glb"
+ },
+ {
+  "category": "props",
+  "name": "Cigarette Pack",
+  "url": "https://polyhaven.com/a/cigarette_pack",
+  "author": "Ulrich Büch",
+  "license": "CC0",
+  "path": "props/polyhaven_cigarette_pack/cigarette_pack.glb"
+ },
+ {
+  "category": "props",
+  "name": "Croissant",
+  "url": "https://polyhaven.com/a/croissant",
+  "author": "Greg Zaal, Dario Barresi",
+  "license": "CC0",
+  "path": "props/polyhaven_croissant/croissant.glb"
+ },
+ {
+  "category": "props",
+  "name": "Food Apple 01",
+  "url": "https://polyhaven.com/a/food_apple_01",
+  "author": "Oliver Harries",
+  "license": "CC0",
+  "path": "props/polyhaven_food_apple_01/food_apple_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Gamepad",
+  "url": "https://polyhaven.com/a/gamepad",
+  "author": "Josh Dean",
+  "license": "CC0",
+  "path": "props/polyhaven_gamepad/gamepad.glb"
+ },
+ {
+  "category": "props",
+  "name": "Long Life Food",
+  "url": "https://polyhaven.com/a/long_life_food",
+  "author": "Mia Pecina Zorko",
+  "license": "CC0",
+  "path": "props/polyhaven_long_life_food/long_life_food.glb"
+ },
+ {
+  "category": "props",
+  "name": "Plastic Bottle Gallon",
+  "url": "https://polyhaven.com/a/plastic_bottle_gallon",
+  "author": "Rahul Chaudhary",
+  "license": "CC0",
+  "path": "props/polyhaven_plastic_bottle_gallon/plastic_bottle_gallon.glb"
+ },
+ {
+  "category": "props",
+  "name": "Plastic Crate 01",
+  "url": "https://polyhaven.com/a/plastic_crate_01",
+  "author": "PierreB3D",
+  "license": "CC0",
+  "path": "props/polyhaven_plastic_crate_01/plastic_crate_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Spray Paint Bottles",
+  "url": "https://polyhaven.com/a/spray_paint_bottles",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "props/polyhaven_spray_paint_bottles/spray_paint_bottles.glb"
+ },
+ {
+  "category": "props",
+  "name": "Spray Paint Bottles 02",
+  "url": "https://polyhaven.com/a/spray_paint_bottles_02",
+  "author": "Riley Queen",
+  "license": "CC0",
+  "path": "props/polyhaven_spray_paint_bottles_02/spray_paint_bottles_02.glb"
+ },
+ {
+  "category": "props",
+  "name": "Strawberry Chocolate Cake",
+  "url": "https://polyhaven.com/a/strawberry_chocolate_cake",
+  "author": "Kuutti Siitonen",
+  "license": "CC0",
+  "path": "props/polyhaven_strawberry_chocolate_cake/strawberry_chocolate_cake.glb"
+ },
+ {
+  "category": "props",
+  "name": "Trashbag",
+  "url": "https://polyhaven.com/a/trashbag",
+  "author": "Benny Weimer",
+  "license": "CC0",
+  "path": "props/polyhaven_trashbag/trashbag.glb"
+ },
+ {
+  "category": "props",
+  "name": "Wicker Basket 01",
+  "url": "https://polyhaven.com/a/wicker_basket_01",
+  "author": "Kuutti Siitonen",
+  "license": "CC0",
+  "path": "props/polyhaven_wicker_basket_01/wicker_basket_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Wine Bottles 01",
+  "url": "https://polyhaven.com/a/wine_bottles_01",
+  "author": "Rico Cilliers, Jurita Burger",
+  "license": "CC0",
+  "path": "props/polyhaven_wine_bottles_01/wine_bottles_01.glb"
+ },
+ {
+  "category": "props",
+  "name": "Wooden Crate 01",
+  "url": "https://polyhaven.com/a/wooden_crate_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "props/polyhaven_wooden_crate_01/wooden_crate_01.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Grass Medium 01",
+  "url": "https://polyhaven.com/a/grass_medium_01",
+  "author": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_grass_medium_01/grass_medium_01.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Grass Medium 02",
+  "url": "https://polyhaven.com/a/grass_medium_02",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_grass_medium_02/grass_medium_02.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Planter Box 01",
+  "url": "https://polyhaven.com/a/planter_box_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "plants/polyhaven_planter_box_01/planter_box_01.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Planter Box 02",
+  "url": "https://polyhaven.com/a/planter_box_02",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "plants/polyhaven_planter_box_02/planter_box_02.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Potted Plant 01",
+  "url": "https://polyhaven.com/a/potted_plant_01",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_potted_plant_01/potted_plant_01.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Potted Plant 02",
+  "url": "https://polyhaven.com/a/potted_plant_02",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_potted_plant_02/potted_plant_02.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Potted Plant 04",
+  "url": "https://polyhaven.com/a/potted_plant_04",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "plants/polyhaven_potted_plant_04/potted_plant_04.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Shrub 01",
+  "url": "https://polyhaven.com/a/shrub_01",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_shrub_01/shrub_01.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Shrub 02",
+  "url": "https://polyhaven.com/a/shrub_02",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_shrub_02/shrub_02.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Shrub 03",
+  "url": "https://polyhaven.com/a/shrub_03",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_shrub_03/shrub_03.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Shrub 04",
+  "url": "https://polyhaven.com/a/shrub_04",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_shrub_04/shrub_04.glb"
+ },
+ {
   "category": "textures",
   "name": "Asphalt 012",
   "url": "https://ambientcg.com/view?id=Asphalt012",
@@ -872,6 +1296,30 @@
   "path": "hdri/polyhaven_vignaioli_night"
  },
  {
+  "category": "sfx",
+  "name": "Kenney Impact Sounds",
+  "url": "https://kenney.nl/assets/impact-sounds",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "sfx/kenney_impact_sounds"
+ },
+ {
+  "category": "sfx",
+  "name": "Kenney Interface Sounds",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "sfx/kenney_interface_sounds"
+ },
+ {
+  "category": "sfx",
+  "name": "Kenney Ui Audio",
+  "url": "https://kenney.nl/assets/ui-audio",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "sfx/kenney_ui_audio"
+ },
+ {
   "category": "fonts",
   "name": "Bebas Neue (bold Latin display)",
   "url": "https://fonts.google.com/specimen/Bebas+Neue",
@@ -902,5 +1350,21 @@
   "author": "Google, Adobe",
   "license": "OFL-1.1",
   "path": "fonts/googlefonts_notosanssc"
+ },
+ {
+  "category": "fx",
+  "name": "Kenney Particle Pack",
+  "url": "https://kenney.nl/assets/particle-pack",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "fx/kenney_particle_pack"
+ },
+ {
+  "category": "fx",
+  "name": "Kenney Smoke Particles",
+  "url": "https://kenney.nl/assets/smoke-particles",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "fx/kenney_smoke_particles"
  }
 ]
