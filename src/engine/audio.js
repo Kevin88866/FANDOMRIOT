@@ -1,5 +1,6 @@
 // 全部用 WebAudio 合成，无需音频文件
 import { settings, onSettings } from './settings.js';
+import { SFX } from './sfx_list.js';
 
 // 分组音量：主音量 → 音乐 / 音效 / 环境 / 界面
 export class Audio {
@@ -26,6 +27,7 @@ export class Audio {
     this.verb.buffer = b; const vg = C.createGain(); vg.gain.value = 0.25; this.verb.connect(vg); vg.connect(this.sfxBus);
     this.noiseBuf = C.createBuffer(1, C.sampleRate * 2, C.sampleRate); const nd = this.noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     this.startAmbience();
+    this.loadSamples();
     if (this.wantMusic) { const w = this.wantMusic; this.wantMusic = null; this.music(w); }
   }
 
@@ -43,14 +45,41 @@ export class Audio {
     const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
     o.connect(g); g.connect(bus || this.sfxBus); o.start(t); o.stop(t + dur + 0.05);
   }
-  pop() { this.noise(0.9, { f: 2500, f2: 300, gain: 0.5 }); this.noise(1.6, { f: 6000, type: 'highpass', gain: 0.12, attack: 0.15 }); }
-  shutter() { this.noise(0.05, { f: 3000, type: 'bandpass', q: 2, gain: 0.5, verb: false }); setTimeout(() => this.noise(0.06, { f: 2000, type: 'bandpass', q: 2, gain: 0.4, verb: false }), 70); }
+  // ---------- 录音样本 ----------
+  loadSamples() {
+    this.buf = {};
+    for (const [k, files] of Object.entries(SFX)) this.buf[k] = [];
+    for (const [k, files] of Object.entries(SFX)) for (const f of files) {
+      fetch(f).then(r => r.arrayBuffer()).then(a => this.ctx.decodeAudioData(a)).then(b => { this.buf[k].push(b); if (k === 'ambience' || k === 'engine' || k === 'traffic') this.startLoops(); }).catch(() => {});
+    }
+  }
+  // 播放一个样本：返回 true 表示播出去了（没加载好时返回 false，调用方可以退回合成音）
+  sample(name, vol = 1, rate = 1, bus = null) {
+    const list = this.buf?.[name]; if (!this.ctx || !list?.length) return false;
+    const s = this.ctx.createBufferSource(); s.buffer = list[Math.random() * list.length | 0]; s.playbackRate.value = rate * (0.95 + Math.random() * 0.1);
+    const g = this.ctx.createGain(); g.gain.value = vol; s.connect(g); g.connect(bus || this.sfxBus); s.start();
+    return true;
+  }
+  // 循环样本：城市环境声、引擎声
+  startLoops() {
+    const loop = (name, bus, vol) => {
+      if (this.loops?.[name] || !this.buf[name]?.length) return;
+      const s = this.ctx.createBufferSource(); s.buffer = this.buf[name][0]; s.loop = true;
+      const g = this.ctx.createGain(); g.gain.value = vol; s.connect(g); g.connect(bus); s.start();
+      (this.loops ||= {})[name] = { s, g };
+    };
+    loop('ambience', this.ambBus, 0.5); loop('traffic', this.ambBus, 0.25); loop('engine', this.sfxBus, 0);
+    if (this.loops?.ambience && this.amb) this.amb.gain.value = 0;   // 有录音就关掉合成的底噪
+  }
+
+  pop() { if (this.sample('fireworks', 0.6)) return; this.noise(0.9, { f: 2500, f2: 300, gain: 0.5 }); this.noise(1.6, { f: 6000, type: 'highpass', gain: 0.12, attack: 0.15 }); }
+  shutter() { if (this.sample('shutter', 0.7)) return; this.noise(0.05, { f: 3000, type: 'bandpass', q: 2, gain: 0.5, verb: false }); setTimeout(() => this.noise(0.06, { f: 2000, type: 'bandpass', q: 2, gain: 0.4, verb: false }), 70); }
   click() { this.tone(900, 0.06, { type: 'triangle', gain: 0.12, bus: this.uiBus }); }
   hover() { this.tone(1400, 0.03, { type: 'sine', gain: 0.04, bus: this.uiBus }); }
   coin() { this.tone(988, 0.08, { type: 'square', gain: 0.07 }); this.tone(1318, 0.25, { type: 'square', gain: 0.07, delay: 0.08 }); }
   bad() { this.tone(220, 0.3, { type: 'sawtooth', gain: 0.08, slide: 110 }); }
-  notify() { this.tone(1046, 0.12, { gain: 0.15, bus: this.uiBus }); this.tone(1568, 0.2, { gain: 0.12, delay: 0.1, bus: this.uiBus }); }
-  splat() { this.noise(0.25, { f: 600, gain: 0.6, verb: false }); }
+  notify() { if (this.sample('notify', 0.5, 1, this.uiBus)) return; this.tone(1046, 0.12, { gain: 0.15, bus: this.uiBus }); this.tone(1568, 0.2, { gain: 0.12, delay: 0.1, bus: this.uiBus }); }
+  splat() { if (this.sample('egg', 0.8)) return; this.noise(0.25, { f: 600, gain: 0.6, verb: false }); }
   whoosh() { this.noise(1.2, { f: 300, f2: 3000, type: 'bandpass', q: 3, gain: 0.5 }); }
   viral() { [523, 659, 784, 1046].forEach((f, i) => this.tone(f, 0.4, { type: 'triangle', gain: 0.15, delay: i * 0.09 })); }
 
@@ -67,7 +96,10 @@ export class Audio {
     const eg = C.createGain(); eg.gain.value = 0; o.connect(ef); ef.connect(eg); eg.connect(this.sfxBus); o.start();
     this.engine = { o, g: eg };
   }
-  setEngine(on, speed) { if (!this.engine) return; const t = this.ctx.currentTime; this.engine.g.gain.setTargetAtTime(on ? 0.05 + Math.min(0.06, speed * 0.003) : 0, t, 0.1); this.engine.o.frequency.setTargetAtTime(35 + speed * 3.5, t, 0.1); }
+  setEngine(on, speed) {
+    const L = this.loops?.engine;
+    if (L) { const t = this.ctx.currentTime; L.g.gain.setTargetAtTime(on ? 0.25 + Math.min(0.3, speed * 0.015) : 0, t, 0.15); L.s.playbackRate.setTargetAtTime(0.7 + Math.min(1.3, speed * 0.05), t, 0.15); if (this.engine) this.engine.g.gain.setTargetAtTime(0, t, 0.1); return; }
+    if (!this.engine) return; const t = this.ctx.currentTime; this.engine.g.gain.setTargetAtTime(on ? 0.05 + Math.min(0.06, speed * 0.003) : 0, t, 0.1); this.engine.o.frequency.setTargetAtTime(35 + speed * 3.5, t, 0.1); }
 
   // ================= 背景音乐（程序化合成，循环） =================
   // 菜单：慢速 lo-fi；行动日：夜晚城市律动；结算：明快一点。

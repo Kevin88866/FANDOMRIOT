@@ -3,7 +3,8 @@ import * as Sim from '../sim/sim.js';
 import { Screens } from './screens.js';
 import { Menus } from './menus.js';
 import { deleteSlot } from '../engine/saves.js';
-import { itemThumb } from './thumbs.js';
+import { itemThumb, charThumb } from './thumbs.js';
+import { REAL, CHAR_LABEL } from '../world/actors.js';
 import { pickStory, STORIES, rollMissions, missionText, rewardText, MISSIONS, ACHIEVEMENTS, achGrant, achLoad } from '../content/story.js';
 
 const $ = id => document.getElementById(id);
@@ -145,10 +146,12 @@ export class UI {
   goals() {
     const s = this.s, G = s.goals || {}, out = [];
     if (s.season === 1) {
-      const p = s.players[G.target];
-      if (G.route === 'attack') out.push({ t: `让 ${G.target} 被下放替补`, done: !!p?.benched, sub: p ? `心态 ${Math.round(p.mood)} · 连续低迷 ${p.weeksBad} 周（心态<28 且低迷≥2 周会被下放）` : '' });
-      else { const as = Sim.allStar(s)[p.role === 'SUB' ? 'MID' : p.role]; const rank = as.findIndex(x => x.name === G.target) + 1; out.push({ t: `把 ${G.target} 捧进全明星`, done: rank === 1, sub: `${p.role} 位置投票排名第 ${rank}` }); }
-      out.push({ t: `粉丝达到 ${num(G.fans)}`, done: s.fans >= G.fans, sub: `当前 ${num(s.fans)}` });
+      const st = s.stance || {}, as = Sim.allStar(s);
+      const benched = Object.values(s.players).find(p => p.benched && !p.sub && st[p.name]?.atk);
+      const star = Object.entries(as).map(([, l]) => l[0]).find(p => st[p.name]?.sup);
+      const done = !!(benched || star);
+      out.push({ t: '让一名你骂过的选手被下放替补，或把一名你捧过的选手送进全明星', done, sub: done ? (benched ? `${benched.name} 被下放了` : `${star.name} 全明星投票第一`) : '心态<28 且低迷≥2 周会被下放；全明星看赛季末投票' });
+      out.push({ t: `粉丝达到 ${num(G.fans || 20000)}`, done: s.fans >= (G.fans || 20000), sub: `当前 ${num(s.fans)}` });
     } else if (s.season === 2) {
       out.push({ t: `粉丝数超过对手粉头 ${s.rival.name}`, done: s.fans > s.rival.fans, sub: `你 ${num(s.fans)} vs ${num(s.rival.fans)}` });
       out.push({ t: '本赛季至少 2 次爆款', done: (s.seasonViral || 0) >= 2, sub: `已 ${s.seasonViral || 0} 次` });
@@ -171,20 +174,16 @@ export class UI {
   keysLine() {
     const K = a => this.g.input.K(a);
     return this.g.input.device === 'pad'
-      ? `左摇杆 移动 · 右摇杆 视角 · RT 奔跑/油门 · LT 刹车 · ${K('vehicle')} 上下车 · ${K('interact')} 互动 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('pause')} 菜单`
-      : `${K('up')}${K('left')}${K('down')}${K('right')} 移动 · ${K('run')} 跑 · ${K('brake')} 刹车 · ${K('vehicle')} 上下车 · ${K('interact')} 互动 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('objective')} 收起目标 · 滚轮 拉近/变焦 · ${K('pause')} 菜单`;
+      ? `左摇杆 移动 · 右摇杆 视角 · RT 奔跑/油门 · LT 刹车 · ${K('vehicle')} 上下车 · ${K('interact')} 互动/跳 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('pause')} 菜单`
+      : `${K('up')}${K('left')}${K('down')}${K('right')} 移动 · ${K('run')} 跑 · ${K('brake')} 跳（开车时刹车）· ${K('vehicle')} 上下车 · ${K('interact')} 互动 · ${K('photo')} 拍照 · ${K('inventory')} 背包 · ${K('map')} 地图 · ${K('objective')} 收起目标 · 滚轮 拉近/变焦 · ${K('pause')} 菜单`;
   }
 
   howto(back) {
     this.open(`<h2>玩法说明</h2>
-      <div class="news">每周流程：<b>比赛日</b>（看赛果，谁打崩了、谁封神）→ <b>行动日</b>（18:00-24:00 在首尔街头行动）→ <b>发帖</b>（挑照片发到平台，换曝光、粉丝和钱）→ <b>周结算</b>。</div>
-      <div class="news">曝光 = 道具冲击力 × 照片质量 × 话题热度 × <b>情绪匹配</b> × 新鲜度 × 平台偏好 × 运气。骂刚打崩的人，大家认同；骂刚拿 MVP 的人，会被反噬掉粉。同一招反复用，看的人越来越少。偶尔会莫名其妙爆火，也会石沉大海。</div>
-      <div class="news">照片质量看：主体是否在画面里（取景时会有黄框和"画面质量"条）、标语能否看清（LED 卡车要等标语滚到屏幕中间）、队标和总部招牌有没有入镜、有没有围观人群、有没有拍到烟花或灯光秀的瞬间。</div>
-      <div class="news">摆放：花圈、花篮、横幅、集会会进入俯视摆放模式，Q / E 或滚轮旋转。正对街道、排成一排、间距均匀，"排面"就高。堵住大门曝光更高，但保安会出来清理 —— 那也是名场面。</div>
-      <div class="news good">机会事件：每晚会有选手下班、电视台采访、对手粉头的卡车、街头主播路过等限时事件（右上角和小地图会提示）。拍到选手亲眼看到你的道具，是最值钱的照片。</div>
-      <div class="news">每周开始前可能会收到私信，你的选择会影响钱、粉丝、争议度和选手心态。每周还有 3 个商单任务，完成拿奖励。</div>
-      <div class="news bad">争议度：抗议类行动会让争议度上升，每周自然回落。≥50 限流，≥75 随机一个平台封号，≥100 收到俱乐部律师函（赔钱、掉粉）。律师函满 3 次会被全网封杀，游戏结束。</div>
-      <div class="news good">你的行动会影响选手心态 → 影响比赛 → 影响热度。把选手骂到下放替补、把喜欢的选手捧进全明星、帮主队夺冠，都靠你。</div>
+      <div class="news"><b>每周</b>：看比赛 → 晚上 18:00–24:00 在首尔街头行动 → 回家发帖 → 周结算。</div>
+      <div class="news"><b>行动</b>：去用品店买花圈、横幅、LED 卡车等道具，到选手所在的战队总部门口布置；骂谁、捧谁由你决定，随时可以粉转黑、黑转粉。</div>
+      <div class="news"><b>拍照</b>：掏出手机，把道具和标语拍进黄框，回家挑最好的发到社交平台，换粉丝和钱。</div>
+      <div class="news"><b>小心争议度</b>：太出格会被限流、封号，收到 3 封律师函就出局。</div>
       <div class="news">操作：${this.keysLine()}</div>
       <div class="row" style="margin-top:14px"><button class="btn pri" id="b">返回</button></div>`, { cinematic: true, esc: back });
     $('b').onclick = back;
@@ -193,35 +192,32 @@ export class UI {
   // ================= 新游戏 =================
   newGame() {
     this.open(`<h2>选择你的主队</h2><div class="sub">你是谁的粉丝？主队决定第 3 赛季的目标。${teamOf(LEAGUE.hqA).name} 和 ${teamOf(LEAGUE.hqB).name} 的总部就在地图中央，其余战队在 ${LEAGUE.arena}。</div>
-      <div class="cards">${TEAMS.map(t => `<div class="card" data-t="${t.id}" style="border-left:4px solid ${t.color}"><div class="t">${esc(t.name)}</div><div class="d">${esc(t.full)}<br>${t.players.map(p => esc(p[0])).join(' · ')}</div></div>`).join('')}</div>`, { cinematic: true, esc: () => this.mainMenu() });
+      <div class="cards">${TEAMS.map(t => `<div class="card" data-t="${t.id}" style="border-left:4px solid ${t.color}"><div class="t">${esc(t.name)}</div><div class="d">${t.players.map(p => esc(p[0])).join(' · ')}</div></div>`).join('')}</div>`, { cinematic: true, esc: () => this.mainMenu() });
     this.on('[data-t]', 'click', (e, el) => this.pickRoute(el.dataset.t));
   }
 
+  // 选完主队直接选形象（不再选路线：骂谁、捧谁随时可以变，粉转黑、黑转粉都行）
   pickRoute(fav) {
     this.g.state = Sim.newGame(fav); this.s.inventory = [];
-    const all = Object.values(this.s.players).filter(p => !p.sub);
-    const opts = all.map(p => `<option value="${esc(p.name)}">${esc(p.name)}（${esc(teamOf(p.team).name)} ${p.role}）</option>`).join('');
-    this.open(`<h2>第 1 赛季：选择你的路线</h2><div class="sub">两条路线都要求赛季结束时粉丝 ≥ 20,000。选好目标后点击卡片。</div>
-      <div class="cards" style="grid-template-columns:1fr 1fr">
-        <div class="card" data-r="attack"><span class="tag evil">黑粉路线</span><div class="t">把某人骂下首发</div><div class="d">持续给目标施压，让他心态崩掉、状态低迷，直到教练把他下放替补。</div><select class="txt" id="ta">${opts}</select></div>
-        <div class="card" data-r="support"><span class="tag good">真爱粉路线</span><div class="t">把某人捧进全明星</div><div class="d">用应援提升他的人气和心态，让他在赛季末全明星投票里拿到所在位置第一。</div><select class="txt" id="ts">${opts}</select></div>
-      </div>`, { cinematic: true, esc: () => this.newGame() });
-    const ta = $('ta'), ts = $('ts');
-    ta.value = all.find(p => p.team === LEAGUE.hqB && p.role === 'ADC')?.name || all[0].name;
-    ts.value = all.find(p => p.team === fav && p.role === 'MID')?.name || all[0].name;
-    for (const sel of [ta, ts]) sel.onclick = e => e.stopPropagation();
-    this.on('[data-r]', 'click', (e, el) => {
-      const r = el.dataset.r; this.s.goals = { route: r, target: r === 'attack' ? ta.value : ts.value, fans: 20000 };
-      this.save(); this.intro();
-    });
+    this.s.goals = { fans: 20000 }; this.s.stance = {};
+    this.pickLook();
+  }
+
+  pickLook(back = () => this.newGame()) {
+    const s = this.s;
+    s.look ||= 'josh';
+    this.open(`<h2>选择你的形象</h2><div class="sub">路人不会和你撞脸。</div>
+      <div class="looks">${[...REAL, 'michelle'].map(k => `<div class="card look ${s.look === k ? 'sel' : ''}" data-look="${k}"><img src="${charThumb(this.g, k)}" alt=""><div class="t">${CHAR_LABEL[k]}</div></div>`).join('')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="ok">就这个</button></div>`, { cinematic: true, esc: back, cls: 'wide2' });
+    this.on('[data-look]', 'click', (e, el) => { s.look = el.dataset.look; this.modal.querySelectorAll('[data-look]').forEach(x => x.classList.toggle('sel', x === el)); this.g.setPlayerLook(s.look); });
+    $('ok').onclick = () => { this.g.setPlayerLook(s.look); this.save(); this.intro(); };
   }
 
   intro() {
     const s = this.s;
     this.open(`<h2>欢迎来到首尔</h2>
       <div class="news">你刚搬进战队总部附近的一间单间，手上有 ${won(s.money)} 存款和 ${s.fans} 个粉丝。</div>
-      <div class="news">${s.goals.route === 'attack' ? `你的目标：让 <b>${esc(s.goals.target)}</b> 被下放替补。` : `你的目标：把 <b>${esc(s.goals.target)}</b> 捧进全明星。`}</div>
-      <div class="news">第一周建议：去用品店（地图粉色点）买花圈或横幅 → 去目标所在的总部门口布置 → 按 C 掏手机拍照（让标语、队标和围观的人都入镜）→ 回家发帖。</div>
+      <div class="news">第 1 赛季目标：粉丝达到 2 万；再让一名你骂过的选手被下放替补，或者把一名你捧过的选手送进全明星（任选其一）。骂谁、捧谁随时可以变。</div>
       <h3>你的账号名</h3><input class="txt" id="handle" maxlength="16" value="@饭圈观察员">
       <h3>难度</h3><div class="seg" id="diff"><button data-d="easy">轻松</button><button data-d="normal" class="on">普通</button><button data-d="hard">困难</button></div>
       <div class="dim" style="font-size:12px;margin-top:6px">轻松：收入 +30%、争议度增长 -30% · 困难：收入 -20%、争议度增长 +25%（之后可以在设置里改）</div>
@@ -285,7 +281,7 @@ export class UI {
       const tag = it.kind === 'support' ? '<span class="tag good">应援</span>' : it.kind === 'both' ? '<span class="tag">黑/捧</span>' : '<span class="tag evil">抗议</span>';
       return `<div class="sc ${locked ? 'locked' : ''} ${sel === it.id ? 'sel' : ''}" data-i="${it.id}">${tag}<img src="${thumb(it.id)}" alt=""><div class="nm">${it.name}</div><div class="pr">${locked ? `🔒 粉丝 ${num(UNLOCK[it.unlock])}` : won(cost)}</div></div>`;
     }).join('');
-    this.open(`<div class="shop"><div class="shop-l"><div class="hd"><b>응원·항의 용품 SHOP</b><span class="dim">资金 ${won(s.money)}</span></div><div class="sgrid">${cards}</div></div>
+    this.open(`<div class="shop"><div class="shop-l"><div class="hd"><b>应援 & 抗议用品店</b><span class="dim">资金 ${won(s.money)}</span></div><div class="sgrid">${cards}</div></div>
       <div class="shop-r" id="order"></div></div>`, { cls: 'wide', esc: () => this.close() });
     this.on('.sc[data-i]', 'click', (e, el) => { const it = itemOf(el.dataset.i); if (it.unlock > lvl) return; this.shop(it.id); });
     this.orderForm(itemOf(sel));
@@ -343,7 +339,7 @@ export class UI {
       const own = s.owned.includes(v.id), cur = s.vehicle === v.id;
       return `<div class="card ${cur ? 'sel' : ''}" data-v="${v.id}"><div class="t">${v.name}</div><div class="d">${v.desc} · 极速 ${v.speed}</div><div class="p">${cur ? '使用中' : own ? '切换（明天生效）' : won(v.price)}</div></div>`;
     }).join('');
-    this.open(`<h2>중고차 · 대리운전</h2><div class="sub">资金 ${won(s.money)}</div>
+    this.open(`<h2>车行 · 代驾</h2><div class="sub">资金 ${won(s.money)}</div>
       <h3>卡车订单</h3>${trucks.length ? trucks.map((o, i) => `<div class="news"><b>${itemOf(o.item).name}</b> → ${esc(o.target)} · “${esc(o.text)}”
         <div class="row" style="margin-top:8px"><button class="btn pri" data-self="${i}">自己开过去</button><button class="btn" data-drv="${i}" ${s.money < DRIVER_FEE ? 'disabled' : ''}>雇司机沿大路巡游（${won(DRIVER_FEE)}）</button></div></div>`).join('') : '<div class="sub">没有待提的卡车。LED 抗议卡车和咖啡应援车在用品店下单。</div>'}
       <h3>我的座驾</h3><div class="cards">${veh}</div>
@@ -385,7 +381,7 @@ export class UI {
       <div class="cards">${list.map((o, i) => { const it = itemOf(o.item); return `<div class="card" data-u="${i}"><span class="tag ${o.kind === 'support' ? 'good' : 'evil'}">${o.kind === 'support' ? '应援' : '抗议'}</span><div class="t">${it.name}</div><div class="d">→ ${esc(o.target)}<br>“${esc(o.text)}”</div></div>`; }).join('')}</div>
       <div class="row" style="margin-top:14px"><button class="btn" id="x">离开</button></div>`, { esc: () => this.close() });
     $('x').onclick = () => this.close();
-    this.on('[data-u]', 'click', (e, el) => { const o = list[+el.dataset.u]; this.close(); this.g.useItem(o, hqId); });
+    this.on('[data-u]', 'click', (e, el) => { const o = list[+el.dataset.u]; this.close(false); this.g.useItem(o, hqId); });
   }
 
   inventory() {
@@ -435,7 +431,7 @@ export class UI {
     if ((s.lawsuits || 0) > lawsuits0) this.achieve('lawsuit');
     if (s.fans >= 10000) this.achieve('fans10k'); if (s.fans >= 100000) this.achieve('fans100k');
     if (s.money >= 50000000) this.achieve('rich'); if (s.missionsDone >= 10) this.achieve('missions');
-    if (s.season === 1 && s.goals?.route === 'attack' && s.players[s.goals.target]?.benched) this.achieve('benched');
+    if (s.season === 1 && Object.values(s.players).some(p => p.benched && !p.sub && s.stance?.[p.name]?.atk)) this.achieve('benched');
     this.save();
     this.weekSummaryView(log);
   }
@@ -477,7 +473,7 @@ export class UI {
     const as = Sim.allStar(s);
     const reward = grade === 'S' ? 10000000 : grade === 'B' ? 3000000 : 0;
     if (s.champion === s.fav) this.achieve('champion');
-    if (s.season === 1 && s.goals?.route === 'support' && goals[0]?.done) this.achieve('allstar');
+    if (s.season === 1 && goals[0]?.done && !Object.values(s.players).some(p => p.benched && s.stance?.[p.name]?.atk)) this.achieve('allstar');
     this.open(`<h2>第 ${s.season} 赛季结束 · 评级 <span style="color:${grade === 'S' ? 'var(--good)' : grade === 'B' ? 'var(--warn)' : 'var(--bad)'}">${grade}</span></h2>
       <div class="news">🏆 冠军：<b style="color:${teamOf(s.champion).color}">${esc(teamOf(s.champion)?.name || '-')}</b></div>
       <h3>目标</h3><div style="font-size:14px;line-height:1.7">${this.goalLines().join('<br>')}</div>

@@ -13,11 +13,14 @@ import { settings, onSettings } from './settings.js';
 
 // 暗角 + 轻微色调
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null }, vignette: { value: 0.32 }, sat: { value: 1.08 }, fade: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, vignette: { value: 0.32 }, sat: { value: 1.0 }, fade: { value: 0 }, grain: { value: 0.035 }, time: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float vignette; uniform float sat; uniform float fade; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float vignette; uniform float sat; uniform float fade; uniform float grain; uniform float time; varying vec2 vUv;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + time) * 43758.5453); }
     void main(){ vec4 c=texture2D(tDiffuse,vUv); float l=dot(c.rgb,vec3(.299,.587,.114));
-      c.rgb=mix(vec3(l),c.rgb,sat); vec2 d=vUv-.5; c.rgb*=(1.0-vignette*dot(d,d)*2.2)*(1.0-fade); gl_FragColor=c; }`,
+      c.rgb=mix(vec3(l),c.rgb,sat); vec2 d=vUv-.5; c.rgb*=(1.0-vignette*dot(d,d)*2.2)*(1.0-fade);
+      c.rgb += (h(vUv * 1000.0) - 0.5) * grain;   // 胶片颗粒，让画面没那么"塑料"
+      gl_FragColor=c; }`,
 };
 
 export class Renderer {
@@ -41,7 +44,12 @@ export class Renderer {
     addEventListener('resize', () => this.resize());
   }
 
-  pixelRatio() { return THREE.MathUtils.clamp(settings.renderScale, 0.5, 2); }
+  applyAniso() {
+    const a = Math.min(settings.aniso || 1, this.r.capabilities.getMaxAnisotropy());
+    this.scene.traverse(o => { if (!o.material) return; for (const m of [].concat(o.material)) for (const k of ['map', 'normalMap', 'roughnessMap', 'emissiveMap']) if (m[k] && m[k].anisotropy !== a) { m[k].anisotropy = a; m[k].needsUpdate = true; } });
+  }
+
+  pixelRatio() { return THREE.MathUtils.clamp(settings.renderScale * (settings.resScale || 1), 0.35, 2.5); }
 
   // 设置即时生效：渲染分辨率、阴影、环境光遮蔽、辉光、抗锯齿、视野
   applySettings() {
@@ -66,6 +74,14 @@ export class Renderer {
     this.bloom.enabled = !!S.bloom;
     this.smaa.enabled = !!S.aa;
     this.baseFov = S.fov;
+    // 阴影距离、视距、纹理过滤、颗粒、暗角、亮度
+    const sd = 70 * (S.shadowDist || 1), sc = this.sun.shadow.camera;
+    if (sc.right !== sd) { sc.left = -sd; sc.right = sd; sc.top = sd; sc.bottom = -sd; sc.updateProjectionMatrix(); }
+    this.camera.far = 900 * Math.max(0.6, S.viewDist || 1); this.camera.updateProjectionMatrix();
+    this.grade.uniforms.grain.value = S.grain ? 0.035 : 0;
+    this.grade.uniforms.vignette.value = 0.64 * (S.vignette ?? 0.5);
+    if (this.anisoApplied !== S.aniso) { this.anisoApplied = S.aniso; this.applyAniso(); }
+    if (this.hour !== undefined) this.setTime(this.hour);
     if (!this.fovLocked && this.camera.fov !== S.fov) { this.camera.fov = S.fov; this.camera.updateProjectionMatrix(); }
   }
 
@@ -156,9 +172,9 @@ export class Renderer {
     this.moonish = t;
     this.hemi.intensity = THREE.MathUtils.lerp(0.4, 0.26, t);
     this.hemi.color.setHSL(0.62, 0.6, THREE.MathUtils.lerp(0.75, 0.35, t));
-    this.r.toneMappingExposure = THREE.MathUtils.lerp(0.75, 1.08, t);
+    this.r.toneMappingExposure = THREE.MathUtils.lerp(0.75, 1.08, t) * (settings.brightness || 1);
     this.scene.fog.color.setHSL(THREE.MathUtils.lerp(0.95, 0.66, t), 0.25, THREE.MathUtils.lerp(0.45, 0.06, t));
-    this.scene.fog.density = THREE.MathUtils.lerp(0.0035, 0.0055, t);
+    this.scene.fog.density = THREE.MathUtils.lerp(0.0035, 0.0055, t) / Math.max(0.5, settings.viewDist || 1);
     const newEnv = THREE.MathUtils.lerp(0.8, 0.38, t);
     if (Math.abs((this.envIntensity ?? 0) - newEnv) > 0.03) { this.envIntensity = newEnv; this.applyEnvIntensity(); }
     if (this.bloom) this.bloom.strength = THREE.MathUtils.lerp(0.35, 0.75, t);
@@ -199,6 +215,7 @@ export class Renderer {
 
   render() {
     if (this.skyGroup) { this.skyGroup.position.copy(this.camera.position); this.stars.material.uniforms.t.value = performance.now() / 1000; }
+    this.grade.uniforms.time.value = (performance.now() % 10000) / 1000;
     this.composer.render();
   }
 }

@@ -13,7 +13,9 @@ export const DEFAULTS = {
   display: 'fullscreen',   // fullscreen | borderless | windowed（桌面版）
   preset: 'high', ...PRESETS.high,
   fpsCap: 0,               // 0 = 跟随显示器刷新率
-  fov: 60, shake: 1, showFps: false,
+  fov: 60, shake: 1, showFps: false, dynFov: true, brightness: 1, resolution: 'auto', resScale: 1,
+  shadowDist: 1, viewDist: 1, aniso: 8, crowd: 0.75, traffic: 0.75, grain: true, vignette: 0.5,
+  hudMap: true, hudGoals: true, hudKeys: true, hudPush: true, hudStats: true,
   // 音频（0..1）
   master: 0.8, music: 0.7, sfx: 1, ambience: 0.8, uiVol: 0.8,
   // 操作
@@ -58,10 +60,12 @@ export function setSetting(patch) {
 
 export function resetSettings(group) {
   const keys = {
-    video: ['display', 'preset', 'renderScale', 'shadows', 'ao', 'bloom', 'aa', 'fpsCap', 'fov', 'shake', 'showFps'],
+    video: ['display', 'resolution', 'resScale', 'fpsCap', 'fov', 'dynFov', 'shake', 'showFps', 'brightness'],
+    gfx: ['preset', 'renderScale', 'shadows', 'shadowDist', 'viewDist', 'ao', 'bloom', 'aa', 'aniso', 'crowd', 'traffic', 'grain', 'vignette'],
+    hud: ['uiScale', 'hudMap', 'hudGoals', 'hudKeys', 'hudPush', 'hudStats'],
     audio: ['master', 'music', 'sfx', 'ambience', 'uiVol'],
     controls: ['mouseSens', 'invertY', 'keys', 'padSens', 'vibration'],
-    game: ['uiScale', 'tutorial', 'autosave', 'subtitlesBig'],
+    game: ['tutorial', 'autosave', 'subtitlesBig'],
   }[group] || Object.keys(DEFAULTS);
   const patch = {};
   for (const k of keys) patch[k] = k === 'keys' ? {} : DEFAULTS[k];

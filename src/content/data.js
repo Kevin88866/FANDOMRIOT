@@ -16,7 +16,7 @@ export const LEAGUE = {
 };
 
 export const TEAMS = [
-  { id: 'T0',  name: 'T0',        full: 'T0 이스포츠',      color: '#e2012d', color2: '#111111', sign: 'T0', popular: 300,
+  { id: 'T0',  name: 'T0',        full: 'T0 Esports',       color: '#e2012d', color2: '#111111', sign: 'T0', popular: 300,
     players: [['Dorran','TOP',86],['Onar','JG',87],['Fakor','MID',93],['Peiz','ADC',86],['Kerya','SUP',92]] },
   { id: 'HWL', name: '汉华生命',  full: 'Hanhwa Lyfe Esports', color: '#f37321', color2: '#1d1d1d', sign: 'HANHWA LYFE', popular: 200,
     players: [['Zeous','TOP',91],['Kanabi','JG',89],['Zekka','MID',88],['Gumayoshi','ADC',88],['Delite','SUP',87]] },
@@ -24,17 +24,17 @@ export const TEAMS = [
     players: [['Kiyn','TOP',90],['Kanyon','JG',91],['Chobi','MID',93],['Rular','ADC',91],['Duroo','SUP',85]] },
   { id: 'DM',  name: 'D-Minus',   full: 'D-Minus KIYA',    color: '#1fc3c9', color2: '#0b1830', sign: 'D-MINUS', popular: 80,
     players: [['Syeon','TOP',80],['Lussid','JG',82],['ShoeMaker','MID',84],['Aimy','ADC',85],['Kellin','SUP',81]] },
-  { id: 'KC',  name: 'KC 롤스터', full: 'KC Rollster',     color: '#e60012', color2: '#222222', sign: 'KC ROLLSTER', popular: 60,
+  { id: 'KC',  name: 'KC',        full: 'KC Rollster',     color: '#e60012', color2: '#222222', sign: 'KC ROLLSTER', popular: 60,
     players: [['PerFact','TOP',81],['Kuzi','JG',83],['Bidd','MID',85],['Ahz','ADC',84],['Peter','SUP',80]] },
   { id: 'DRZ', name: 'DRZ',       full: 'DRZ Gaming',      color: '#2e5bff', color2: '#0a0f2a', sign: 'DRZ', popular: 30,
     players: [['Rich','TOP',77],['Sponj','JG',76],['Ucal','MID',80],['Teddi','ADC',80],['Andi','SUP',76]] },
   { id: 'FX',  name: 'FearZ',     full: 'BNK FearZ',       color: '#ffcc00', color2: '#1a1a1a', sign: 'FEARZ', popular: 30,
     players: [['Clea','TOP',77],['Raptr','JG',78],['VicLa','MID',79],['Diable','ADC',80],['Kelly','SUP',76]] },
-  { id: 'NS',  name: '농심 레드',  full: 'Nongsim RedForce',color: '#d4002a', color2: '#2a0000', sign: 'NONGSIM', popular: 30,
+  { id: 'NS',  name: 'Nongsim',   full: 'Nongsim RedForce',color: '#d4002a', color2: '#2a0000', sign: 'NONGSIM', popular: 30,
     players: [['Kingin','TOP',78],['Sylvi','JG',76],['Calix','MID',80],['Jiwoo','ADC',81],['Lehendz','SUP',79]] },
   { id: 'BRY', name: 'BRYON',     full: 'OKSaving BRYON',  color: '#00a651', color2: '#06240f', sign: 'BRYON', popular: 20,
     players: [['Kasting','TOP',74],['GIDEN','JG',75],['Fisha','MID',76],['Hype','ADC',77],['Pullbak','SUP',74]] },
-  { id: 'DNF', name: 'DN 프릭스', full: 'DN Freaks',       color: '#7b2cbf', color2: '#160828', sign: 'DN FREAKS', popular: 20,
+  { id: 'DNF', name: 'DN Freaks', full: 'DN Freaks',       color: '#7b2cbf', color2: '#160828', sign: 'DN FREAKS', popular: 20,
     players: [['DuDu','TOP',78],['Pyosik','JG',79],['Clozer','MID',79],['deokdam','ADC',79],['Peter2','SUP',76]] },
 ];
 
@@ -50,7 +50,7 @@ export const ITEMS = [
   { id: 'banner',   name: '抗议横幅',    kind: 'attack',  price: 150000,   impact: 10, heat: 1,  mood: -3, unlock: 0, prop: 'banner',
     desc: '在总部门口拉一条横幅。便宜，但没啥人看。' },
   { id: 'wreath',   name: '花圈',        kind: 'attack',  price: 400000,   impact: 22, heat: 3,  mood: -6, unlock: 0, prop: 'wreath',
-    desc: '韩国饭圈经典的"근조화환"。一排摆开最有冲击力。' },
+    desc: '韩国饭圈经典的花圈抗议。一排摆开最有冲击力。' },
   { id: 'truck',    name: 'LED 抗议卡车', kind: 'attack', price: 2500000,  impact: 60, heat: 6,  mood: -10, unlock: 0, prop: 'truck', truck: true,
     desc: '卡车侧面大屏滚动你写的标语，在总部门口绕圈。' },
   { id: 'drone',    name: '无人机灯光秀', kind: 'both',   price: 6000000,  impact: 110, heat: 8, mood: 12, unlock: 3, prop: 'drone',
@@ -64,7 +64,7 @@ export const ITEMS = [
   { id: 'rally',    name: '粉丝线下集会', kind: 'both',   price: 800000,   impact: 35, heat: 8,  mood: 8, unlock: 1, prop: 'rally',
     desc: '在群里号召粉丝到总部门口举牌集会。人越多照片越有气势。' },
   { id: 'flowers',  name: '应援花篮',    kind: 'support', price: 300000,   impact: 18, heat: 0,  mood: 6, unlock: 0, prop: 'flowers',
-    desc: '韩国饭圈的"쌀화환"/花篮应援，温暖但平淡。' },
+    desc: '韩国饭圈常见的花篮应援，温暖但平淡。' },
   { id: 'coffee',   name: '咖啡应援车',  kind: 'support', price: 3500000,  impact: 55, heat: 0,  mood: 12, unlock: 1, prop: 'truck', truck: true, support: true,
     desc: '请全队和员工喝咖啡，车身印选手照片。选手会发 ins 感谢。' },
   { id: 'billboard',name: '生日应援大屏', kind: 'support', price: 5000000, impact: 85, heat: 0,  mood: 16, unlock: 2, prop: 'billboard',
@@ -102,23 +102,23 @@ export const VEHICLES = [
 
 // 选手动态模板（{p}=选手，{t}=战队，{i}=你的道具）
 export const PLAYER_POSTS = {
-  attacked_bad:  ['요즘 경기력이 안 좋아서 죄송합니다. 더 노력하겠습니다.', '最近状态确实不好，是我的问题。会调整的。', '门口的{i}我看到了……对不起大家。'],
-  attacked_good: ['오늘 경기가 제 대답입니다.', '看到{i}了。今天的比赛就是我的回答。', '骂我可以，赢下来再说。'],
-  supported_good:['{i} 정말 감사합니다 ☕ 오늘 승리는 팬분들 덕분이에요!', '谢谢大家的{i}！今天的胜利送给你们 ❤', '应援收到了，状态满满！'],
-  supported_bad: ['응원해주셨는데 져서 너무 죄송해요…', '对不起，辜负了大家的{i}……下周一定赢回来。'],
-  mvp:           ['오늘 MVP! 팀원들 고마워요 🔥', '今天手感不错，谢谢{t}的大家。'],
-  benched:       ['당분간 휴식하면서 컨디션을 회복하겠습니다.', '暂时休息一段时间，调整好再回来。'],
+  attacked_bad:  ['最近的比赛打得不好，对不起大家，我会更努力。', '最近状态确实不好，是我的问题。会调整的。', '门口的{i}我看到了……对不起大家。'],
+  attacked_good: ['今天的比赛就是我的答案。', '看到{i}了。今天的比赛就是我的回答。', '骂我可以，赢下来再说。'],
+  supported_good:['真的很感谢大家的{i} ☕ 今天能赢多亏了粉丝们！', '谢谢大家的{i}！今天的胜利送给你们 ❤', '应援收到了，状态满满！'],
+  supported_bad: ['大家这么支持我却输了，真的很抱歉……', '对不起，辜负了大家的{i}……下周一定赢回来。'],
+  mvp:           ['今天拿了 MVP！谢谢队友们 🔥', '今天手感不错，谢谢{t}的大家。'],
+  benched:       ['接下来会先休息一阵，把状态调整回来。', '暂时休息一段时间，调整好再回来。'],
 };
 
 // 网友评论模板（发帖结果里随机挑几条）
 export const COMMENTS = {
-  attack_agree: ['ㅋㅋㅋ 이건 인정', '说得对，这周确实打得太烂了', '花圈都送到门口了，俱乐部还不换人？', '오늘 경기 보고 나도 화났음', '终于有人敢说了', '这才是真爱粉的愤怒'],
-  attack_backlash: ['人家今天 MVP 你在干嘛？', '선 넘네 진짜', '黑子能不能消停点', '这种粉丝才是战队最大的敌人', '取关了，太恶心', '맞는 말도 정도가 있지'],
-  support: ['应援做得好用心 😭', '이런 팬들 덕분에 버티는 거지', '咖啡车太可爱了吧', '这才是饭圈该有的样子', '감동이다 진짜', '已经存图了'],
-  viral: ['🔥 热搜第一了', '这条怎么突然火了？？', '실검 1위 ㄷㄷ', '我朋友圈全是这张图', '转发破万了'],
+  attack_agree: ['哈哈哈这个我认', '说得对，这周确实打得太烂了', '花圈都送到门口了，俱乐部还不换人？', '看完今天的比赛我也气炸了', '终于有人敢说了', '这才是真爱粉的愤怒'],
+  attack_backlash: ['人家今天 MVP 你在干嘛？', '这就过分了啊', '黑子能不能消停点', '这种粉丝才是战队最大的敌人', '取关了，太恶心', '说得对也得有个度吧'],
+  support: ['应援做得好用心 😭', '就是有这样的粉丝选手才撑得下去', '咖啡车太可爱了吧', '这才是饭圈该有的样子', '真的被感动到了', '已经存图了'],
+  viral: ['🔥 热搜第一了', '这条怎么突然火了？？', '实时热搜第一了 666', '我朋友圈全是这张图', '转发破万了'],
   flop: ['……', '沙发', '这条怎么没人看', 'ㅇㅇ'],
-  reaction: ['他本人看到了！！！表情绝了', '본인 등판 ㄷㄷㄷ', '这个瞬间能吹一年', '选手的表情说明一切'],
-  press: ['上新闻了', '뉴스에 나왔네 ㅋㅋ', '记者都来了，事情闹大了'],
+  reaction: ['他本人看到了！！！表情绝了', '本人亲自下场了！', '这个瞬间能吹一年', '选手的表情说明一切'],
+  press: ['上新闻了', '哈哈居然上新闻了', '记者都来了，事情闹大了'],
   generic: ['路过', 'ㅋㅋㅋㅋ', '拍得不错', '这是哪里？', '我也想去现场'],
 };
 

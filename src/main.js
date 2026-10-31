@@ -5,7 +5,7 @@ const shown = new Set();
 function showError(msg, stack = '') {
   const text = `${msg}\n${stack || ''}`.trim();
   try { window.native?.log?.(text); } catch { /* 写不了日志就算了 */ }
-  if (shown.has(msg) || /ResizeObserver|Script error\.?$/.test(msg)) return;
+  if (shown.has(msg) || /ResizeObserver|Script error\.?$|Pointer ?Lock|pointer lock|play\(\) request/i.test(msg)) return;
   shown.add(msg);
   const box = document.getElementById('err'); if (!box) return;
   document.getElementById('err-msg').textContent = `${text}\n\n版本 1.0.0 · ${navigator.userAgent}`;

@@ -103,6 +103,9 @@ export class Vehicle {
     this.body = new THREE.Group(); this.root.add(this.body);
     this.wheels = []; this.speed = 0; this.steer = 0; this.heading = 0;
     this.radius = T.wid * 0.55;
+    // 碰撞用：质量、侧滑速度、自转、失控时间
+    this.mass = { bus: 12, ledtruck: 9, coffee: 8, van: 2.6, pickup: 2.6, sedan: 1.6, taxi: 1.6, scooter: 0.35 }[type] || 2;
+    this.slide = new THREE.Vector3(); this.spin = 0; this.stun = 0;
     const m = mats();
     const color = opts.color ?? T.color;
     const glb = model('car_' + type);
@@ -222,10 +225,12 @@ export class Vehicle {
   integrate(dt, city) {
     const L = this.T.len;
     const turnRate = this.steer * Math.min(1, Math.abs(this.speed) / 4) * (2.2 / Math.max(2.5, L * 0.55)) * 1.6;
-    this.heading += turnRate * Math.sign(this.speed) * dt;
+    this.heading += turnRate * Math.sign(this.speed) * dt + this.spin * dt;
     const p = this.root.position;
-    p.x += Math.sin(this.heading) * this.speed * dt;
-    p.z += Math.cos(this.heading) * this.speed * dt;
+    p.x += Math.sin(this.heading) * this.speed * dt + this.slide.x * dt;
+    p.z += Math.cos(this.heading) * this.speed * dt + this.slide.z * dt;
+    // 被撞后的侧滑和打转逐渐停下
+    this.slide.multiplyScalar(Math.pow(0.08, dt)); this.spin *= Math.pow(0.06, dt); this.stun = Math.max(0, this.stun - dt);
     // 前后两个碰撞圆
     let hit = false;
     if (city) {
@@ -252,11 +257,13 @@ export class Vehicle {
     this.pathI = this.pathI ?? 0;
     const p = this.root.position, wp = path[this.pathI];
     const dx = wp.x - p.x, dz = wp.z - p.z, d = Math.hypot(dx, dz);
-    if (d < 3.5) { this.pathI++; return this.pathI >= path.length; }
+    // 到点判定随车速放宽；路点已经在车身侧后方也算到了（避免绕着路点打转）
+    const fx = Math.sin(this.heading), fz = Math.cos(this.heading), ahead = (dx * fx + dz * fz) / Math.max(d, 1e-3);
+    if (d < Math.max(3.5, Math.abs(this.speed) * 0.45) || (d < 10 && ahead < 0.2)) { this.pathI++; return this.pathI >= path.length; }
     const want = Math.atan2(dx, dz);
     let diff = want - this.heading; while (diff > Math.PI) diff -= Math.PI * 2; while (diff < -Math.PI) diff += Math.PI * 2;
     this.steer = THREE.MathUtils.clamp(diff * 2, -1, 1);
-    const tgt = Math.abs(diff) > 0.5 ? target * 0.5 : target;
+    const tgt = Math.abs(diff) > 0.9 ? Math.min(target, 3) : Math.abs(diff) > 0.35 ? target * 0.5 : target;
     this.speed += THREE.MathUtils.clamp(tgt - this.speed, -8 * dt, this.T.accel * dt);
     this.integrate(dt, null);
     return false;

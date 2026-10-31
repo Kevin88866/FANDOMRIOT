@@ -76,7 +76,7 @@ export const Screens = {
           <div class="sec"><h3>📰 本周新闻</h3><div class="news ${s.lastEvent.id === 'rage' || s.lastEvent.id === 'injury' ? 'bad' : ''}">${esc(s.lastEvent.text)}</div>${story}</div>
         </div>
         <div class="bc-side">
-          <div class="phone-card"><div class="pc-h">🔥 실시간 검색어 · 热搜</div>${trend.map((n, i) => { const p = P[n]; return `<div class="tr"><span class="rk ${i < 3 ? 'top' : ''}">${i + 1}</span><b>${esc(n)}</b><span class="dim">${esc(teamOf(p.team).name)}</span><span class="tg ${p.sentiment < -0.3 ? 'neg' : p.sentiment > 0.4 ? 'pos' : ''}">${p.sentiment < -0.3 ? '挨骂' : p.sentiment > 0.4 ? '被夸' : '平'}</span></div>`; }).join('')}</div>
+          <div class="phone-card"><div class="pc-h">🔥 实时热搜</div>${trend.map((n, i) => { const p = P[n]; return `<div class="tr"><span class="rk ${i < 3 ? 'top' : ''}">${i + 1}</span><b>${esc(n)}</b><span class="dim">${esc(teamOf(p.team).name)}</span><span class="tg ${p.sentiment < -0.3 ? 'neg' : p.sentiment > 0.4 ? 'pos' : ''}">${p.sentiment < -0.3 ? '挨骂' : p.sentiment > 0.4 ? '被夸' : '平'}</span></div>`; }).join('')}</div>
           ${feed ? `<div class="phone-card"><div class="pc-h">📱 选手动态</div>${feed}</div>` : ''}
           <div class="phone-card"><div class="pc-h">🏆 积分榜</div><table class="t">${st.map((t, i) => `<tr class="${t.id === s.fav ? 'me' : ''}"><td>${i + 1}</td><td style="color:${teamOf(t.id).color}">${esc(teamOf(t.id).name)}</td><td>${t.w}-${t.l}</td></tr>`).join('')}</table></div>
         </div>
@@ -151,7 +151,7 @@ export const Screens = {
     if (r.photo.press) out.push(pick(COMMENTS.press));
     const main = !ev ? COMMENTS.generic : ev.kind === 'support' ? COMMENTS.support : r.backlash ? COMMENTS.attack_backlash : COMMENTS.attack_agree;
     while (out.length < 3) { const c = pick(main); if (!out.includes(c)) out.push(c); }
-    return out.slice(0, 3).map((c, i) => ({ c, user: pick(['롤붕이', '直播间常客', '페이커장인', '吃瓜群众', 'lck_fan', '하루종일롤', '電競少女', '老粉']) + (100 + Math.random() * 900 | 0), likes: Math.round(r.views * (0.002 + Math.random() * 0.006) / (i + 1)) }));
+    return out.slice(0, 3).map((c, i) => ({ c, user: pick(['LOL老哥', '直播间常客', '中单信徒', '吃瓜群众', 'lck_fan', '整天看比赛', '电竞少女', '老粉']) + (100 + Math.random() * 900 | 0), likes: Math.round(r.views * (0.002 + Math.random() * 0.006) / (i + 1)) }));
   },
 
   showResults(results) {

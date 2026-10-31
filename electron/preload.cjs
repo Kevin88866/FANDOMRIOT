@@ -9,4 +9,7 @@ contextBridge.exposeInMainWorld('native', {
   setDisplay: mode => ipcRenderer.send('app:display', mode === 'windowed' ? 'windowed' : 'fullscreen'),
   log: msg => ipcRenderer.send('app:log', String(msg).slice(0, 4000)),
   version: ipcRenderer.sendSync('app:version'),
+  screen: () => ipcRenderer.sendSync('app:screen'),
+  setWindowSize: (w, h) => ipcRenderer.send('app:winsize', w, h),
+  setFpsUnlimited: on => ipcRenderer.send('app:fps', !!on),
 });

@@ -1,6 +1,6 @@
 // 桌面版主进程：单实例、无菜单栏、全屏/窗口切换、存档写到用户数据目录、错误日志。
 // 页面通过自定义协议 app:// 加载（ES 模块不能直接用 file://）。
-const { app, BrowserWindow, protocol, net, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, protocol, net, ipcMain, Menu, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
@@ -15,6 +15,8 @@ const USER = app.getPath('userData');
 const SAVES = path.join(USER, 'saves'), LOGS = path.join(USER, 'logs'), WINCFG = path.join(USER, 'window.json');
 for (const d of [SAVES, LOGS]) fs.mkdirSync(d, { recursive: true });
 let win = null;
+// 帧率"不限"：需要在启动前关掉 Chromium 的帧率限制和垂直同步（改了设置后下次启动生效）
+try { if (JSON.parse(fs.readFileSync(path.join(USER, 'window.json'), 'utf8')).unlimitedFps) { app.commandLine.appendSwitch('disable-frame-rate-limit'); app.commandLine.appendSwitch('disable-gpu-vsync'); } } catch { /* 没有配置文件 */ }
 
 function log(msg) {
   try { fs.appendFileSync(path.join(LOGS, 'error.log'), `[${new Date().toISOString()}] ${msg}\n`); } catch { /* 日志写不了就算了 */ }
@@ -36,6 +38,9 @@ ipcMain.on('save:delete', (e, slot) => { const f = slotFile(slot); try { if (f &
 ipcMain.on('app:version', e => { e.returnValue = app.getVersion(); });
 ipcMain.on('app:quit', () => app.quit());
 ipcMain.on('app:log', (e, msg) => log('renderer: ' + msg));
+ipcMain.on('app:screen', e => { const d = screen.getPrimaryDisplay(); e.returnValue = { w: Math.round(d.size.width * d.scaleFactor), h: Math.round(d.size.height * d.scaleFactor) }; });
+ipcMain.on('app:winsize', (e, w, h) => { if (!win || win.isFullScreen()) return; const d = screen.getPrimaryDisplay().scaleFactor || 1; win.setContentSize(Math.round(w / d), Math.round(h / d)); win.center(); });
+ipcMain.on('app:fps', (e, unlimited) => { const c = readCfg(); if (!!c.unlimitedFps !== !!unlimited) writeCfg({ ...c, unlimitedFps: !!unlimited }); });
 ipcMain.on('app:display', (e, mode) => {
   if (!win) return;
   win.setFullScreen(mode === 'fullscreen');

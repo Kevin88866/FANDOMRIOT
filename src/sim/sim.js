@@ -24,7 +24,7 @@ export function newGame(fav = LEAGUE.defaultFav) {
     banned: {}, used: {}, unlocked: 1,
     teams: Object.fromEntries(TEAMS.map(t => [t.id, { w: 0, l: 0, gw: 0, gl: 0 }])),
     players, schedule: makeSchedule(), results: [], news: [], trending: [],
-    rival: { name: '킹갓팬_Chan', fans: 3000, stance: 'attack' },
+    rival: { name: '王者大粉_Chan', fans: 3000, stance: 'attack' },
     flags: {}, club: 30, storySeen: [], missions: [], missionsDone: 0, handle: '@饭圈观察员',
     goals: null, history: [], trendTopic: null, totalViews: 0, bestPost: null, viralCount: 0,
   };
@@ -148,6 +148,13 @@ export function applyAction(s, ev) {
   const item = ITEMS.find(i => i.id === ev.item), p = s.players[ev.target];
   const stealthK = 1 - 0.12 * s.skills.stealth;
   s.heat = clamp(s.heat + item.heat * (s.patrol && ev.kind !== 'support' ? 1.5 : 1) * stealthK * (ev.kind === 'support' ? 0.3 : 1) * diff(s).heat, 0, 120);
+  if (p && item.mood) {
+    // 记录你对这名选手的态度；态度反转（粉转黑 / 黑转粉）会成为话题
+    const st = (s.stance ||= {})[p.name] ||= { atk: 0, sup: 0, last: null };
+    const k = ev.kind === 'support' ? 'support' : 'attack';
+    if (st.last && st.last !== k) { ev.flip = k === 'attack' ? '粉转黑' : '黑转粉'; p.heat = clamp(p.heat + 25, 0, 100); }
+    st.last = k; if (k === 'support') st.sup++; else st.atk++;
+  }
   if (p) {
     let dm = ev.kind === 'support' ? Math.abs(item.mood) : -Math.abs(item.mood);
     // 知耻后勇：被骂有概率反而振作（心态好时概率高）

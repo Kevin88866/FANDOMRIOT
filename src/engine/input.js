@@ -8,7 +8,7 @@ export const ACTIONS = [
   ['left', '向左', 'KeyA', 'ArrowLeft', '左摇杆'],
   ['right', '向右', 'KeyD', 'ArrowRight', '左摇杆'],
   ['run', '奔跑 / 油门', 'ShiftLeft', 'ShiftRight', 'RT'],
-  ['brake', '刹车', 'Space', null, 'LT'],
+  ['brake', '跳跃 / 刹车', 'Space', null, 'A / LT'],
   ['interact', '互动', 'KeyE', null, 'A'],
   ['vehicle', '上车 / 下车', 'KeyF', null, 'X'],
   ['photo', '手机拍照', 'KeyC', null, 'Y'],

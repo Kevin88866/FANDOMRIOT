@@ -11,7 +11,11 @@ export class Placer {
     this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.18);
     this.mouse = new THREE.Vector2();
     this.ui = document.getElementById('place-ui');
-    addEventListener('mousemove', e => { this.mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); });
+    // 指针被锁住时（比如从游戏里直接进摆放模式）clientX 不会变，改用位移量推动光标
+    addEventListener('mousemove', e => {
+      if (document.pointerLockElement) { this.mouse.x = Math.max(-1, Math.min(1, this.mouse.x + e.movementX / innerWidth * 2)); this.mouse.y = Math.max(-1, Math.min(1, this.mouse.y - e.movementY / innerHeight * 2)); }
+      else this.mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    });
   }
 
   static supports(prop) { return prop in PIECES; }
@@ -19,7 +23,8 @@ export class Placer {
   start(order, hqId, item) {
     const g = this.game, hq = g.city.hq[hqId];
     this.ctx = { order, hqId, hq, item, left: PIECES[item.prop], placed: [], rot: 0 };
-    g.mode = 'place'; g.releaseMouse();
+    g.mode = 'place'; g.releaseMouse(); setTimeout(() => g.mode === 'place' && g.releaseMouse(), 150);   // 防止之前的锁定请求晚到
+    this.mouse.set(0, -0.2);
     g.ui.showHud(false);
     this.ui.classList.remove('hidden');
     // 相机：广场斜上方

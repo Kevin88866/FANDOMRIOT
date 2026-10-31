@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Vehicle } from '../player/vehicle.js';
 import { textTex } from '../engine/textures.js';
 import { model as glbModel } from '../engine/assets.js';
+import { Actor } from '../world/actors.js';
 
 // 商店用的道具 3D 缩略图：用游戏里同一套模型，离屏渲染一次后缓存成图片。
 const cache = new Map();
@@ -62,18 +63,32 @@ function model(game, id) {
 
 export function itemThumb(game, id) {
   if (cache.has(id)) return cache.get(id);
-  const r = game.renderer.r, W = 320, H = 240;
+  const url = renderThumb(game, model(game, id), 320, 240, new THREE.Vector3(0.75, 0.45, 1), 1.35);
+  cache.set(id, url); return url;
+}
+
+// 人物形象缩略图（新游戏选形象用）：正面全身
+export function charThumb(game, kind) {
+  const key = 'char:' + kind;
+  if (cache.has(key)) return cache.get(key);
+  const a = new Actor(kind); a.play('idle', 0); a.update(0.6);
+  const url = renderThumb(game, a.root, 180, 280, new THREE.Vector3(0.2, 0.05, 1), 1.3);
+  cache.set(key, url); return url;
+}
+
+function renderThumb(game, obj, W, H, dir, dist) {
+  const r = game.renderer.r;
   const scene = new THREE.Scene();
   scene.environment = game.renderer.envDusk || null;
   scene.add(new THREE.HemisphereLight(0xdde6ff, 0x30282a, 1.4));
   const key = new THREE.DirectionalLight(0xfff0dd, 2.2); key.position.set(3, 5, 4); scene.add(key);
   const rim = new THREE.DirectionalLight(0x88aaff, 1.2); rim.position.set(-4, 3, -3); scene.add(rim);
-  const obj = model(game, id); scene.add(obj);
+  scene.add(obj);
   // 自动取景：按包围盒设置相机
   obj.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(obj), c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length();
   const cam = new THREE.PerspectiveCamera(32, W / H, 0.01, 200);
-  cam.position.copy(c).add(new THREE.Vector3(0.75, 0.45, 1).normalize().multiplyScalar(size * 1.35)); cam.lookAt(c);
+  cam.position.copy(c).add(dir.clone().normalize().multiplyScalar(size * dist)); cam.lookAt(c);
   const rt = new THREE.WebGLRenderTarget(W, H, { samples: 4 });
   rt.texture.colorSpace = THREE.SRGBColorSpace;
   const prevTone = r.toneMapping, prevColor = new THREE.Color(); r.getClearColor(prevColor); const prevAlpha = r.getClearAlpha();
@@ -85,5 +100,5 @@ export function itemThumb(game, id) {
   ctx.putImageData(img, 0, 0);
   const url = cv.toDataURL('image/png');
   rt.dispose();
-  cache.set(id, url); return url;
+  return url;
 }

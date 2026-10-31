@@ -9,6 +9,7 @@ import { Input, actionOf, codesFor, PAD } from './engine/input.js';
 import { migrateOldSave } from './engine/saves.js';
 import { Focus } from './ui/focus.js';
 import { Tutorial } from './ui/tutorial.js';
+import { applyResolution } from './ui/menus.js';
 import { Crowd } from './world/npc.js';
 import { Props } from './world/props.js';
 import { FX } from './fx/fx.js';
@@ -50,6 +51,10 @@ export class Game {
   // 界面缩放、帧率显示
   applyUiSettings() {
     document.documentElement.style.setProperty('--ui-scale', settings.uiScale);
+    const b = document.body.classList;
+    for (const [k, c] of [['hudMap', 'no-map'], ['hudGoals', 'no-goals'], ['hudKeys', 'no-keys'], ['hudPush', 'no-push'], ['hudStats', 'no-stats']]) b.toggle(c, settings[k] === false);
+    window.native?.setFpsUnlimited?.(settings.fpsCap === -1);
+    this.crowd?.setDensity(settings.crowd); this.traffic?.setDensity(settings.traffic);
     let f = document.getElementById('fps');
     if (settings.showFps && !f) { f = document.createElement('div'); f.id = 'fps'; document.body.appendChild(f); }
     if (f) f.classList.toggle('hidden', !settings.showFps);
@@ -59,6 +64,7 @@ export class Game {
     const bar = document.getElementById('lbar'), txt = document.getElementById('ltext');
     const step = (p, t) => { bar.style.width = (p * 100) + '%'; txt.textContent = t; };
     migrateOldSave();
+    applyResolution(); addEventListener('resize', () => { if (settings.resolution !== 'auto') applyResolution(); });
     this.startTips();
     step(0.05, '加载天空…');
     await this.renderer.loadEnv('assets/hdr/venice_sunset_1k.hdr', 'assets/hdr/night.exr');
@@ -71,11 +77,12 @@ export class Game {
     this.city = new City(this.scene);
     this.city.finalizeTrees();
     buildStreetDetails(this);
-    this.traffic = new Traffic(this, 12);
+    this.traffic = new Traffic(this, 16);
     this.fx = new FX(this.scene, this);
     this.props = new Props(this);
     step(0.85, '路人出门中…');
-    this.crowd = new Crowd(this, 36);
+    this.crowd = new Crowd(this, 64);
+    this.applyUiSettings();
     this.player = new Player(this);
     this.photo = new PhotoMode(this);
     this.placer = new Placer(this);
@@ -85,7 +92,7 @@ export class Game {
     step(0.95, '编译着色器…');
     this.renderer.setTime(19);
     this.renderer.r.compile(this.scene, this.camera);
-    this.bindInput();
+    this.bindInput(); this.watchPointerLock();
     step(1, '完成');
     this.last = performance.now();
     requestAnimationFrame(t => this.loop(t));
@@ -104,6 +111,13 @@ export class Game {
     let i = Math.random() * TIPS.length | 0;
     const show = () => { el.style.opacity = 0; setTimeout(() => { el.textContent = '💡 ' + TIPS[i++ % TIPS.length]; el.style.opacity = 1; }, 300); };
     show(); this.tipTimer = setInterval(show, 3600);
+  }
+
+  // 换玩家形象：路人里撞脸的换成别人
+  setPlayerLook(kind) {
+    this.playerLook = kind;
+    if (this.player.look !== kind) this.player.setLook(kind);
+    this.crowd?.avoid(kind);
   }
 
   // 回到主菜单：重新载入页面（场景、车辆、道具全部复位），跳过启动画面
@@ -132,6 +146,7 @@ export class Game {
         return;
       }
       if (MOVE.includes(act)) { this.keyState[act] = 1; if (e.code === 'Space') e.preventDefault(); }
+      if (act === 'brake' && !e.repeat && this.mode === 'play' && !this.player.vehicle) this.player.jump();   // 步行时空格 = 跳
       if (e.code === 'Tab') e.preventDefault();
       if (e.repeat) return;
       if (this.mode === 'play') {
@@ -159,7 +174,7 @@ export class Game {
       if (this.ui.anyKey) return this.ui.anyKey();
       if (this.mode === 'place') return this.placer.click(e.button);
       if (this.mode === 'play' || this.mode === 'photo') {
-        if (document.pointerLockElement !== cv) { cv.requestPointerLock?.(); return; }
+        if (document.pointerLockElement !== cv) { this.lockMouse(); return; }
         if (this.mode === 'photo') { if (e.button === 0) this.photo.shoot(); else if (e.button === 2) this.exitPhoto(); }
       }
     });
@@ -201,7 +216,7 @@ export class Game {
     const sens = settings.padSens, iy = settings.invertY ? -1 : 1;
     if (this.mode === 'play') {
       if (rx || ry) { this.player.look(rx * 950 * dt * sens, ry * 650 * dt * sens * iy); I.mouseActive = true; clearTimeout(this.mt); this.mt = setTimeout(() => I.mouseActive = false, 1200); }
-      if (down.has(PAD.A)) this.interact();
+      if (down.has(PAD.A)) { if (this.player.vehicle || this.hasPrompt) this.interact(); else this.player.jump(); }   // A：有互动就互动，没有就跳
       if (down.has(PAD.X)) this.toggleVehicle();
       if (down.has(PAD.Y)) this.enterPhoto();
       if (down.has(PAD.DOWN)) this.ui.inventory();
@@ -227,12 +242,14 @@ export class Game {
   }
 
   releaseMouse() { if (document.pointerLockElement) document.exitPointerLock(); }
-  lockMouse() { this.renderer.r.domElement.requestPointerLock?.(); }
+  lockMouse() { try { this.renderer.r.domElement.requestPointerLock?.()?.catch?.(() => {}); } catch { /* 没有用户手势时浏览器会拒绝，下次点击再锁 */ } }
+  // 指针锁是异步的：如果锁定生效时已经不在游玩/拍照模式（比如进了摆放模式或菜单），马上解锁
+  watchPointerLock() { document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement && this.mode !== 'play' && this.mode !== 'photo') document.exitPointerLock(); }); }
 
   // ================= 主循环 =================
   loop(now) {
     requestAnimationFrame(t => this.loop(t));
-    if (settings.fpsCap && now - (this.lastDraw || 0) < 1000 / settings.fpsCap - 1.5) return;
+    if (settings.fpsCap > 0 && now - (this.lastDraw || 0) < 1000 / settings.fpsCap - 1.5) return;
     this.lastDraw = now;
     const raw = (now - this.last) / 1000, dt = Math.min(0.05, raw); this.last = now;
     this.pollPad(dt, now);
@@ -260,7 +277,11 @@ export class Game {
     if (this.mode === 'place') this.placer.update();
     else if (this.mode === 'photo') this.photo.updateCamera(this.camera);
     else if (this.mode === 'menu' || (this.mode === 'ui' && this.ui.cinematic)) this.cinematicCam(dt);
-    else this.player.updateCamera(this.camera, dt);
+    else {
+      this.player.updateCamera(this.camera, dt);
+      const v = this.player.vehicle, want = settings.fov + (settings.dynFov && v ? Math.min(14, Math.abs(v.speed) * 0.5) : 0);
+      if (Math.abs(this.camera.fov - want) > 0.05) { this.camera.fov += (want - this.camera.fov) * Math.min(1, dt * 3); this.camera.updateProjectionMatrix(); }
+    }
     const focus = this.player.vehicle ? this.player.vehicle.root.position : this.player.pos;
     this.renderer.followShadow(focus);
     if (this.mode === 'play') this.updatePrompt();
@@ -359,22 +380,55 @@ export class Game {
 
   toggleVehicle() {
     const p = this.player;
-    if (p.vehicle) { if (Math.abs(p.vehicle.speed) > 3) return this.toast('先停车（空格刹车）'); p.exit(); return; }
+    if (p.busy) return;
+    if (p.vehicle) { if (Math.abs(p.vehicle.speed) > 3) return this.toast('先停车（空格刹车）'); p.exit(); if (p.vehicle === null) this.audio.sample?.('door', 0.5); return; }
     const near = this.vehicles.filter(v => !v.ai && !v.npc).map(v => [v, v.root.position.distanceTo(p.pos)]).filter(([, d]) => d < 4.5).sort((a, b) => a[1] - b[1])[0];
-    if (near) { p.enter(near[0]); this.audio.click(); }
+    if (near) { p.startEnter(near[0]); this.audio.sample?.('door', 0.5); }
   }
 
-  // 玩家开的车撞到 AI 车：互相推开、减速
+  // 车与车的碰撞：每辆车用沿车身的几个圆近似，按质量分开位置、交换动量；被撞的车侧滑打转、短暂失控
   bumpTraffic() {
-    const pv = this.player.vehicle; if (!pv) return;
-    for (const v of this.vehicles) {
-      if (v === pv || !v.npc) continue;
-      const d = pv.root.position.clone().sub(v.root.position); d.y = 0;
-      const min = pv.radius + v.T.len * 0.42, L = d.length();
-      if (L < min && L > 0.01) {
-        pv.root.position.addScaledVector(d.normalize(), (min - L));
-        if (Math.abs(pv.speed) > 4) { this.shake(0.25); this.audio.tone(90, 0.2, { type: 'sawtooth', gain: 0.12 }); }
-        pv.speed *= -0.3;
+    const cars = this.vehicles.filter(v => v.root.visible !== false && v.root.parent);
+    const circ = v => {
+      const L = v.T.len, fx = Math.sin(v.heading), fz = Math.cos(v.heading), p = v.root.position;
+      const offs = L < 2 ? [0] : L < 6 ? [-L * 0.3, 0, L * 0.3] : [-L * 0.36, -L * 0.12, L * 0.12, L * 0.36];
+      return offs.map(o => [p.x + fx * o, p.z + fz * o]);
+    };
+    const n = new THREE.Vector3(), va = new THREE.Vector3(), vb = new THREE.Vector3();
+    const vel = (v, out) => out.set(Math.sin(v.heading) * v.speed + v.slide.x, 0, Math.cos(v.heading) * v.speed + v.slide.z);
+    const setVel = (v, w) => { const fx = Math.sin(v.heading), fz = Math.cos(v.heading), along = w.x * fx + w.z * fz; v.speed = along; v.slide.set(w.x - fx * along, 0, w.z - fz * along); };
+    const C = cars.map(circ);
+    for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) {
+      const a = cars[i], b = cars[j];
+      if (a.root.position.distanceToSquared(b.root.position) > (a.T.len + b.T.len) ** 2 / 3.2) continue;
+      const ra = a.T.wid * 0.52, rb = b.T.wid * 0.52;
+      let best = null;
+      for (const [ax, az] of C[i]) for (const [bx, bz] of C[j]) {
+        const dx = ax - bx, dz = az - bz, d = Math.hypot(dx, dz), pen = ra + rb - d;
+        if (pen > 0 && (!best || pen > best.pen)) best = { pen, nx: d > 1e-4 ? dx / d : 1, nz: d > 1e-4 ? dz / d : 0, px: (ax + bx) / 2, pz: (az + bz) / 2 };
+      }
+      if (!best) continue;
+      const ma = a.mass, mb = b.mass, tot = ma + mb;
+      n.set(best.nx, 0, best.nz);
+      a.root.position.addScaledVector(n, best.pen * mb / tot); b.root.position.addScaledVector(n, -best.pen * ma / tot);
+      vel(a, va); vel(b, vb);
+      const vrel = va.clone().sub(vb).dot(n);
+      if (vrel >= 0) continue;
+      const J = -(1.25) * vrel / (1 / ma + 1 / mb);
+      va.addScaledVector(n, J / ma); vb.addScaledVector(n, -J / mb);
+      setVel(a, va); setVel(b, vb);
+      // 撞击点偏离车身中心 → 打转
+      for (const [v, sgn, m] of [[a, 1, ma], [b, -1, mb]]) {
+        const rx = best.px - v.root.position.x, rz = best.pz - v.root.position.z;
+        const torque = (rx * n.z - rz * n.x) * sgn * J / m;
+        v.spin += THREE.MathUtils.clamp(-torque * 0.35, -3, 3);
+        if (J / m > 2.5) v.stun = Math.max(v.stun, Math.min(3.5, J / m * 0.3));
+      }
+      const pv = this.player.vehicle, impact = J / Math.min(ma, mb);
+      if ((a === pv || b === pv) && impact > 2) {
+        this.shake(Math.min(0.6, impact * 0.05)); this.input.rumble(Math.min(1, impact * 0.08), 0.5, 220);
+        this.audio.sample?.('crash', Math.min(1, impact * 0.08)) || this.audio.tone(90, 0.2, { type: 'sawtooth', gain: 0.12 });
+        if (impact > 6) { const o = a === pv ? b : a; if (o.traffic && !o.honked) { o.honked = true; this.audio.sample?.('horn', 0.6); setTimeout(() => o.honked = false, 3000); } }
       }
     }
   }
@@ -415,9 +469,10 @@ export class Game {
       else if (pt.kind === 'home') txt = `${this.input.K('interact')}回家（结束今天，去发帖）`;
     } else if (!this.player.vehicle) {
       const nv = this.vehicles.find(v => !v.ai && !v.npc && v.root.position.distanceTo(this.player.pos) < 4.5);
-      if (nv) txt = `<kbd>F</kbd>上车`;
+      if (nv) txt = `${this.input.K('vehicle')}上车`;
     } else txt = '';
     el.innerHTML = txt; el.classList.toggle('hidden', !txt);
+    this.hasPrompt = !!txt && !txt.includes('上车');
   }
 
   interact() {
@@ -457,6 +512,11 @@ export class Game {
     if (cost) { this.state.cleanupDue = (this.state.cleanupDue || 0) + cost; setTimeout(() => this.toast(`物业会找你要清洁费 ₩${cost.toLocaleString()}（周结算扣除）`, 'bad'), 2500); }
     this.day.events.push(ev);
     if (ev.backfire) setTimeout(() => this.toast(`${order.target} 好像被激励了……（知耻后勇）`, ''), 1500);
+    if (ev.flip) {   // 粉转黑 / 黑转粉：话题度上升，今晚这条帖子更容易火，但老粉丝会掉一点
+      const lost = Math.round(this.state.fans * 0.02);
+      this.state.fans = Math.max(0, this.state.fans - lost);
+      setTimeout(() => this.ui.push(`🔥 热搜：博主对 ${order.target} ${ev.flip}`, `评论区吵翻了，话题度暴涨；${lost ? `${lost} 个老粉取关` : ''}`, 'big'), 1200);
+    }
     return ev;
   }
 
@@ -489,7 +549,7 @@ export class Game {
         this.droneShowT = { obj: d, until: this.time + 40 };
         this.audio.whoosh(); break;
       }
-      case 'graffiti': { const g = this.props.graffiti(hq, order.text); this.props.addSubject(g, { eventId: ev.id, label, text: true, weight: 1.3 }); this.audio.noise(1.5, { f: 5000, type: 'highpass', gain: 0.25 }); break; }
+      case 'graffiti': { const g = this.props.graffiti(hq, order.text); this.props.addSubject(g, { eventId: ev.id, label, text: true, weight: 1.3 }); (this.audio.sample('spray', 0.7) || this.audio.noise(1.5, { f: 5000, type: 'highpass', gain: 0.25 })); break; }
       case 'eggs': this.throwEggs(hq, ev, label); break;
       case 'rally': this.rally(hq, ev, label, order); break;
       case 'billboard': {

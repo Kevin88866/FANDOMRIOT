@@ -129,9 +129,9 @@ export class Opportunities {
     } else if (e.type === 'press') {
       const hq = city.hq[e.hqId];
       const base = hq.plaza.clone().add(new THREE.Vector3(hq.cx > 0 ? -10 : 10, 0, e.hqId === 'ARENA' ? 0 : hq.dir * 4));
-      const rep = new Actor('michelle', { tint: new THREE.Color(0.95, 0.9, 1.0) });
+      const rep = new Actor('louise');   // 记者
       rep.root.position.copy(base); rep.play('idle', 0); this.add(rep.root);
-      const cam = new Actor('xbot', { tint: new THREE.Color(0.35, 0.38, 0.45) });
+      const cam = new Actor('brian');    // 摄像师
       cam.root.position.copy(base).add(new THREE.Vector3(0, 0, hq.dir * 2.6)); this.add(cam.root);
       rep.root.rotation.y = Math.atan2(cam.root.position.x - base.x, cam.root.position.z - base.z);
       cam.root.rotation.y = rep.root.rotation.y + Math.PI;
@@ -152,7 +152,7 @@ export class Opportunities {
       e.truck.root.add(Object.assign(nameTag(`⚔ ${r.name}`, '#27e1ff'), { position: new THREE.Vector3(0, 4.6, 0) }));
       e.rivalQ = 0.8 + Math.random() * 0.45 + this.s.week * 0.015 + (this.s.season - 1) * 0.05;
     } else if (e.type === 'streamer') {
-      const a = new Actor('michelle', { tint: new THREE.Color(1, 0.85, 0.95) });
+      const a = new Actor('sophie');       // 街头主播
       const A = city.hq[LEAGUE.hqA], Bq = city.hq[LEAGUE.hqB];
       // 沿两家总部门前的人行道走一圈
       const path = [
@@ -176,7 +176,7 @@ export class Opportunities {
     if (e.phase === 'waiting' && now >= e.start) {
       e.phase = 'walking';
       const team = TEAMS.find(t => t.id === e.hqId);
-      const a = new Actor('xbot', { tint: new THREE.Color(team.color).lerp(new THREE.Color(0.15, 0.15, 0.18), 0.35) });
+      const a = new Actor(['josh', 'leonard', 'remy', 'jody'][[...String(e.player || '')].reduce((x, c) => x + c.charCodeAt(0), 0) % 4]);   // 选手本人（同一个选手每次长一样）
       const door = new THREE.Vector3(hq.cx, 0.18, hq.face + hq.dir * 0.8);
       a.root.position.copy(door); this.add(a.root);
       a.root.add(nameTag(`★ ${e.player}`, team.color));

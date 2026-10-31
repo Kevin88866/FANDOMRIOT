@@ -16,6 +16,22 @@ const when = t => { if (!t) return ''; const d = new Date(t); return `${d.getMon
 const SLOT_NAME = { auto: '自动存档', 1: '存档 1', 2: '存档 2', 3: '存档 3' };
 const DIFF = { easy: '轻松', normal: '普通', hard: '困难' };
 
+// 分辨率选项：桌面版取显示器尺寸，常见分辨率里不超过它的都列出来
+function resolutions() {
+  const scr = native?.screen?.() || { w: screen.width * devicePixelRatio, h: screen.height * devicePixelRatio };
+  const list = [[3840, 2160], [2560, 1440], [2560, 1080], [1920, 1200], [1920, 1080], [1680, 1050], [1600, 900], [1440, 900], [1366, 768], [1280, 800], [1280, 720], [1024, 576]]
+    .filter(([w, h]) => w <= scr.w && h <= scr.h);
+  return [['auto', `原生（${scr.w}×${scr.h}）`], ...list.map(([w, h]) => [`${w}x${h}`, `${w} × ${h}`])];
+}
+// 全屏：按选择的分辨率换算渲染倍率；窗口：直接改窗口大小
+export function applyResolution() {
+  const r = settings.resolution || 'auto';
+  if (r === 'auto') { setSetting({ resScale: 1 }); return; }
+  const [w, h] = r.split('x').map(Number);
+  if (native?.setWindowSize && settings.display === 'windowed') { native.setWindowSize(w, h); setSetting({ resScale: 1 }); }
+  else setSetting({ resScale: Math.min(2, w / (innerWidth * devicePixelRatio)) * devicePixelRatio });
+}
+
 export const Menus = {
   // ================= 启动画面 =================
   splash() {
@@ -102,7 +118,8 @@ export const Menus = {
     if (!d) return this.toast('这个存档读不出来了', 'bad');
     const s = d.state;
     s.flags ||= {}; s.club ??= 30; s.storySeen ||= []; s.missions ||= []; s.missionsDone ??= 0; s.handle ||= '@饭圈观察员'; s.inventory ||= []; s.difficulty ||= 'normal'; s.playTime ||= 0;
-    this.g.state = s; this.g.lastThumb = s.thumb || null;
+    s.look ||= 'michelle'; s.stance ||= {}; s.goals ||= { fans: 20000 };
+    this.g.state = s; this.g.lastThumb = s.thumb || null; this.g.setPlayerLook(s.look);
     this.close(false);
     this.g.fadeTo?.(() => this.matchDay(true)) ?? this.matchDay(true);
   },
@@ -146,20 +163,38 @@ export const Menus = {
     const slider = (k, min, max, step, fmt) => `<div class="slw"><input type="range" data-k="${k}" min="${min}" max="${max}" step="${step}" value="${S[k]}"><span class="val" data-for="${k}">${fmt(S[k])}</span></div>`;
     const row = (label, ctl, hint = '') => `<div class="srow"><div class="sl-label">${label}${hint ? `<small>${hint}</small>` : ''}</div><div class="sl-ctl">${ctl}</div></div>`;
     const pct = v => Math.round(v * 100) + '%';
-    const FMT = { renderScale: pct, fov: v => Math.round(v) + '°', shake: pct, master: pct, music: pct, sfx: pct, ambience: pct, uiVol: pct, mouseSens: v => (+v).toFixed(2) + '×', padSens: v => (+v).toFixed(2) + '×', uiScale: pct };
+    const FMT = { brightness: pct, shadowDist: pct, viewDist: pct, crowd: pct, traffic: pct, vignette: pct, renderScale: pct, fov: v => Math.round(v) + '°', shake: pct, master: pct, music: pct, sfx: pct, ambience: pct, uiVol: pct, mouseSens: v => (+v).toFixed(2) + '×', padSens: v => (+v).toFixed(2) + '×', uiScale: pct };
     let body = '';
+    const res = resolutions();
     if (tab === 'video') body = [
       desktop ? row('显示模式', seg('display', [['fullscreen', '全屏'], ['windowed', '窗口']]), 'F11 也可以切换') : '',
+      row('分辨率', `<select class="txt sel" data-sk="resolution">${res.map(([v, l]) => `<option value="${v}" ${S.resolution === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`, S.display === 'fullscreen' || !desktop ? '全屏时按这个分辨率渲染再放大' : '窗口大小'),
+      row('帧率上限', seg('fpsCap', [[0, '垂直同步'], [30, '30'], [60, '60'], [90, '90'], [120, '120'], [144, '144'], [165, '165'], [240, '240'], [-1, '不限']])),
+      row('亮度', slider('brightness', 0.6, 1.5, 0.05, pct)),
+      row('视野', slider('fov', 50, 100, 1, FMT.fov)),
+      row('速度感视野', onoff('dynFov'), '开快车时视野略微变宽'),
+      row('镜头晃动', slider('shake', 0, 1, 0.05, pct)),
+      row('显示帧率', onoff('showFps')),
+    ].join('');
+    else if (tab === 'gfx') body = [
       row('画质预设', seg('preset', [['low', '低'], ['mid', '中'], ['high', '高'], ['ultra', '极高']]) + (S.preset === 'custom' ? '<span class="dim" style="margin-left:8px">自定义</span>' : '')),
-      row('渲染分辨率', slider('renderScale', 0.5, 2, 0.05, pct), '低于 100% 更流畅，高于 100% 更清晰'),
-      row('阴影', seg('shadows', [['off', '关'], ['low', '低'], ['mid', '中'], ['high', '高'], ['ultra', '极高']])),
+      row('渲染倍率', slider('renderScale', 0.5, 2, 0.05, pct), '低于 100% 更流畅，高于 100% 更清晰'),
+      row('阴影质量', seg('shadows', [['off', '关'], ['low', '低'], ['mid', '中'], ['high', '高'], ['ultra', '极高']])),
+      row('阴影距离', slider('shadowDist', 0.5, 2, 0.1, pct)),
+      row('视距', slider('viewDist', 0.5, 1.6, 0.05, pct), '远处的雾和路人显示距离'),
       row('环境光遮蔽', onoff('ao'), '缝隙和角落的柔和阴影，比较吃显卡'),
       row('辉光', onoff('bloom'), '霓虹灯、LED 屏的光晕'),
       row('抗锯齿', onoff('aa')),
-      row('帧率上限', seg('fpsCap', [[0, '不限'], [30, '30'], [60, '60'], [120, '120'], [144, '144']])),
-      row('视野', slider('fov', 50, 90, 1, FMT.fov)),
-      row('镜头晃动', slider('shake', 0, 1, 0.05, pct)),
-      row('显示帧率', onoff('showFps')),
+      row('纹理过滤', seg('aniso', [[1, '关'], [4, '4×'], [8, '8×'], [16, '16×']])),
+      row('路人密度', slider('crowd', 0.25, 1, 0.05, pct)),
+      row('车流密度', slider('traffic', 0.25, 1, 0.05, pct)),
+      row('胶片颗粒', onoff('grain')),
+      row('暗角', slider('vignette', 0, 1, 0.05, pct)),
+    ].join('');
+    else if (tab === 'hud') body = [
+      row('界面缩放', slider('uiScale', 0.8, 1.3, 0.05, pct)),
+      row('小地图', onoff('hudMap')), row('目标面板', onoff('hudGoals')), row('底部按键提示', onoff('hudKeys')),
+      row('手机通知', onoff('hudPush')), row('资金 / 粉丝栏', onoff('hudStats')),
     ].join('');
     else if (tab === 'audio') body = [
       row('主音量', slider('master', 0, 1, 0.05, pct)), row('音乐', slider('music', 0, 1, 0.05, pct)), row('音效', slider('sfx', 0, 1, 0.05, pct)),
@@ -174,11 +209,10 @@ export const Menus = {
     ].join('');
     else if (tab === 'game') body = [
       this.s ? row('难度（当前存档）', `<div class="seg" data-k="__diff">${Object.entries(DIFF).map(([v, l]) => `<button class="${(this.s.difficulty || 'normal') === v ? 'on' : ''}" data-v='"${v}"'>${l}</button>`).join('')}</div>`, '轻松：收入 +30%、争议度增长 -30%；困难：收入 -20%、争议度 +25%') : '',
-      row('界面缩放', slider('uiScale', 0.8, 1.3, 0.05, pct)),
       row('新手引导', onoff('tutorial'), '第一周按步骤提示'),
       row('自动存档', onoff('autosave'), '每周开始和周结算后自动保存'),
     ].join('');
-    const tabs = [['video', '画面'], ['audio', '音频'], ['controls', '操作'], ['game', '游戏']];
+    const tabs = [['video', '显示'], ['gfx', '图形'], ['audio', '音频'], ['controls', '操作'], ['hud', '界面'], ['game', '游戏']];
     this.open(`<h2>设置</h2>
       <div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${k === tab ? 'on' : ''}" data-tab="${k}" data-nav>${l}</button>`).join('')}<span class="dim tab-hint">${this.g.input.device === 'pad' ? 'LB / RB 切换' : 'Q / E 切换'}</span></div>
       <div class="sbody">${body}</div>
@@ -191,13 +225,17 @@ export const Menus = {
       const k = sg.dataset.k, v = JSON.parse(bt.dataset.v);
       this.g.audio.click();
       if (k === '__diff') { this.s.difficulty = v; this.save(); }
-      else { setSetting({ [k]: v }); if (k === 'display') native?.setDisplay?.(v); }
+      else { setSetting({ [k]: v }); if (k === 'display') { native?.setDisplay?.(v); setTimeout(applyResolution, 300); } }
       if (k === 'preset' || ['renderScale', 'shadows', 'ao', 'bloom', 'aa'].includes(k)) return this.settings(back, tab);
       sg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === bt));
     }));
     this.modal.querySelectorAll('input[type=range]').forEach(el => {
       el.oninput = () => { const k = el.dataset.k, v = +el.value; this.modal.querySelector(`[data-for="${k}"]`).textContent = FMT[k](v); setSetting({ [k]: v }); };
       el.onchange = () => { if (el.dataset.k === 'renderScale') this.settings(back, tab); };
+    });
+    this.modal.querySelectorAll('select[data-sk]').forEach(el => el.onchange = () => {
+      setSetting({ [el.dataset.sk]: el.value });
+      if (el.dataset.sk === 'resolution') applyResolution();
     });
     this.modal.querySelectorAll('[data-act]').forEach(bt => bt.onclick = () => {
       bt.textContent = '按下新按键…'; bt.classList.add('wait');
