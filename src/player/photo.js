@@ -110,7 +110,7 @@ export class PhotoMode {
 
     let q = best ? 0.25 + bestScore * 0.75 : 0.12;
     if (tags.has('text')) q += 0.15; if (tags.has('logo')) q += 0.18; if (tags.has('crowd')) q += Math.min(0.3, crowd * 0.04);
-    if (tags.has('explosion')) q += 0.45; if (tags.has('night') && best?.glow) q += 0.1;
+    if (tags.has('explosion')) q += 0.45; if (tags.has('night') && best?.glow) q += 0.1; if (best?.night) q += 0.25 * g.renderer.night - 0.1;   // 投影越晚越清楚
     if (tags.has('star')) q += 0.25; if (tags.has('reaction')) q += 0.3; if (tags.has('press')) q += 0.15;
     if (best?.layout) q *= best.layout;
     q *= 1 + 0.08 * g.state.skills.photo;

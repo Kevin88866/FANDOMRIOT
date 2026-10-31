@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // 摆放模式：俯视总部门前广场，鼠标决定花圈 / 花篮 / 横幅 / 集会的位置和朝向。
 // 摆得整齐、正对街道会提高"排面"分（影响照片质量）；堵住大门会被保安清理（但那也是名场面）。
-const PIECES = { wreath: 3, flowers: 3, banner: 1, rally: 1 };
+const PIECES = { wreath: 3, flowers: 3, banner: 1, rally: 1, lightboard: 4, cake: 1, lunch: 1, balloon: 1 };
 
 export class Placer {
   constructor(game) {
@@ -45,10 +45,7 @@ export class Placer {
     const { order, hq, item } = this.ctx, P = this.game.props;
     const pos = hq.plaza.clone();
     let obj;
-    if (item.prop === 'wreath') obj = P.wreath(pos, hq.faceRy, order.text, order.kind);
-    else if (item.prop === 'flowers') obj = P.flowers(pos, hq.faceRy, order.text);
-    else if (item.prop === 'banner') obj = P.banner(pos, hq.faceRy, order.text, order.kind);
-    else obj = P.rallyGroup(pos, hq.faceRy, order.text, order.kind);
+    obj = P.build(item.prop, pos, hq.faceRy, order.text, order.kind, hq.team?.color);
     obj.rotation.y = hq.faceRy + this.ctx.rot;
     obj.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.55; o.userData.ghostMat = true; } });
     this.ghost = obj;

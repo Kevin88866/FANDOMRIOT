@@ -16,6 +16,15 @@ function model(game, id) {
     case 'wreath': return detach(P, P.wreath(at, 0, '정신차려', 'attack'));
     case 'flowers': return detach(P, P.flowers(at, 0, '♥ 최고 ♥'));
     case 'rally': return detach(P, P.rallyGroup(at, 0, 'OUT', 'attack'));
+    case 'lightboard': case 'cake': case 'lunch': case 'balloon': return detach(P, P.build(id === 'lightboard' ? 'lightboard' : id, at, 0, id === 'cake' ? '생일 축하해' : '최고 ♥', id === 'lightboard' ? 'attack' : 'support', '#ff7ab0'));
+    case 'megaphone': { const o = glbModel('pr_megaphone'); if (o) o.scale.setScalar(4); return o; }
+    case 'projector': return glbModel('pr_projector');
+    case 'lightsticks': {
+      const g = new THREE.Group(), m = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff7ab0').multiplyScalar(2), toneMapped: false });
+      for (let i = 0; i < 5; i++) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.7, 10), m); st.position.set(-0.6 + i * 0.3, 0.5 + (i % 2) * 0.1, 0); st.rotation.z = (i - 2) * 0.18; g.add(st); }
+      return g;
+    }
+    case 'busad': { const v = new Vehicle('bus', { color: 0xff7ab0 }); return v.root; }
     case 'truck': return new Vehicle('ledtruck', { text: 'OUT', textColor: '#ff2d2d', sub: 'LCK' }).root;
     case 'coffee': return new Vehicle('coffee', { text: '☕ 응원해요', textColor: '#ff7ab0' }).root;
     case 'eggs': {

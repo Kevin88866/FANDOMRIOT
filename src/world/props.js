@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { textTex } from '../engine/textures.js';
-import { model } from '../engine/assets.js';
+import { model, recolor } from '../engine/assets.js';
 
 // 花圈、横幅、花篮、涂鸦、炸弹、无人机等。每个道具注册成"拍照对象"。
 function verticalText(text, { bg = '#ffffff', fg = '#111', w = 128, h = 1024 } = {}) {
@@ -34,6 +34,96 @@ export class Props {
     this.game = game; this.scene = game.scene;
     this.list = [];           // 当前场景里的道具
     this.subjects = [];       // 拍照对象
+  }
+
+  // 摆放类道具统一入口（摆放模式的幽灵、缩略图、正式摆放都走这里）
+  build(prop, pos, faceRy, text, kind, color) {
+    switch (prop) {
+      case 'wreath': return this.wreath(pos, faceRy, text, kind);
+      case 'flowers': return this.flowers(pos, faceRy, text);
+      case 'banner': return this.banner(pos, faceRy, text, kind);
+      case 'rally': return this.rallyGroup(pos, faceRy, text, kind);
+      case 'lightboard': return this.signModel('pr_lightboard', pos, faceRy, text, kind, true);
+      case 'cake': return this.signModel('pr_cake', pos, faceRy, text, 'support');
+      case 'lunch': return this.signModel('pr_lunch', pos, faceRy, text, 'support');
+      case 'balloon': { const o = this.signModel('pr_balloon', pos, faceRy, text, 'support'); recolor(o, color || '#ff7ab0'); return o; }
+    }
+    return null;
+  }
+
+  // 带一块写字牌（sign_*）的 Blender 模型；glow = 夜里发光的 LED 牌
+  signModel(name, pos, faceRy, text, kind, glow = false) {
+    const support = kind === 'support';
+    const glb = model(name) || new THREE.Group();
+    const t = textTex(text, glow ? { w: 512, h: 190, bg: '#000000', fg: support ? '#ff7ab0' : '#ff2d2d', size: 0.5, glow: 18 }
+      : { w: 512, h: 260, bg: support ? '#fff0f5' : '#ffffff', fg: support ? '#d81b60' : '#c00000', size: 0.4, border: support ? '#ff9ec4' : '#222' });
+    glb.traverse(o => {
+      if (!o.isMesh || !o.name.startsWith('sign_')) return;
+      o.material = glow ? new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.6, roughness: 0.4 })
+        : new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 });
+      if (glow) { o.material.userData.night = true; this.game.city?.nightMats.push(o.material); }
+    });
+    glb.position.copy(pos); glb.rotation.y = faceRy;
+    this.place(glb); return glb;
+  }
+
+  // 楼体投影：投影灯 + 外墙上的发光文字
+  projection(hq, text, kind) {
+    const support = kind === 'support';
+    const lamp = model('pr_projector') || new THREE.Group();
+    lamp.position.copy(hq.plaza).add(new THREE.Vector3(0, 0, hq.dir * 6)); lamp.rotation.y = hq.faceRy + Math.PI;
+    this.place(lamp);
+    const t = textTex(text, { w: 1024, h: 384, bg: '#000000', fg: support ? '#ffd1e6' : '#ffffff', size: 0.55, glow: 30 });
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, color: new THREE.Color(1.3, 1.3, 1.3) });
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(16, 6), m);
+    wall.position.set(hq.cx, 14, hq.face + hq.dir * 0.35); wall.rotation.y = hq.faceRy;
+    this.place(wall);
+    // 光束
+    const beam = new THREE.Mesh(new THREE.ConeGeometry(3.2, 1, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff3dd, transparent: true, opacity: 0.03, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    const from = lamp.position.clone().setY(1.3), to = wall.position.clone(), len = from.distanceTo(to);
+    beam.scale.set(1, len, 1); beam.position.copy(from).lerp(to, 0.5);
+    beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), from.clone().sub(to).normalize().negate());
+    this.place(beam);
+    return wall;
+  }
+
+  // 公交车身广告：在城市里跑一整晚的公交车，侧面贴你的图文
+  busAd(text, kind) {
+    const g = this.game, support = kind === 'support';
+    const bus = new (g.VehicleClass)('bus', { color: support ? 0xff7ab0 : 0x1a1a1a });
+    const t = textTex(text, { w: 1024, h: 200, bg: support ? '#ffe3ef' : '#111111', fg: support ? '#d81b60' : '#ff2d2d', size: 0.62 });
+    bus.root.traverse(o => { if (o.isMesh && (o.name === 'sign_side' || o.name.startsWith('sign_side'))) o.material = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.5 }); });
+    // 车身两侧再贴一块大广告板（模型上没有 sign_side 时也能看到）
+    const L = bus.T.len;
+    for (const sx of [-1, 1]) {
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.62, 1.1), new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.45, roughness: 0.5 }));
+      pl.position.set(sx * (bus.T.wid / 2 + 0.03), 1.75, -0.2); pl.rotation.y = sx * Math.PI / 2; bus.body.add(pl);
+    }
+    bus.ai = true; bus.npc = true; bus.path = g.truckRoute(); bus.loop = true; bus.aiSpeed = 8;
+    bus.root.position.copy(bus.path[0]); g.addVehicle(bus);
+    return bus;
+  }
+
+  // 应援棒：广场上的路人人手一根，夜里一片光海
+  lightsticks(hq, color) {
+    const grp = new THREE.Group();
+    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(2.2), toneMapped: false });
+    const geo = new THREE.CylinderGeometry(0.025, 0.03, 0.32, 8); geo.translate(0, 0.16, 0);
+    const near = this.game.crowd.list.filter(p => p.a.root.position.distanceTo(hq.plaza) < 26).slice(0, 18);
+    for (const p of near) {
+      const hand = p.a.bones?.RightHand; if (!hand) continue;
+      const st = new THREE.Mesh(geo, m); st.rotation.x = -0.6; hand.add(st); (p.sticks ||= []).push(st);
+      setTimeout(() => { hand.remove(st); }, 240000);
+    }
+    // 广场上再站一排举棒的粉丝（集会规模随粉丝团）
+    const n = Math.min(14, 6 + Math.floor((this.game.state.club || 0) / 80));
+    for (let i = 0; i < n; i++) {
+      const st = new THREE.Mesh(geo, m);
+      st.position.copy(hq.plaza).add(new THREE.Vector3(-8 + i * 16 / n, 1.5 + Math.random() * 0.3, hq.dir * (3 + (i % 2))));
+      st.rotation.z = (Math.random() - 0.5) * 0.6; grp.add(st);
+    }
+    this.place(grp);
+    return grp;
   }
 
   addSubject(obj, info) { const s = { obj, ...info, born: this.game.time }; this.subjects.push(s); return s; }

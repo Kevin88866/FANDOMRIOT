@@ -138,6 +138,7 @@ export class UI {
       x.strokeStyle = o.type === 'rival' ? '#27e1ff' : '#ffd34d'; x.lineWidth = 2; x.beginPath(); x.arc(a, b, pulse + 3, 0, 7); x.stroke();
       x.font = `${big ? 16 : 12}px sans-serif`; x.fillText(o.icon, a - 7, b + 5);
     }
+    for (const t of g.trackers || []) { if (g.clockMin > t.until || !t.obj.parent) continue; const [a, b] = P(t.obj.position.x, t.obj.position.z); x.fillStyle = t.color; x.beginPath(); x.arc(a, b, big ? 7 : 5, 0, 7); x.fill(); }
     for (const v of g.vehicles) { if (v === g.player.vehicle) continue; const [a, b] = P(v.root.position.x, v.root.position.z); x.fillStyle = v.order || v.shown || v.ai ? '#ff8a00' : '#888'; x.fillRect(a - 3, b - 3, 6, 6); }
     const [a, b] = P(me.x, me.z), hd = g.player.vehicle ? g.player.vehicle.heading : g.player.facing;
     x.save(); x.translate(a, b); x.rotate(-hd + Math.PI); x.fillStyle = '#fff'; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 6); x.lineTo(-5, 6); x.fill(); x.restore();

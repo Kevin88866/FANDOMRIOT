@@ -35,6 +35,7 @@ export class Game {
     this.keyState = {};
     this.mode = 'menu';           // menu | play | photo | place | ui
     this.vehicles = [];           // 场景内车辆（玩家载具、订购卡车、警车）
+    this.VehicleClass = Vehicle;
     this.ui = new UI(this);
     this.focus = new Focus(this.ui);
     this.tutorial = new Tutorial(this);
@@ -335,7 +336,7 @@ export class Game {
     own.root.position.set(home.x - 3, 0, home.z - 5); own.heading = Math.PI / 2; own.root.rotation.y = own.heading; own.owned = true;
     this.addVehicle(own); this.myRide = own;
     this.crowd.list.forEach(p => { p.state = 'walk'; });
-    this.guards = [];
+    this.guards = []; this.trackers = [];
     s.weekStory = [];
     this.opps.plan();
     this.mode = 'play'; this.ui.showHud(true);
@@ -562,6 +563,22 @@ export class Game {
       case 'graffiti': { const g = this.props.graffiti(hq, order.text); this.props.addSubject(g, { eventId: ev.id, label, text: true, weight: 1.3 }); (this.audio.sample('spray', 0.7) || this.audio.noise(1.5, { f: 5000, type: 'highpass', gain: 0.25 })); break; }
       case 'eggs': this.throwEggs(hq, ev, label); break;
       case 'rally': this.rally(hq, ev, label, order); break;
+      case 'megaphone': this.megaphone(hq, ev, label); break;
+      case 'lightsticks': {
+        const z = this.props.lightsticks(hq, support ? '#ff7ab0' : hq.team.color);
+        this.props.addSubject(z, { eventId: ev.id, label, glow: true, crowd: true, weight: 1.2 }); break;
+      }
+      case 'projector': {
+        const w = this.props.projection(hq, order.text, order.kind);
+        this.props.addSubject(w, { eventId: ev.id, label, text: true, glow: true, weight: 1.35, night: true }); break;
+      }
+      case 'busad': {
+        const bus = this.props.busAd(order.text, order.kind);
+        this.props.addSubject(bus.root, { eventId: ev.id, label, text: true, weight: 1.3 });
+        this.ui.push('🚌 公交车身广告已上线', '整晚在全城跑，在路上拍到它就算数（小地图上的粉色点）', 'good');
+        (this.trackers ||= []).push({ obj: bus.root, color: '#ff7ab0', until: 24 * 60 });
+        break;
+      }
       case 'billboard': {
         this.props.billboardOrder(order.text);
         this.props.addSubject(this.city.billboard, { eventId: ev.id, label, text: true, glow: true, weight: 1.4 });
@@ -655,6 +672,18 @@ export class Game {
   }
 
   // 粉丝集会：一排举牌的人 + 围观
+  // 喇叭喊话：玩家自己举着喇叭喊，路人围观录视频
+  megaphone(hq, ev, label) {
+    const P = this.player, a = P.actor, hand = a.bones?.RightHand;
+    const mp = model('pr_megaphone');
+    if (mp && hand) { mp.scale.setScalar(1 / hand.getWorldScale(new THREE.Vector3()).x); mp.position.set(0, 0.08, 0.05); mp.rotation.set(-Math.PI / 2, 0, 0); hand.add(mp); setTimeout(() => hand.remove(mp), 6000); }
+    a.play('angry', 0.2, 1, true);
+    this.audio.sample?.('crowd_boo', 0.5);
+    this.crowd.attract(P.pos.clone(), 40, 14, 'angry');
+    this.props.addSubject(P.root, { eventId: ev.id, label, weight: 1.15, crowd: true });
+    this.state.heat = Math.min(120, this.state.heat + 2);
+  }
+
   rally(hq, ev, label, order) {
     const zone = new THREE.Mesh(new THREE.BoxGeometry(18, 4, 8), new THREE.MeshBasicMaterial({ visible: false }));
     zone.position.copy(hq.plaza).setY(2); this.props.place(zone);

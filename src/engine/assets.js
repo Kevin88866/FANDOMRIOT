@@ -8,6 +8,7 @@ export const MODEL_LIST = [
   'st_lamp', 'st_signal', 'st_busstop', 'st_vending', 'st_pole', 'st_rail', 'st_planter', 'st_bench', 'st_bin',
   'st_bollard', 'st_hydrant', 'st_cone',
   'pr_wreath_w', 'pr_wreath_p', 'pr_basket', 'pr_banner', 'pr_picket', 'pr_fireworks',
+  'pr_cake', 'pr_lunch', 'pr_megaphone', 'pr_balloon', 'pr_projector', 'pr_lightboard',
   'bd_ac', 'bd_vsign', 'bd_tank', 'bd_stair', 'bd_condenser', 'bd_dish', 'bd_antenna',
   'lm_t0', 'lm_hwl', 'lm_arena',
   'shop_conv', 'shop_cafe', 'shop_chicken', 'shop_pcbang', 'shop_phone',
@@ -27,7 +28,7 @@ export async function loadModels(list = MODEL_LIST, onProgress) {
       if (name.startsWith('shop_')) shopGlow(g.scene);
       if (name.startsWith('lm_')) g.scene.traverse(o => {   // 地标大堂玻璃：夜里不至于黑成一个洞
         const m = o.isMesh && o.material;
-        if (m && m.name.startsWith('glass')) { m.userData.envMul = 2.2; m.emissive.setHex(0x1a2230); }
+        if (m && m.name.startsWith('glass')) { m.userData.envMul = 2.2; m.emissive.setHex(0x1a2230); m.roughness = Math.max(m.roughness, 0.3); }
       });
       store[name] = g.scene;
     } catch (e) {
