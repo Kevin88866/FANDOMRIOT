@@ -118,7 +118,7 @@ export class Game {
   // 换玩家形象：路人里撞脸的换成别人
   setPlayerLook(kind) {
     this.playerLook = kind;
-    if (this.player.look !== kind) this.player.setLook(kind);
+    if (this.player.lookKind !== kind) this.player.setLook(kind);
     this.crowd?.avoid(kind);
   }
 

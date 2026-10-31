@@ -18,7 +18,7 @@ export class Player {
 
   // 换形象：先用路人版，完整版加载好后替换
   setLook(kind) {
-    this.look = kind;
+    this.lookKind = kind;
     const build = full => {
       if (this.actor) this.root.remove(this.actor.root);
       this.actor = new Actor(kind, { scale: this.game.charScale, full });
@@ -26,7 +26,7 @@ export class Player {
       this.actor.play('idle', 0);
     };
     build(false);
-    loadFull(kind).then(() => { if (this.look === kind) build(true); });
+    loadFull(kind).then(() => { if (this.lookKind === kind) build(true); });
   }
 
   look(dx, dy) {
