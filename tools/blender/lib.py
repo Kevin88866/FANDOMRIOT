@@ -306,6 +306,9 @@ SPECIAL_MAT = ('paint', 'glass', 'emit_', 'screen', 'cloth', 'leaf', 'skin', 'fa
 
 
 def _special(m):
+    # 带贴图的材质（导入的 Poly Haven 模型、PBR 地板墙面）不能并进顶点色共享材质
+    if m is not None and m.use_nodes and any(n.type == 'TEX_IMAGE' for n in m.node_tree.nodes):
+        return True
     return m is None or m.name.startswith(SPECIAL_MAT)
 
 
@@ -383,7 +386,7 @@ def bake_ao(samples=24, soften=0.38, distance=0.6, atlas=True):
         cols = [(1.0, 1.0, 1.0)] * len(me.loops)
         if atlas:
             remap = {}
-            for i, m in enumerate(me.materials):
+            for i, m in enumerate(list(me.materials)):
                 if m is None or _special(m) or m.name.startswith('shared_'):
                     continue
                 b = m.node_tree.nodes.get('Principled BSDF')

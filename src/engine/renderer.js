@@ -139,11 +139,12 @@ export class Renderer {
   }
 
   // 黄昏用落日 HDR，入夜后换成城市夜景 HDR（玻璃幕墙的反射会跟着变）
-  async loadEnv(url, nightUrl) {
+  async loadEnv(url, nightUrl, scale = [1, 1]) {
+    this.envScale = scale;   // 不同 HDR 的整体亮度差很多（夜景 HDR 里有路灯直射），按图校准
     const pmrem = new THREE.PMREMGenerator(this.r);
     const tex = await new RGBELoader().loadAsync(url);
     this.envDusk = pmrem.fromEquirectangular(tex).texture; tex.dispose();
-    if (nightUrl) { const nt = await new EXRLoader().loadAsync(nightUrl); this.envNight = pmrem.fromEquirectangular(nt).texture; nt.dispose(); }
+    if (nightUrl) { const nt = await (nightUrl.endsWith('.hdr') ? new RGBELoader() : new EXRLoader()).loadAsync(nightUrl); this.envNight = pmrem.fromEquirectangular(nt).texture; nt.dispose(); }
     this.envMap = this.envDusk;
     this.scene.environment = this.envMap;
     this.applyEnvIntensity();
@@ -175,12 +176,13 @@ export class Renderer {
     this.r.toneMappingExposure = THREE.MathUtils.lerp(0.75, 1.08, t) * (settings.brightness || 1);
     this.scene.fog.color.setHSL(THREE.MathUtils.lerp(0.95, 0.66, t), 0.25, THREE.MathUtils.lerp(0.45, 0.06, t));
     this.scene.fog.density = THREE.MathUtils.lerp(0.0035, 0.0055, t) / Math.max(0.5, settings.viewDist || 1);
-    const newEnv = THREE.MathUtils.lerp(0.8, 0.38, t);
-    if (Math.abs((this.envIntensity ?? 0) - newEnv) > 0.03) { this.envIntensity = newEnv; this.applyEnvIntensity(); }
+    const useNight = t > 0.55 && this.envNight;
+    const newEnv = THREE.MathUtils.lerp(0.8, 0.38, t) * ((this.envScale || [1, 1])[useNight ? 1 : 0]);
+    if (Math.abs((this.envIntensity ?? 0) - newEnv) > 0.01) { this.envIntensity = newEnv; this.applyEnvIntensity(); }
     if (this.bloom) this.bloom.strength = THREE.MathUtils.lerp(0.35, 0.75, t);
     this.night = t;
     if (this.dome) { const k = THREE.MathUtils.smoothstep(t, 0.35, 0.9); this.dome.material.uniforms.k.value = k; this.stars.material.uniforms.k.value = k; this.moon.material.opacity = k; }
-    const env = t > 0.55 && this.envNight ? this.envNight : this.envDusk;
+    const env = useNight ? this.envNight : this.envDusk;
     if (env && this.scene.environment !== env) { this.scene.environment = env; this.envMap = env; }
   }
 

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS, vsignAtlas, SignAtlas } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
-import { hasModel, instanced, partGeos, model } from '../engine/assets.js';
+import { hasModel, instanced, partGeos, model, registerNight } from '../engine/assets.js';
 
 // 首尔街区：6x6 路网，中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
 export const ROADS = [-150, -90, -30, 30, 90, 150];
@@ -11,6 +11,16 @@ export const roadWidth = (axis, v) => (axis === 'z' && v === AVENUE_Z ? 26 : 14)
 const BLOCK = 60, CURB = 0.18, HALF = 165;
 
 // 取 BoxGeometry 的几个面（按 groups），用于把同一个盒子的不同面分到不同材质的合并网格里
+const SHOP_KINDS = ['shop_conv', 'shop_cafe', 'shop_chicken', 'shop_pcbang', 'shop_phone', 'shop_conv', 'shop_cafe'];
+
+// 下载的 PBR 贴图（Poly Haven，1K）：颜色 + 法线 + 粗糙度
+const texLoader = new THREE.TextureLoader();
+function pbrMat(base, repeat, { color = 0xffffff, normalScale = 1 } = {}) {
+  const url = k => `assets/thirdparty/textures/${base}_${k}_1k.jpg`;
+  const load = (k, srgb) => { const t = texLoader.load(url(k)); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
+  return new THREE.MeshStandardMaterial({ color, map: load('diff', true), normalMap: load('nor_gl'), roughnessMap: load('rough'), roughness: 1, metalness: 0, normalScale: new THREE.Vector2(normalScale, normalScale) });
+}
+
 function faces(g, ids) {
   const idx = [];
   for (const i of ids) { const gr = g.groups[i]; for (let k = gr.start; k < gr.start + gr.count; k++) idx.push(g.index.getX(k)); }
@@ -83,9 +93,10 @@ export class City {
   }
 
   ground() {
-    const a = asphalt();
-    const roadMat = new THREE.MeshStandardMaterial({ map: a.map, roughness: 0.82, metalness: 0.0, color: 0xb8b8b8 });
-    roadMat.map.repeat.set(36, 36);
+    // 路面：Poly Haven 的磨损沥青（颜色 + 法线 + 粗糙度），每 5 米一格
+    const size = HALF * 2 + 40, rep = size / 5;
+    const roadMat = pbrMat('polyhaven_worn_asphalt/worn_asphalt', rep, { color: 0x9a9a9a, normalScale: 0.8 }) || new THREE.MeshStandardMaterial({ map: asphalt().map, roughness: 0.82, color: 0xb8b8b8 });
+    if (!roadMat.normalMap) roadMat.map.repeat.set(36, 36);
     const g = new THREE.Mesh(new THREE.PlaneGeometry(HALF * 2 + 40, HALF * 2 + 40), roadMat);
     g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
     this.group.add(g);
@@ -107,15 +118,13 @@ export class City {
     const r = this.rnd, s = this.sidewalkFor(cx, cz);
     const w = s.xMax - s.xMin, d = s.zMax - s.zMin, mx = (s.xMin + s.xMax) / 2, mz = (s.zMin + s.zMax) / 2;
     if (!this.swMat) {
-      this.swMat = new THREE.MeshStandardMaterial({ map: sidewalk(), roughness: 0.9 });
-      this.swMat.map.repeat.set(0.25, 0.25);
+      this.swMat = pbrMat('polyhaven_rectangular_paving/rectangular_paving', 1, { color: 0xc8c4be }) || new THREE.MeshStandardMaterial({ map: sidewalk(), roughness: 0.9 });
       this.curbMat = new THREE.MeshStandardMaterial({ color: 0x9a9a98, roughness: 0.85 });
     }
     const geo = new THREE.BoxGeometry(w, CURB, d);
     // 世界坐标 UV，避免拉伸
     const uv = geo.attributes.uv, pos = geo.attributes.position;
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + mx) * 0.25, (pos.getZ(i) + mz) * 0.25);
-    this.swMat.map.repeat.set(1, 1);
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + mx) * 0.4, (pos.getZ(i) + mz) * 0.4);
     geo.translate(mx, CURB / 2, mz);
     this.addStatic(this.swMat, geo, false);
 
@@ -181,9 +190,13 @@ export class City {
     const roofMat = this.roofMat || (this.roofMat = new THREE.MeshStandardMaterial({ color: 0x45474d, roughness: 0.92 }));
     const darkMat = this.darkMat || (this.darkMat = new THREE.MeshStandardMaterial({ color: 0x24262b, roughness: 0.6, metalness: 0.3 }));
     // 一楼：深色框架 + 朝街的店面玻璃
-    const g0 = new THREE.BoxGeometry(L.w - 0.3, GROUND, L.d - 0.3); g0.translate(L.x, GROUND / 2 + CURB, L.z);
+    const shops = hasModel('shop_conv');
+    const REC = shops ? 3.1 : 0;   // 有店铺内景时，一楼主体往里缩，让出店铺纵深
+    const off0 = { S: [0, -1], N: [0, 1], W: [-1, 0], E: [1, 0] }[L.facing];
+    const g0 = new THREE.BoxGeometry(L.w - 0.3 - Math.abs(off0[0]) * REC, GROUND, L.d - 0.3 - Math.abs(off0[1]) * REC);
+    g0.translate(L.x - off0[0] * REC / 2, GROUND / 2 + CURB, L.z - off0[1] * REC / 2);
     this.addStatic(darkMat, g0);
-    this.storefront(L, r, GROUND);
+    if (shops) this.shopModules(L, r, GROUND, darkMat); else this.storefront(L, r, GROUND);
     // 楼身（高楼有一定概率做成"裙楼 + 塔楼"）。侧面 UV 按整数格贴楼面贴图，所有同款楼共用一个材质
     const tower = !billboard && floors >= 9 && r() < 0.55;
     const podiumFloors = tower ? 2 + (r() * 2 | 0) : floors;
@@ -317,6 +330,28 @@ export class City {
     this.addStatic(this.darkMat, faces(g, [0, 1, 2, 3]));
   }
 
+  // 一楼店铺：Blender 做的有纵深的店面模块（6 米宽、3 米深），之间用深色柱子补齐
+  shopModules(L, r, GROUND, darkMat) {
+    const F = this.facadeFrame(L, L.w, L.d), MW = 6.0, MH = 3.6, D = 3.1, P = 0.35;
+    const span = F.along - 0.3, n = Math.max(1, Math.floor((span - P) / (MW + P)));
+    const used = n * MW + (n + 1) * P, start = -used / 2;
+    const one = new THREE.Vector3(1, 1, 1);
+    const box = (u, w, y, h) => {   // 店面层的实心部分：柱子、两端墙、门头
+      const g = new THREE.BoxGeometry(w, h, D);
+      g.applyQuaternion(F.q); const c = F.at(u, CURB + y + h / 2, -D / 2 - 0.15); g.translate(c.x, c.y, c.z);
+      this.addStatic(darkMat, g);
+    };
+    const edge = (span - used) / 2;
+    if (edge > 0.01) { box(-span / 2 + edge / 2, edge, 0, GROUND); box(span / 2 - edge / 2, edge, 0, GROUND); }
+    box(0, used, MH, GROUND - MH);
+    for (let i = 0; i <= n; i++) box(start + i * (MW + P) + P / 2, P, 0, MH);
+    for (let i = 0; i < n; i++) {
+      const kind = SHOP_KINDS[(r() * SHOP_KINDS.length) | 0];
+      const u = start + P + i * (MW + P) + MW / 2;
+      (this.inst[kind] ||= []).push(new THREE.Matrix4().compose(F.at(u, CURB, -D / 2 - 0.12), F.q, one));
+    }
+  }
+
   // 朝街一面的一楼店面玻璃（夜里亮）
   storefront(L, r, GROUND) {
     const vi = (r() * 40 | 0) % 12, mats = (this.sfMats ||= []);
@@ -342,8 +377,8 @@ export class City {
     }
     this.buckets = null;
     // Blender 细节模块（实例化）
-    const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser']);   // 小件不投影，省一遍阴影绘制
-    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'))) if (NOSHADOW.has(name)) im.castShadow = false;
+    const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser', ...SHOP_KINDS]);   // 小件不投影，省一遍阴影绘制
+    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'))) { if (NOSHADOW.has(name)) im.castShadow = false; if (name.startsWith('shop_')) registerNight(im, this); }
     if (this.ledges.length) {
       const lg = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), this.ledges.length);
       this.ledges.forEach(([m, c], i) => { lg.setMatrixAt(i, m); lg.setColorAt(i, c); });
@@ -452,8 +487,10 @@ export class City {
   }
 
   finalizeTrees() {
-    if (hasModel('tr_ginkgo')) {   // Blender 行道树：三种树形，叶色逐棵微调
-      const kinds = ['tr_ginkgo', 'tr_zelkova', 'tr_round'], lists = kinds.map(() => []);
+    const maple = hasModel('tr_maple0');
+    if (maple || hasModel('tr_ginkgo')) {   // 行道树：写实叶片卡片树（三种树形），叶色逐棵变化（首尔秋天：红、橙、银杏黄、还没变色的绿）
+      const kinds = maple ? ['tr_maple0', 'tr_maple2', 'tr_maple4'] : ['tr_ginkgo', 'tr_zelkova', 'tr_round'], lists = kinds.map(() => []);
+      const AUTUMN = [[1.0, 0.36, 0.2], [1.0, 0.58, 0.24], [1.0, 0.84, 0.3], [1.0, 0.8, 0.28], [0.5, 0.68, 0.3], [0.62, 0.7, 0.3]];
       const r = mulberry(31), up = new THREE.Vector3(0, 1, 0);
       this.treeList.forEach(([x, z]) => {
         const k = r() < 0.5 ? 0 : r() < 0.6 ? 1 : 2, s = 0.85 + r() * 0.3;
@@ -462,8 +499,11 @@ export class City {
       });
       kinds.forEach((name, k) => {
         for (const im of instanced(name, lists[k], this.group)) {
-          if (im.material.name !== 'leaf') continue;
-          for (let i = 0; i < lists[k].length; i++) im.setColorAt(i, new THREE.Color(0.82 + r() * 0.3, 0.85 + r() * 0.25, 0.7 + r() * 0.3));
+          if (!im.material.name.startsWith('leaf')) continue;
+          for (let i = 0; i < lists[k].length; i++) {
+            if (maple) { const c = AUTUMN[r() * AUTUMN.length | 0], v = 0.85 + r() * 0.3; im.setColorAt(i, new THREE.Color(c[0] * v, c[1] * v, c[2] * v)); }
+            else im.setColorAt(i, new THREE.Color(0.82 + r() * 0.3, 0.85 + r() * 0.25, 0.7 + r() * 0.3));
+          }
         }
       });
       return;
