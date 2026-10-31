@@ -338,6 +338,9 @@ export class Game {
     this.addVehicle(own); this.myRide = own;
     this.crowd.list.forEach(p => { p.state = 'walk'; });
     this.guards = []; this.trackers = [];
+    for (const l of s.pendingLive || []) { this.day.events.push(l.ev); this.day.photos.push(l.photo); }
+    if (s.pendingLive?.length) setTimeout(() => this.ui.push('📺 现场的转播截图已在相册里', '回家发帖时可以选它', 'good'), 1500);
+    s.pendingLive = [];
     s.weekStory = [];
     this.opps.plan();
     this.mode = 'play'; this.ui.showHud(true);

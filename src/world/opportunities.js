@@ -4,6 +4,7 @@ import { Vehicle } from '../player/vehicle.js';
 import { textTex } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
 import { noteInfluence } from '../sim/sim.js';
+import { ROADS, AVENUE_Z } from './city.js';
 
 // 每晚的限时机会事件：选手下班、记者采访、对手粉头的卡车、街头主播。
 // 它们给玩家在 3D 世界里"赶时间、抢镜头"的理由，并产生特殊的照片标签。
@@ -198,9 +199,67 @@ export class Opportunities {
     }
     if (e.phase === 'walking') {
       e.walker.update(dt);
-      if (e.walker.done) { e.phase = 'leaving'; g.scene.remove(e.npc.root); e.npc = null; e.van.ai = true; e.van.path = [new THREE.Vector3(hq.cx + (hq.dir < 0 ? -200 : 200), 0, e.van.root.position.z)]; e.van.aiSpeed = 9; }
+      if (e.walker.done) this.startDrive(e);
+    }
+    if (e.phase === 'driving') this.tickFollow(e, dt);
+    if (e.phase === 'arrived') {
+      e.walker.update(dt);
+      if ((e.arriveT -= dt) <= 0) { e.phase = 'gone'; g.scene.remove(e.npc.root); e.npc = null; this.hideFollow(); }
     }
   }
+
+  // 跟拍：保姆车沿路网开到一家餐厅，玩家要骑车 / 开车跟着（15–60 米），到了能拍到选手下车的独家照片
+  startDrive(e) {
+    const g = this.g, hq = g.city.hq[e.hqId];
+    g.scene.remove(e.npc.root); e.npc = null;
+    const v = e.van, p0 = v.root.position;
+    const far = ROADS.filter(r => Math.abs(r - p0.x) > 100), dx = far[Math.random() * far.length | 0] ?? ROADS[0];
+    const dz = ROADS.filter(r => r !== AVENUE_Z && Math.abs(r - p0.z) > 50)[Math.random() * 4 | 0] ?? ROADS[1];
+    const lx = dx + 3.4 * Math.sign(dz - p0.z || 1);
+    e.dest = new THREE.Vector3(lx, 0, dz - Math.sign(dz - p0.z || 1) * 12);
+    v.ai = true; v.loop = false; v.pathI = 0; v.aiSpeed = 7.5;
+    v.path = [new THREE.Vector3(lx, 0, p0.z), e.dest.clone()];
+    e.phase = 'driving'; e.follow = { close: 0, far: 0, t: 0 }; e.end = Math.max(e.end, g.clockMin + 45);
+    g.ui.push(`🚐 ${e.player} 的保姆车出发了`, '骑上滑板车或开车跟上去，保持 15–60 米：太近会被发现，太远会跟丢', 'big');
+  }
+
+  tickFollow(e, dt) {
+    const g = this.g, v = e.van, f = e.follow;
+    const me = g.player.vehicle ? g.player.vehicle.root.position : g.player.pos;
+    const d = me.distanceTo(v.root.position);
+    f.t += dt;
+    if (d < 13) f.close += dt; else f.close = Math.max(0, f.close - dt * 0.5);
+    if (d > 70 && f.t > 4) f.far += dt; else f.far = Math.max(0, f.far - dt);
+    this.showFollow(`🚐 跟拍 ${e.player} · <b>${Math.round(d)} 米</b> ${d < 15 ? '<span class="neg">太近了！</span>' : d > 60 ? '<span class="neg">快跟丢了</span>' : '<span class="pos">距离合适</span>'}`);
+    if (f.close > 2.5) {   // 被发现：争议度上涨，车加速甩掉你
+      this.s.heat = Math.min(120, this.s.heat + 5);
+      g.ui.push('👀 被保镖发现了', '保姆车加速开走了。争议度 +5', 'bad');
+      (this.s.weekStory ||= []).push({ t: `你跟车被 ${e.player} 的保镖发现了，网上有人骂你是私生饭`, c: 'bad' });
+      v.aiSpeed = 13; v.path = [new THREE.Vector3(v.root.position.x + 400 * Math.sign(v.root.position.x || 1), 0, v.root.position.z)]; v.pathI = 0;
+      e.phase = 'gone'; e.why = 'spotted'; this.hideFollow(); return;
+    }
+    if (f.far > 6) { g.ui.push('跟丢了', `${e.player} 的车消失在车流里`, ''); e.phase = 'gone'; e.why = 'lost'; this.hideFollow(); return; }
+    if (v.root.position.distanceTo(e.dest) < 4 || v.pathI >= v.path.length) {
+      // 到了：选手下车走进餐厅，独家照片的机会
+      v.ai = false; v.speed = 0;
+      const a = new Actor(['josh', 'leonard', 'remy', 'jody'][[...String(e.player || '')].reduce((x, c) => x + c.charCodeAt(0), 0) % 4]);
+      const out = v.root.position.clone().add(new THREE.Vector3(Math.sign(v.root.position.x - e.dest.x || 1) * -2, 0.18, 0)); out.y = 0.18;
+      a.root.position.copy(out); this.add(a.root); a.root.add(nameTag(`★ ${e.player}`, '#ffd34d'));
+      const door = out.clone().add(new THREE.Vector3(Math.sign(out.x - v.root.position.x || 1) * 6, 0, 0));
+      e.npc = a; e.actors = [...(e.actors || []), a];
+      e.walker = new Walker(g, a, [{ pos: door, wait: 6, anim: 'phone' }], 1.0);
+      e.phase = 'arrived'; e.arriveT = 12;
+      this.hideFollow();
+      g.ui.push(`📸 ${e.player} 下车了！`, '快拍 —— 这是独家照片（曝光 ×1.7）', 'big');
+    }
+  }
+
+  showFollow(html) {
+    let el = document.getElementById('followbar');
+    if (!el) { el = document.createElement('div'); el.id = 'followbar'; document.getElementById('hud')?.appendChild(el); }
+    el.innerHTML = html; el.style.display = '';
+  }
+  hideFollow() { const el = document.getElementById('followbar'); if (el) el.style.display = 'none'; }
 
   // 选手看到了你的道具：心态变化 + "名场面"
   react(e, ev, subj) {
@@ -264,6 +323,7 @@ export class Opportunities {
         const head = e.npc.root.position.clone().setY(e.npc.root.position.y + 1.6);
         if (frustum.containsPoint(head) && head.distanceTo(cam.position) < 40) {
           out.tags.push('star'); out.star = e.player;
+          if (e.phase === 'arrived') out.exclusive = true;
           if (e.reacted && this.g.time < e.reacted.until && inFrame(e.reacted.obj)) { out.tags.push('reaction'); out.reaction = { player: e.player, eventId: e.reacted.eventId }; }
         }
       }
@@ -282,6 +342,7 @@ export class Opportunities {
 
   markerPos(e) {
     const c = this.g.city;
+    if (e.type === 'commute' && (e.phase === 'driving' || e.phase === 'arrived') && e.van) return e.van.root.position;
     if (e.type === 'commute' || e.type === 'press') return c.hq[e.hqId].plaza;
     if (e.type === 'rival' && e.truck) return e.truck.root.position;
     if (e.type === 'streamer' && e.actors?.[0]) return e.actors[0].root.position;

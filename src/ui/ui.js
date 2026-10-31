@@ -262,6 +262,7 @@ export class UI {
     this.open(this.matchDayView(), { cinematic: true, cls: 'wide' });
     $('go').onclick = () => this.beforeDay();
     $('pl').onclick = () => this.playerList(() => this.matchDay(true));
+    if ($('live')) $('live').onclick = () => this.arenaLive(() => this.matchDay(true));
     $('menu').onclick = () => this.pause(() => this.matchDay(true));
   }
 

@@ -213,7 +213,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0, 
   parts.venue = ev?.hq === 'PARK' && PARK_PROPS.includes(item?.prop) ? 1.35 : ev?.hq === 'CAFE' ? 1.1 : 1;
   parts.print = ev?.printed ? 1.15 : 1;                      // 打印店精印的标语更清楚
   // 名场面：选手亲眼看到你的道具 / 记者入镜 / 拍到选手本人 / 堵门
-  parts.moment = (photo.reaction ? 1.8 : 1) * (photo.press ? 1.4 : 1) * (photo.star && !photo.reaction ? 1.15 : 1) * (ev?.blockDoor ? 1.3 : 1);
+  parts.moment = (photo.reaction ? 1.8 : 1) * (photo.press ? 1.4 : 1) * (photo.star && !photo.reaction ? 1.15 : 1) * (ev?.blockDoor ? 1.3 : 1) * (photo.broadcast ? 1.6 : 1) * (photo.exclusive ? 1.7 : 1);
   // 运气
   const editK = s.skills.edit;
   let luck = Math.exp(rand.normal() * B.luckSigma);

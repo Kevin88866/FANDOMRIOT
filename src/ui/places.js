@@ -140,4 +140,105 @@ export const Places = {
       requestAnimationFrame(tick);
     };
   },
+
+  // ---------- 比赛现场：导播镜头扫过看台时举牌，上了直播就是一张"转播截图" ----------
+  arenaLive(back) {
+    const s = this.s, ticket = 150000;
+    const res = s.lastResults || [], names = new Set();
+    for (const m of res) for (const side of [m.a, m.b, m.home, m.away, m.t1, m.t2]) if (side) Object.values(s.players).filter(p => p.team === (side.id || side) && !p.benched).forEach(p => names.add(p.name));
+    const ps = (names.size ? [...names].map(n => s.players[n]) : Object.values(s.players).filter(p => !p.sub || !p.benched)).sort((a, b) => b.heat - a.heat);
+    this.open(`<h2>🎫 LCK 竞技场 · 现场观赛</h2><div class="sub">门票 ${won(ticket)}。导播镜头会在看台上来回扫，<b>镜头框扫到你的座位时按住空格（或鼠标）举牌</b>。没在镜头里还举着，后排观众会不满；不满太多，保安会没收你的牌子。</div>
+      <div class="row"><select class="txt" id="lk" style="min-width:90px"><option value="support">应援</option><option value="attack">抗议</option></select>
+      <select class="txt" id="lt" style="flex:1;min-width:0">${ps.map(p => `<option value="${esc(p.name)}">${esc(p.name)} · ${esc(teamOf(p.team).name)} ${p.role}</option>`).join('')}</select></div>
+      <div class="row" style="margin-top:8px"><input class="txt" id="ltx" maxlength="16" style="flex:1;min-width:0"></div>
+      <div class="row" style="margin-top:14px;justify-content:space-between"><button class="btn" id="x">返回</button><button class="btn pri" id="go" ${s.money < ticket ? 'disabled' : ''}>买票入场 ${won(ticket)}</button></div>`, { cinematic: true, esc: back });
+    const fill = () => { const p = s.players[$('lt').value], k = $('lk').value; $('ltx').value = (SLOGANS[k][k === 'support' ? 2 : 0] || '{p}').replace('{p}', p.name).replace('{t}', teamOf(p.team).name); };
+    $('lt').onchange = fill; $('lk').onchange = fill; fill(); $('ltx').onkeydown = e => e.stopPropagation();
+    $('x').onclick = back;
+    $('go').onclick = () => {
+      const target = $('lt').value, kind = $('lk').value, text = $('ltx').value.trim() || target;
+      s.money -= ticket; s.liveWeek = s.week + ':' + s.season; this.save();
+      this.arenaGame(target, kind, text, back);
+    };
+  },
+
+  arenaGame(target, kind, text, back) {
+    const s = this.s, W = 760, H = 330;
+    this.open(`<h2>📺 直播中 · ${esc(target)}</h2><canvas id="arena" width="${W}" height="${H}" style="width:100%;border-radius:12px;background:#000"></canvas>
+      <div class="row" style="justify-content:space-between;margin-top:8px"><span class="dim">按住 空格 / 鼠标 举牌</span><span id="ast"></span></div>`, { cinematic: true, esc: () => {} });
+    const cv = $('arena'), x = cv.getContext('2d');
+    const ROWS = 3, COLS = 18, seat = { r: 1 + (Math.random() * 2 | 0), c: 3 + (Math.random() * 12 | 0) };
+    const seatX = c => 30 + c * ((W - 60) / (COLS - 1)), seatY = r => 150 + r * 55;
+    const crowd = []; for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) crowd.push({ r, c, hue: Math.random() * 360, bob: Math.random() * 6, sign: Math.random() < 0.15 });
+    let raise = 0, holding = false, angry = 0, onAir = 0, best = 0, done = false, t = 0, captured = null;
+    const cam = { x: 0, w: 170, dir: 1, speed: 120 };
+    const down = e => { if (e.type === 'keydown' && e.code !== 'Space') return; e.preventDefault?.(); e.stopPropagation?.(); holding = true; };
+    const up = e => { if (e.type === 'keyup' && e.code !== 'Space') return; holding = false; };
+    addEventListener('keydown', down, true); addEventListener('keyup', up, true); cv.addEventListener('mousedown', down); addEventListener('mouseup', up);
+    const cleanup = () => { removeEventListener('keydown', down, true); removeEventListener('keyup', up, true); removeEventListener('mouseup', up); };
+    const sx = seatX(seat.c), sy = seatY(seat.r);
+    const drawSign = (px, py, k, txt) => {
+      x.save(); x.translate(px, py - 30 - 46 * k);
+      x.fillStyle = kind === 'support' ? '#ffe3ef' : '#ffffff'; x.strokeStyle = kind === 'support' ? '#ff7ab0' : '#222'; x.lineWidth = 2;
+      x.fillRect(-38, -16, 76, 32); x.strokeRect(-38, -16, 76, 32);
+      x.fillStyle = kind === 'support' ? '#d81b60' : '#c00000'; x.font = '900 11px "Noto Sans SC",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(txt.length > 9 ? txt.slice(0, 9) + '…' : txt, 0, 0); x.restore();
+    };
+    const draw = () => {
+      const grad = x.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, '#120a20'); grad.addColorStop(1, '#05040a'); x.fillStyle = grad; x.fillRect(0, 0, W, H);
+      // 舞台灯光
+      for (let i = 0; i < 5; i++) { x.fillStyle = `rgba(80,140,255,${0.05 + 0.03 * Math.sin(t * 2 + i)})`; x.beginPath(); x.moveTo(100 + i * 140, 0); x.lineTo(60 + i * 140, H); x.lineTo(160 + i * 140, H); x.fill(); }
+      x.fillStyle = '#1b1f2e'; x.fillRect(0, 120, W, H - 120);
+      for (const p of crowd) {
+        const px = seatX(p.c), py = seatY(p.r) + Math.sin(t * 3 + p.bob) * 2, me = p.r === seat.r && p.c === seat.c;
+        x.fillStyle = me ? '#ffd34d' : `hsl(${p.hue},35%,${30 + p.r * 6}%)`;
+        x.beginPath(); x.arc(px, py - 22, 9, 0, 7); x.fill(); x.fillRect(px - 12, py - 13, 24, 26);
+        if (p.sign && !me) { x.fillStyle = '#ffffff22'; x.fillRect(px - 16, py - 52, 32, 16); }
+        if (me) { drawSign(px, py, raise, text); x.fillStyle = '#ffd34d'; x.font = '10px sans-serif'; x.textAlign = 'center'; x.fillText('你', px, py + 26); }
+      }
+      // 导播镜头框
+      x.strokeStyle = '#ff2d55'; x.lineWidth = 3; x.strokeRect(cam.x, 110, cam.w, 200);
+      x.fillStyle = '#ff2d55'; x.fillRect(cam.x, 96, 54, 16); x.fillStyle = '#fff'; x.font = '900 11px sans-serif'; x.textAlign = 'left'; x.fillText('● LIVE', cam.x + 5, 108);
+      // 后排不满
+      x.fillStyle = '#333'; x.fillRect(16, 16, 150, 8); x.fillStyle = angry > 0.7 ? '#ff4a4a' : '#ffb020'; x.fillRect(16, 16, 150 * angry, 8);
+      x.fillStyle = '#aaa'; x.font = '11px sans-serif'; x.fillText('后排不满', 16, 38);
+      x.fillStyle = '#38e08a'; x.fillRect(W - 166, 16, 150 * Math.min(1, onAir / 0.8), 8); x.fillStyle = '#aaa'; x.fillText('上镜', W - 166, 38);
+    };
+    let last = performance.now();
+    const finish = ok => {
+      done = true; cleanup();
+      if (ok) {
+        // 转播截图：当前画面 + 直播字幕条
+        x.fillStyle = 'rgba(0,0,0,.65)'; x.fillRect(0, H - 46, W, 46);
+        x.fillStyle = '#27e1ff'; x.font = '900 18px "Noto Sans SC",sans-serif'; x.textAlign = 'left'; x.fillText('LCK  LIVE', 16, H - 17);
+        x.fillStyle = '#fff'; x.font = '15px "Noto Sans SC",sans-serif'; x.fillText(`现场观众举牌：「${text}」`, 130, H - 17);
+        captured = cv.toDataURL('image/jpeg', 0.85);
+        const ev = { id: 'live' + Math.random().toString(36).slice(2, 7), item: 'lightboard', target, kind, text, hq: 'ARENA', time: 18 * 60, live: true };
+        Sim.applyAction(s, ev);
+        const photo = { img: captured, q: 1.25 + Math.min(0.25, best * 0.2), tags: ['subject', 'text', 'crowd'], eventId: ev.id, label: `转播镜头：${text}`, t: 18 * 60, crowd: 40, broadcast: true };
+        (s.pendingLive ||= []).push({ ev, photo });
+        s.heat = Math.min(120, s.heat + (kind === 'attack' ? 3 : 0));
+      }
+      const msg = ok ? `<p>导播切到了你的牌子！转播截图已存进今晚的相册，可以直接拿去发帖（名场面 ×1.6）。</p>` : angry >= 1 ? '<p>后排观众投诉，保安把你的牌子没收了……</p>' : '<p>比赛结束了，导播一次都没给到你。</p>';
+      this.open(`<h2>${ok ? '📺 上直播了！' : '没上镜'}</h2>${captured ? `<img src="${captured}" style="width:100%;border-radius:10px">` : ''}${msg}<div class="row"><button class="btn pri" id="b">返回</button></div>`, { cinematic: true, esc: back });
+      $('b').onclick = back; this.save();
+    };
+    const loop = now => {
+      if (done || !$('arena')) { cleanup(); return; }
+      const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+      // 镜头来回扫，速度和停顿随机
+      if (cam.pause > 0) cam.pause -= dt; else { cam.x += cam.dir * cam.speed * dt; if (cam.x < 0 || cam.x + cam.w > W) { cam.dir *= -1; cam.x = Math.max(0, Math.min(W - cam.w, cam.x)); cam.speed = 90 + Math.random() * 120; } if (Math.random() < dt * 0.4) cam.pause = 0.4 + Math.random() * 0.8; }
+      raise = Math.max(0, Math.min(1, raise + (holding ? 3 : -4) * dt));
+      const inCam = sx > cam.x + 10 && sx < cam.x + cam.w - 10;
+      if (inCam && raise > 0.75) { onAir += dt; best = Math.max(best, onAir); } else onAir = Math.max(0, onAir - dt * 0.5);
+      if (!inCam && raise > 0.5) angry += dt * 0.28; else angry = Math.max(0, angry - dt * 0.05);
+      window.__arena = { inCam, raise, angry, onAir };   // 测试用
+      const st = $('ast'); if (st) st.textContent = `剩余 ${Math.max(0, 22 - t).toFixed(0)} 秒`;
+      draw();
+      if (onAir >= 0.8) return finish(true);
+      if (angry >= 1 || t > 22) return finish(false);
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  },
 };

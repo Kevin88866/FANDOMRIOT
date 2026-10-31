@@ -83,7 +83,7 @@ export const Screens = {
         </div>
       </div>
       <div class="bc-bottom"><div class="goals">${this.goalLines().join(' · ')}</div>
-        <div class="row"><button class="btn ghost" id="menu">菜单</button><button class="btn" id="pl">选手一览</button><button class="btn pri" id="go">进入行动日 →</button></div></div>
+        <div class="row"><button class="btn ghost" id="menu">菜单</button><button class="btn" id="pl">选手一览</button><button class="btn" id="live" ${s.liveWeek === s.week + ':' + s.season ? 'disabled' : ''}>🎫 去现场举牌</button><button class="btn pri" id="go">进入行动日 →</button></div></div>
     </div>`;
   },
 

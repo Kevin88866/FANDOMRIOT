@@ -138,8 +138,8 @@ export class PhotoMode {
     const ctx = this.small.getContext('2d');
     ctx.drawImage(g.renderer.r.domElement, 0, 0, this.small.width, this.small.height);
     const img = this.small.toDataURL('image/jpeg', 0.82);
-    const photo = { img, q: r.q, tags: r.tags, eventId: r.subject?.eventId ?? r.opp?.reaction?.eventId ?? null, label: r.subject?.label || (r.opp?.star ? `${r.opp.star} 本人` : '街景'), t: g.clockMin, crowd: r.crowd,
-      star: r.opp?.star || null, reaction: !!r.opp?.reaction, press: !!r.opp?.press, truckSlogan: !!(r.subject?.vehicle && r.tags.includes('text')) };
+    const photo = { img, q: r.q, tags: r.tags, eventId: r.subject?.eventId ?? r.opp?.reaction?.eventId ?? null, label: r.subject?.label || (r.opp?.star ? `${r.opp.star} ${r.opp.exclusive ? '独家' : '本人'}` : '街景'), t: g.clockMin, crowd: r.crowd,
+      star: r.opp?.star || null, exclusive: !!r.opp?.exclusive, reaction: !!r.opp?.reaction, press: !!r.opp?.press, truckSlogan: !!(r.subject?.vehicle && r.tags.includes('text')) };
     if (photo.reaction) g.ui.achieve('reaction'); if (photo.press) g.ui.achieve('press');
     g.day.photos.push(photo);
     g.lastThumb = img;
