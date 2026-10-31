@@ -1,0 +1,850 @@
+[
+ {
+  "category": "street",
+  "name": "Concrete Road Barrier",
+  "url": "https://polyhaven.com/a/concrete_road_barrier",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "street/polyhaven_concrete_road_barrier/concrete_road_barrier.glb"
+ },
+ {
+  "category": "street",
+  "name": "Concrete Road Barrier 02",
+  "url": "https://polyhaven.com/a/concrete_road_barrier_02",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "street/polyhaven_concrete_road_barrier_02/concrete_road_barrier_02.glb"
+ },
+ {
+  "category": "street",
+  "name": "Fire Hydrant",
+  "url": "https://polyhaven.com/a/fire_hydrant",
+  "author": "Gonçalo Felício",
+  "license": "CC0",
+  "path": "street/polyhaven_fire_hydrant/fire_hydrant.glb"
+ },
+ {
+  "category": "street",
+  "name": "Korean Public Payphone 01",
+  "url": "https://polyhaven.com/a/korean_public_payphone_01",
+  "author": "UM JOORIN",
+  "license": "CC0",
+  "path": "street/polyhaven_korean_public_payphone_01/korean_public_payphone_01.glb"
+ },
+ {
+  "category": "street",
+  "name": "Metal Trash Can",
+  "url": "https://polyhaven.com/a/metal_trash_can",
+  "author": "GurJas Studios",
+  "license": "CC0",
+  "path": "street/polyhaven_metal_trash_can/metal_trash_can.glb"
+ },
+ {
+  "category": "street",
+  "name": "Modular Chainlink Fence",
+  "url": "https://polyhaven.com/a/modular_chainlink_fence",
+  "author": "James Ray Cock, Amal Kumar",
+  "license": "CC0",
+  "path": "street/polyhaven_modular_chainlink_fence/modular_chainlink_fence.glb"
+ },
+ {
+  "category": "street",
+  "name": "Modular Electricity Poles",
+  "url": "https://polyhaven.com/a/modular_electricity_poles",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "street/polyhaven_modular_electricity_poles/modular_electricity_poles.glb"
+ },
+ {
+  "category": "street",
+  "name": "Modular Street Seating",
+  "url": "https://polyhaven.com/a/modular_street_seating",
+  "author": "Stuart Attenborrow",
+  "license": "CC0",
+  "path": "street/polyhaven_modular_street_seating/modular_street_seating.glb"
+ },
+ {
+  "category": "street",
+  "name": "Outdoor Table Chair Set 01",
+  "url": "https://polyhaven.com/a/outdoor_table_chair_set_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "street/polyhaven_outdoor_table_chair_set_01/outdoor_table_chair_set_01.glb"
+ },
+ {
+  "category": "street",
+  "name": "Painted Wooden Bench",
+  "url": "https://polyhaven.com/a/painted_wooden_bench",
+  "author": "Kirill Sannikov",
+  "license": "CC0",
+  "path": "street/polyhaven_painted_wooden_bench/painted_wooden_bench.glb"
+ },
+ {
+  "category": "street",
+  "name": "Power Box 01",
+  "url": "https://polyhaven.com/a/power_box_01",
+  "author": "Rico Cilliers, Yann Kervran",
+  "license": "CC0",
+  "path": "street/polyhaven_power_box_01/power_box_01.glb"
+ },
+ {
+  "category": "street",
+  "name": "Street Lamp 01",
+  "url": "https://polyhaven.com/a/street_lamp_01",
+  "author": "Josh Dean",
+  "license": "CC0",
+  "path": "street/polyhaven_street_lamp_01/street_lamp_01.glb"
+ },
+ {
+  "category": "street",
+  "name": "Street Lamp 02",
+  "url": "https://polyhaven.com/a/street_lamp_02",
+  "author": "Josh Dean",
+  "license": "CC0",
+  "path": "street/polyhaven_street_lamp_02/street_lamp_02.glb"
+ },
+ {
+  "category": "street",
+  "name": "Utility Box 01",
+  "url": "https://polyhaven.com/a/utility_box_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "street/polyhaven_utility_box_01/utility_box_01.glb"
+ },
+ {
+  "category": "street",
+  "name": "Utility Box 02",
+  "url": "https://polyhaven.com/a/utility_box_02",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "street/polyhaven_utility_box_02/utility_box_02.glb"
+ },
+ {
+  "category": "street",
+  "name": "Water Manhole Cover",
+  "url": "https://polyhaven.com/a/water_manhole_cover",
+  "author": "Raunox",
+  "license": "CC0",
+  "path": "street/polyhaven_water_manhole_cover/water_manhole_cover.glb"
+ },
+ {
+  "category": "building",
+  "name": "Exterior Aircon Unit",
+  "url": "https://polyhaven.com/a/exterior_aircon_unit",
+  "author": "Monsta3D",
+  "license": "CC0",
+  "path": "building/polyhaven_exterior_aircon_unit/exterior_aircon_unit.glb"
+ },
+ {
+  "category": "building",
+  "name": "Modular Airduct Rectangular 01",
+  "url": "https://polyhaven.com/a/modular_airduct_rectangular_01",
+  "author": "James Ray Cock",
+  "license": "CC0",
+  "path": "building/polyhaven_modular_airduct_rectangular_01/modular_airduct_rectangular_01.glb"
+ },
+ {
+  "category": "building",
+  "name": "Modular Fire Escape",
+  "url": "https://polyhaven.com/a/modular_fire_escape",
+  "author": "Juniix",
+  "license": "CC0",
+  "path": "building/polyhaven_modular_fire_escape/modular_fire_escape.glb"
+ },
+ {
+  "category": "building",
+  "name": "Modular Metal Gutter",
+  "url": "https://polyhaven.com/a/modular_metal_gutter",
+  "author": "Maxim Domnin",
+  "license": "CC0",
+  "path": "building/polyhaven_modular_metal_gutter/modular_metal_gutter.glb"
+ },
+ {
+  "category": "building",
+  "name": "Modular Pipes",
+  "url": "https://polyhaven.com/a/modular_pipes",
+  "author": "Kuutti Siitonen",
+  "license": "CC0",
+  "path": "building/polyhaven_modular_pipes/modular_pipes.glb"
+ },
+ {
+  "category": "building",
+  "name": "Rollershutter Door",
+  "url": "https://polyhaven.com/a/rollershutter_door",
+  "author": "MP",
+  "license": "CC0",
+  "path": "building/polyhaven_rollershutter_door/rollershutter_door.glb"
+ },
+ {
+  "category": "building",
+  "name": "Rollershutter Window 01",
+  "url": "https://polyhaven.com/a/rollershutter_window_01",
+  "author": "MP",
+  "license": "CC0",
+  "path": "building/polyhaven_rollershutter_window_01/rollershutter_window_01.glb"
+ },
+ {
+  "category": "building",
+  "name": "Rollershutter Window 02",
+  "url": "https://polyhaven.com/a/rollershutter_window_02",
+  "author": "MP",
+  "license": "CC0",
+  "path": "building/polyhaven_rollershutter_window_02/rollershutter_window_02.glb"
+ },
+ {
+  "category": "textures",
+  "name": "Asphalt 012",
+  "url": "https://ambientcg.com/view?id=Asphalt012",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Asphalt012"
+ },
+ {
+  "category": "textures",
+  "name": "Carpet 016",
+  "url": "https://ambientcg.com/view?id=Carpet016",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Carpet016"
+ },
+ {
+  "category": "textures",
+  "name": "Facade 001",
+  "url": "https://ambientcg.com/view?id=Facade001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Facade001"
+ },
+ {
+  "category": "textures",
+  "name": "Facade 006",
+  "url": "https://ambientcg.com/view?id=Facade006",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Facade006"
+ },
+ {
+  "category": "textures",
+  "name": "Ground 050",
+  "url": "https://ambientcg.com/view?id=Ground050",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Ground050"
+ },
+ {
+  "category": "textures",
+  "name": "Leaf 001",
+  "url": "https://ambientcg.com/view?id=Leaf001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Leaf001"
+ },
+ {
+  "category": "textures",
+  "name": "Leaf 003",
+  "url": "https://ambientcg.com/view?id=Leaf003",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Leaf003"
+ },
+ {
+  "category": "textures",
+  "name": "Plastic 006",
+  "url": "https://ambientcg.com/view?id=Plastic006",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Plastic006"
+ },
+ {
+  "category": "textures",
+  "name": "Plastic 010",
+  "url": "https://ambientcg.com/view?id=Plastic010",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Plastic010"
+ },
+ {
+  "category": "textures",
+  "name": "Plastic 013 A",
+  "url": "https://ambientcg.com/view?id=Plastic013A",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "textures/ambientcg_Plastic013A"
+ },
+ {
+  "category": "textures",
+  "name": "Asphalt 02",
+  "url": "https://polyhaven.com/a/asphalt_02",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_asphalt_02"
+ },
+ {
+  "category": "textures",
+  "name": "Bark Platanus",
+  "url": "https://polyhaven.com/a/bark_platanus",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_bark_platanus"
+ },
+ {
+  "category": "textures",
+  "name": "Box Profile Metal Sheet",
+  "url": "https://polyhaven.com/a/box_profile_metal_sheet",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "textures/polyhaven_box_profile_metal_sheet"
+ },
+ {
+  "category": "textures",
+  "name": "Brick Wall 10",
+  "url": "https://polyhaven.com/a/brick_wall_10",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_brick_wall_10"
+ },
+ {
+  "category": "textures",
+  "name": "Brown Leather",
+  "url": "https://polyhaven.com/a/brown_leather",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_brown_leather"
+ },
+ {
+  "category": "textures",
+  "name": "Brushed Concrete ",
+  "url": "https://polyhaven.com/a/brushed_concrete",
+  "author": "Dario Barresi, Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_brushed_concrete"
+ },
+ {
+  "category": "textures",
+  "name": "Clean Asphalt",
+  "url": "https://polyhaven.com/a/clean_asphalt",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_clean_asphalt"
+ },
+ {
+  "category": "textures",
+  "name": "Concrete Floor 02",
+  "url": "https://polyhaven.com/a/concrete_floor_02",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_concrete_floor_02"
+ },
+ {
+  "category": "textures",
+  "name": "Concrete Tile Facade",
+  "url": "https://polyhaven.com/a/concrete_tile_facade",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_concrete_tile_facade"
+ },
+ {
+  "category": "textures",
+  "name": "Denim Fabric",
+  "url": "https://polyhaven.com/a/denim_fabric",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_denim_fabric"
+ },
+ {
+  "category": "textures",
+  "name": "Dirty Carpet",
+  "url": "https://polyhaven.com/a/dirty_carpet",
+  "author": "Rohit Seervi",
+  "license": "CC0",
+  "path": "textures/polyhaven_dirty_carpet"
+ },
+ {
+  "category": "textures",
+  "name": "Fabric Pattern 07",
+  "url": "https://polyhaven.com/a/fabric_pattern_07",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_fabric_pattern_07"
+ },
+ {
+  "category": "textures",
+  "name": "Floor Tiles 06",
+  "url": "https://polyhaven.com/a/floor_tiles_06",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_floor_tiles_06"
+ },
+ {
+  "category": "textures",
+  "name": "Herringbone Pavement",
+  "url": "https://polyhaven.com/a/herringbone_pavement",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_herringbone_pavement"
+ },
+ {
+  "category": "textures",
+  "name": "Hexagonal Concrete Paving",
+  "url": "https://polyhaven.com/a/hexagonal_concrete_paving",
+  "author": "Stephan Seeliger",
+  "license": "CC0",
+  "path": "textures/polyhaven_hexagonal_concrete_paving"
+ },
+ {
+  "category": "textures",
+  "name": "Japanese Zelkova Bark",
+  "url": "https://polyhaven.com/a/japanese_zelkova_bark",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_japanese_zelkova_bark"
+ },
+ {
+  "category": "textures",
+  "name": "Leafy Grass",
+  "url": "https://polyhaven.com/a/leafy_grass",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_leafy_grass"
+ },
+ {
+  "category": "textures",
+  "name": "Leather White",
+  "url": "https://polyhaven.com/a/leather_white",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_leather_white"
+ },
+ {
+  "category": "textures",
+  "name": "Marble Tiles",
+  "url": "https://polyhaven.com/a/marble_tiles",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_marble_tiles"
+ },
+ {
+  "category": "textures",
+  "name": "Metal Plate",
+  "url": "https://polyhaven.com/a/metal_plate",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_metal_plate"
+ },
+ {
+  "category": "textures",
+  "name": "Painted Brick",
+  "url": "https://polyhaven.com/a/painted_brick",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "textures/polyhaven_painted_brick"
+ },
+ {
+  "category": "textures",
+  "name": "Painted Plaster Wall",
+  "url": "https://polyhaven.com/a/painted_plaster_wall",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "textures/polyhaven_painted_plaster_wall"
+ },
+ {
+  "category": "textures",
+  "name": "Park Dirt",
+  "url": "https://polyhaven.com/a/park_dirt",
+  "author": "Christopher Melani",
+  "license": "CC0",
+  "path": "textures/polyhaven_park_dirt"
+ },
+ {
+  "category": "textures",
+  "name": "Pavement 03",
+  "url": "https://polyhaven.com/a/pavement_03",
+  "author": "Dario Barresi, Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_pavement_03"
+ },
+ {
+  "category": "textures",
+  "name": "Plastered Wall 04",
+  "url": "https://polyhaven.com/a/plastered_wall_04",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_plastered_wall_04"
+ },
+ {
+  "category": "textures",
+  "name": "Precast Stone Paving",
+  "url": "https://polyhaven.com/a/precast_stone_paving",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_precast_stone_paving"
+ },
+ {
+  "category": "textures",
+  "name": "Rectangular Facade Tiles",
+  "url": "https://polyhaven.com/a/rectangular_facade_tiles",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_rectangular_facade_tiles"
+ },
+ {
+  "category": "textures",
+  "name": "Rectangular Paving",
+  "url": "https://polyhaven.com/a/rectangular_paving",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_rectangular_paving"
+ },
+ {
+  "category": "textures",
+  "name": "Road Damaged",
+  "url": "https://polyhaven.com/a/road_damaged",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_road_damaged"
+ },
+ {
+  "category": "textures",
+  "name": "Rusty Metal 02",
+  "url": "https://polyhaven.com/a/rusty_metal_02",
+  "author": "Rob Tuytel",
+  "license": "CC0",
+  "path": "textures/polyhaven_rusty_metal_02"
+ },
+ {
+  "category": "textures",
+  "name": "Rusty Metal Shutter",
+  "url": "https://polyhaven.com/a/rusty_metal_shutter",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_rusty_metal_shutter"
+ },
+ {
+  "category": "textures",
+  "name": "Sakura Bark",
+  "url": "https://polyhaven.com/a/sakura_bark",
+  "author": "Charlotte Baglioni",
+  "license": "CC0",
+  "path": "textures/polyhaven_sakura_bark"
+ },
+ {
+  "category": "textures",
+  "name": "Sparse Grass",
+  "url": "https://polyhaven.com/a/sparse_grass",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "textures/polyhaven_sparse_grass"
+ },
+ {
+  "category": "textures",
+  "name": "Square Brick Paving",
+  "url": "https://polyhaven.com/a/square_brick_paving",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_square_brick_paving"
+ },
+ {
+  "category": "textures",
+  "name": "Terrazzo Tiles",
+  "url": "https://polyhaven.com/a/terrazzo_tiles",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "textures/polyhaven_terrazzo_tiles"
+ },
+ {
+  "category": "textures",
+  "name": "Wood Floor",
+  "url": "https://polyhaven.com/a/wood_floor",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_wood_floor"
+ },
+ {
+  "category": "textures",
+  "name": "Wood Floor Worn",
+  "url": "https://polyhaven.com/a/wood_floor_worn",
+  "author": "Dimitrios Savva",
+  "license": "CC0",
+  "path": "textures/polyhaven_wood_floor_worn"
+ },
+ {
+  "category": "textures",
+  "name": "Worn Asphalt",
+  "url": "https://polyhaven.com/a/worn_asphalt",
+  "author": "Amal Kumar",
+  "license": "CC0",
+  "path": "textures/polyhaven_worn_asphalt"
+ },
+ {
+  "category": "decals",
+  "name": "Asphalt Damage 001",
+  "url": "https://ambientcg.com/view?id=AsphaltDamage001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_AsphaltDamage001"
+ },
+ {
+  "category": "decals",
+  "name": "Chewing Gum 001",
+  "url": "https://ambientcg.com/view?id=ChewingGum001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_ChewingGum001"
+ },
+ {
+  "category": "decals",
+  "name": "Graffiti Set 001",
+  "url": "https://ambientcg.com/view?id=GraffitiSet001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_GraffitiSet001"
+ },
+ {
+  "category": "decals",
+  "name": "Leaking 001",
+  "url": "https://ambientcg.com/view?id=Leaking001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_Leaking001"
+ },
+ {
+  "category": "decals",
+  "name": "Leaking 004",
+  "url": "https://ambientcg.com/view?id=Leaking004",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_Leaking004"
+ },
+ {
+  "category": "decals",
+  "name": "Leaking 008",
+  "url": "https://ambientcg.com/view?id=Leaking008",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_Leaking008"
+ },
+ {
+  "category": "decals",
+  "name": "Leaking 012 A",
+  "url": "https://ambientcg.com/view?id=Leaking012A",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_Leaking012A"
+ },
+ {
+  "category": "decals",
+  "name": "Leaking 016 A",
+  "url": "https://ambientcg.com/view?id=Leaking016A",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_Leaking016A"
+ },
+ {
+  "category": "decals",
+  "name": "Manhole Cover 001",
+  "url": "https://ambientcg.com/view?id=ManholeCover001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_ManholeCover001"
+ },
+ {
+  "category": "decals",
+  "name": "Manhole Cover 005",
+  "url": "https://ambientcg.com/view?id=ManholeCover005",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_ManholeCover005"
+ },
+ {
+  "category": "decals",
+  "name": "Manhole Cover 009",
+  "url": "https://ambientcg.com/view?id=ManholeCover009",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_ManholeCover009"
+ },
+ {
+  "category": "decals",
+  "name": "Paving Edge 001",
+  "url": "https://ambientcg.com/view?id=PavingEdge001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_PavingEdge001"
+ },
+ {
+  "category": "decals",
+  "name": "Paving Edge 002",
+  "url": "https://ambientcg.com/view?id=PavingEdge002",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_PavingEdge002"
+ },
+ {
+  "category": "decals",
+  "name": "Road Lines 007",
+  "url": "https://ambientcg.com/view?id=RoadLines007",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_RoadLines007"
+ },
+ {
+  "category": "decals",
+  "name": "Road Lines 013",
+  "url": "https://ambientcg.com/view?id=RoadLines013",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_RoadLines013"
+ },
+ {
+  "category": "decals",
+  "name": "Road Lines 019 A",
+  "url": "https://ambientcg.com/view?id=RoadLines019A",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_RoadLines019A"
+ },
+ {
+  "category": "decals",
+  "name": "Road Lines 022 A",
+  "url": "https://ambientcg.com/view?id=RoadLines022A",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_RoadLines022A"
+ },
+ {
+  "category": "decals",
+  "name": "Tire Tracks 001",
+  "url": "https://ambientcg.com/view?id=TireTracks001",
+  "author": "ambientCG (Lennart Demes)",
+  "license": "CC0",
+  "path": "decals/ambientcg_TireTracks001"
+ },
+ {
+  "category": "hdri",
+  "name": "Castel St. Angelo Roof",
+  "url": "https://polyhaven.com/a/castel_st_angelo_roof",
+  "author": "Andreas Mischok",
+  "license": "CC0",
+  "path": "hdri/polyhaven_castel_st_angelo_roof"
+ },
+ {
+  "category": "hdri",
+  "name": "Cobblestone Street Night",
+  "url": "https://polyhaven.com/a/cobblestone_street_night",
+  "author": "Greg Zaal, Jenelle van Heerden",
+  "license": "CC0",
+  "path": "hdri/polyhaven_cobblestone_street_night"
+ },
+ {
+  "category": "hdri",
+  "name": "Crosswalk",
+  "url": "https://polyhaven.com/a/crosswalk",
+  "author": "Sergej Majboroda",
+  "license": "CC0",
+  "path": "hdri/polyhaven_crosswalk"
+ },
+ {
+  "category": "hdri",
+  "name": "German Town Street",
+  "url": "https://polyhaven.com/a/german_town_street",
+  "author": "Alexander Scholten",
+  "license": "CC0",
+  "path": "hdri/polyhaven_german_town_street"
+ },
+ {
+  "category": "hdri",
+  "name": "Modern Buildings Night",
+  "url": "https://polyhaven.com/a/modern_buildings_night",
+  "author": "Greg Zaal",
+  "license": "CC0",
+  "path": "hdri/polyhaven_modern_buildings_night"
+ },
+ {
+  "category": "hdri",
+  "name": "Pedestrian Overpass",
+  "url": "https://polyhaven.com/a/pedestrian_overpass",
+  "author": "Greg Zaal",
+  "license": "CC0",
+  "path": "hdri/polyhaven_pedestrian_overpass"
+ },
+ {
+  "category": "hdri",
+  "name": "Potsdamer Platz",
+  "url": "https://polyhaven.com/a/potsdamer_platz",
+  "author": "Greg Zaal",
+  "license": "CC0",
+  "path": "hdri/polyhaven_potsdamer_platz"
+ },
+ {
+  "category": "hdri",
+  "name": "Shanghai Bund",
+  "url": "https://polyhaven.com/a/shanghai_bund",
+  "author": "Greg Zaal",
+  "license": "CC0",
+  "path": "hdri/polyhaven_shanghai_bund"
+ },
+ {
+  "category": "hdri",
+  "name": "Shanghai Riverside",
+  "url": "https://polyhaven.com/a/shanghai_riverside",
+  "author": "Alex Radosnov",
+  "license": "CC0",
+  "path": "hdri/polyhaven_shanghai_riverside"
+ },
+ {
+  "category": "hdri",
+  "name": "Joburg Central Sunset",
+  "url": "https://polyhaven.com/a/sunset_jhbcentral",
+  "author": "Greg Zaal, Dimitrios Savva",
+  "license": "CC0",
+  "path": "hdri/polyhaven_sunset_jhbcentral"
+ },
+ {
+  "category": "hdri",
+  "name": "Urban Street 01",
+  "url": "https://polyhaven.com/a/urban_street_01",
+  "author": "Andreas Mischok",
+  "license": "CC0",
+  "path": "hdri/polyhaven_urban_street_01"
+ },
+ {
+  "category": "hdri",
+  "name": "Vignaioli Night",
+  "url": "https://polyhaven.com/a/vignaioli_night",
+  "author": "Greg Zaal, Rico Cilliers",
+  "license": "CC0",
+  "path": "hdri/polyhaven_vignaioli_night"
+ },
+ {
+  "category": "fonts",
+  "name": "Bebas Neue (bold Latin display)",
+  "url": "https://fonts.google.com/specimen/Bebas+Neue",
+  "author": "Dharma Type",
+  "license": "OFL-1.1",
+  "path": "fonts/googlefonts_bebasneue"
+ },
+ {
+  "category": "fonts",
+  "name": "Black Han Sans (bold Korean display)",
+  "url": "https://fonts.google.com/specimen/Black+Han+Sans",
+  "author": "Zess Type",
+  "license": "OFL-1.1",
+  "path": "fonts/googlefonts_blackhansans"
+ },
+ {
+  "category": "fonts",
+  "name": "Noto Sans KR (variable)",
+  "url": "https://fonts.google.com/specimen/Noto+Sans+KR",
+  "author": "Google, Adobe",
+  "license": "OFL-1.1",
+  "path": "fonts/googlefonts_notosanskr"
+ },
+ {
+  "category": "fonts",
+  "name": "Noto Sans SC (variable)",
+  "url": "https://fonts.google.com/specimen/Noto+Sans+SC",
+  "author": "Google, Adobe",
+  "license": "OFL-1.1",
+  "path": "fonts/googlefonts_notosanssc"
+ }
+]
