@@ -68,7 +68,7 @@ export class Game {
     this.startTips();
     step(0.05, '加载天空…');
     // 城市实景 HDR（Poly Haven，CC0）：黄昏是城市中心的落日，夜里是现代楼群夜景；下载素材不在时退回旧的
-    await this.renderer.loadEnv('assets/thirdparty/hdri/polyhaven_sunset_jhbcentral/sunset_jhbcentral_1k.hdr', 'assets/thirdparty/hdri/polyhaven_modern_buildings_night/modern_buildings_night_1k.hdr', [0.7, 0.06])
+    await this.renderer.loadEnv('assets/thirdparty/hdri/polyhaven_sunset_jhbcentral/sunset_jhbcentral_1k.hdr', 'assets/thirdparty/hdri/polyhaven_modern_buildings_night/modern_buildings_night_1k.hdr', [0.7, 0.13])
       .catch(() => this.renderer.loadEnv('assets/hdr/venice_sunset_1k.hdr', 'assets/hdr/night.exr'));
     step(0.15, '加载模型…');
     await loadModels(MODEL_LIST, p => step(0.15 + p * 0.15, '加载模型…'));
@@ -263,19 +263,18 @@ export class Game {
     if (this.mode === 'play' || this.mode === 'photo') this.tickDay(dt);
     if (this.mode === 'play') this.player.update(dt, this.input);
     else this.player.actor.update(dt);
-    for (const v of this.vehicles) {
+    this.safe('vehicles', () => { for (const v of this.vehicles) {
       if (v.ai && !v.traffic) this.updateAIVehicle(v, dt);
       v.update(dt, this.time);
-    }
-    this.crowd.update(dt);
+    } });
+    this.safe('crowd', () => this.crowd.update(dt));
     wind.value = now * 0.001;
-    this.traffic.update(dt);
-    this.bumpTraffic();
-    this.details?.update(this.time);
-    this.props.update(dt, this.time);
-    this.fx.update(dt);
-    this.updateTimers(dt);
-    this.updateGuards(dt);
+    this.safe('traffic', () => { this.traffic.update(dt); this.bumpTraffic(); });
+    this.safe('details', () => this.details?.update(this.time));
+    this.safe('props', () => this.props.update(dt, this.time));
+    this.safe('fx', () => this.fx.update(dt));
+    this.safe('timers', () => this.updateTimers(dt));
+    this.safe('guards', () => this.updateGuards(dt));
     this.updateFade(dt);
     if (this.mode === 'place') this.placer.update();
     else if (this.mode === 'photo') this.photo.updateCamera(this.camera);
@@ -346,11 +345,19 @@ export class Game {
     if (s.week === 1 && s.season === 1 && !this.tutorial.active) setTimeout(() => this.toast('先去「应援 & 抗议用品店」买东西（地图上的粉色点）', ''), 2500);
   }
 
+  // 子系统出错不让整局崩：记日志、跳过这一帧；同一个错误只记一次
+  safe(name, fn) {
+    try { fn(); } catch (e) {
+      const key = name + ':' + e.message;
+      if (!(this.errSeen ||= new Set()).has(key)) { this.errSeen.add(key); console.error(`[${name}]`, e); window.native?.log?.(`[${name}] ${e.message}\n${e.stack}`); }
+    }
+  }
+
   tickDay(dt) {
     this.clockMin += dt / B.realSecPerGameMin;
     this.renderer.setTime(this.clockMin / 60);
     this.city.updateNight(this.renderer.night);
-    this.opps.update(dt);
+    this.safe('opps', () => this.opps.update(dt));
     if (this.clockMin >= 24 * 60 && !this.ending) { this.toast('已经午夜了，回家发帖吧', 'big'); this.endDay(); }
   }
 

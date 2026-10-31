@@ -199,7 +199,7 @@ export class Renderer {
     const w = innerWidth, h = innerHeight, r = this.r;
     const c = this.composer = new EffectComposer(r);
     c.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.55, 0.82);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.55, 0.9);
     c.addPass(this.bloom);
     c.addPass(new OutputPass());
     this.grade = new ShaderPass(GradeShader);

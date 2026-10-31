@@ -149,7 +149,7 @@ export class Opportunities {
       e.truck = new Vehicle('ledtruck', { text: `${r.name} 응원단`, textColor: '#27e1ff', sub: '진짜 팬은 우리' });
       e.truck.ai = true; e.truck.npc = true; e.truck.path = g.truckRoute().reverse(); e.truck.loop = true; e.truck.aiSpeed = 7.5;
       e.truck.root.position.copy(e.truck.path[0]); g.addVehicle(e.truck);
-      e.truck.root.add(Object.assign(nameTag(`⚔ ${r.name}`, '#27e1ff'), { position: new THREE.Vector3(0, 4.6, 0) }));
+      { const tag = nameTag(`⚔ ${r.name}`, '#27e1ff'); tag.position.set(0, 4.6, 0); e.truck.root.add(tag); }
       e.rivalQ = 0.8 + Math.random() * 0.45 + this.s.week * 0.015 + (this.s.season - 1) * 0.05;
     } else if (e.type === 'streamer') {
       const a = new Actor('sophie');       // 街头主播

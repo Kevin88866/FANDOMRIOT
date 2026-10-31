@@ -53,6 +53,9 @@ export class Props {
     const glb = model(support ? 'pr_wreath_p' : 'pr_wreath_w');
     if (glb) {   // Blender 花圈：真实花朵 + 三脚架，丝带贴字
       glb.traverse(o => {
+        if (o.isMesh && !o.name.startsWith('ribbon') && !o.material.userData.dimmed) {   // 白花反照率压到 0.72，灯下不过曝
+          const m = o.material; m.userData.dimmed = true; m.color.multiplyScalar(0.72); m.roughness = Math.max(m.roughness, 0.85); m.envMapIntensity = 0.5;
+        }
         if (o.isMesh && o.name === 'ribbon_L') o.material = new THREE.MeshStandardMaterial({ map: t1, roughness: 0.8 });
         else if (o.isMesh && o.name === 'ribbon_R') o.material = new THREE.MeshStandardMaterial({ map: t2, roughness: 0.8 });
       });

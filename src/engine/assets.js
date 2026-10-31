@@ -14,7 +14,7 @@ export const MODEL_LIST = [
   'tr_maple0', 'tr_maple2', 'tr_maple4', 'acc_cap', 'acc_beanie', 'acc_backpack', 'acc_crossbag', 'acc_hair', 'acc_hair_long',
 ];
 const store = {};
-const EMIT = { emit_head: 3, emit_tail: 2.5, emit_amber: 2, emit_warm: 1.6 };
+const EMIT = { emit_head: 1.5, emit_tail: 1.4, emit_amber: 1.4, emit_warm: 1.2 };
 const TEXT_SURFACE = /^(screen|sign_|ribbon|cloth)/;
 
 export async function loadModels(list = MODEL_LIST, onProgress) {
@@ -25,6 +25,10 @@ export async function loadModels(list = MODEL_LIST, onProgress) {
       const g = await loader.loadAsync(`assets/models/${name}.glb`);
       prepare(g.scene);
       if (name.startsWith('shop_')) shopGlow(g.scene);
+      if (name.startsWith('lm_')) g.scene.traverse(o => {   // 地标大堂玻璃：夜里不至于黑成一个洞
+        const m = o.isMesh && o.material;
+        if (m && m.name.startsWith('glass')) { m.userData.envMul = 2.2; m.emissive.setHex(0x1a2230); }
+      });
       store[name] = g.scene;
     } catch (e) {
       console.warn('模型加载失败，改用程序化模型：', name, e);

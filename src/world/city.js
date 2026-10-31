@@ -586,7 +586,7 @@ export class City {
       this.registerHQ(id, h, Math.PI, logo);
       return;
     }
-    const glass = new THREE.MeshStandardMaterial({ color: 0x0d0f14, metalness: 0.9, roughness: 0.12 });
+    const glass = new THREE.MeshStandardMaterial({ color: 0x0d0f14, metalness: 0.9, roughness: 0.12, emissive: 0x161c26 });
     glass.userData.envMul = 1.6;
     const towerMat = this.facadeMat(3, 77, W, 62);
     towerMat.userData.envMul = 1.4;
@@ -632,7 +632,7 @@ export class City {
     for (let i = -3; i <= 3; i++) { const fin = new THREE.Mesh(new THREE.BoxGeometry(0.6, 44, 1.2), orange); fin.position.set(cx + i * 4.4, 22, faceZ + 0.6); fin.castShadow = true; this.group.add(fin); }
     const canopy = new THREE.Mesh(new THREE.BoxGeometry(20, 0.5, 5), orange);
     canopy.position.set(cx, 5.5, faceZ + 2.5); canopy.castShadow = true; this.group.add(canopy);
-    const glass = new THREE.MeshStandardMaterial({ color: 0x10141a, metalness: 0.9, roughness: 0.1 });
+    const glass = new THREE.MeshStandardMaterial({ color: 0x10141a, metalness: 0.9, roughness: 0.1, emissive: 0x161c26 });
     const lobby = new THREE.Mesh(new THREE.BoxGeometry(16, 5, 0.6), glass); lobby.position.set(cx, 2.7, faceZ + 0.3); this.group.add(lobby);
     this.makeHQSign(id, team, cx, 38, faceZ + 1.4, 0, 18, 5);
     const logo = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4.5), new THREE.MeshStandardMaterial({ map: logoTex(team), emissive: 0xffffff, emissiveMap: logoTex(team), emissiveIntensity: 0.6 }));
@@ -701,9 +701,9 @@ export class City {
     const pl = new THREE.Mesh(new THREE.BoxGeometry(34, 0.08, 14), new THREE.MeshStandardMaterial({ color: 0x5d5f66, roughness: 0.35, metalness: 0.1 }));
     pl.position.set(h.cx, CURB + 0.04, h.faceZ + dir * 7); pl.receiveShadow = true; this.group.add(pl);
     // 广场射灯照亮正面
-    const spot = new THREE.SpotLight(h.team.color, 60, 40, 0.7, 0.6, 1.5);
+    const spot = new THREE.SpotLight(h.team.color, 25, 40, 0.7, 0.6, 1.5);
     spot.position.set(h.cx, 0.5, h.faceZ + dir * 12); spot.target.position.set(h.cx, 18, h.faceZ); this.group.add(spot, spot.target);
-    const pt = new THREE.PointLight(0xffe2b8, 40, 26, 1.6); pt.position.set(h.cx, 6, h.faceZ + dir * 8); this.group.add(pt);
+    const pt = new THREE.PointLight(0xffe2b8, 9, 26, 1.6); pt.position.set(h.cx, 6, h.faceZ + dir * 8); this.group.add(pt);
     this.points['hq_' + id] = { pos: plaza.clone(), r: 9, label: `${h.team.name} 总部`, kind: 'hq', id };
   }
 

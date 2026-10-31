@@ -178,7 +178,11 @@ export function buildStreetDetails(game) {
 
   // ---------- 大路中央护栏、人行道花坛、消防栓 ----------
   const railMats = [];
-  for (let x = -160; x <= 160; x += 3.8) { if (ROADS.some(rx => Math.abs(x - rx) < 9)) continue; railMats.push(place(x, 0.03, AVENUE_Z)); }
+  for (let x = -160; x <= 160; x += 3.8) {
+    if (ROADS.some(rx => Math.abs(x - rx) < 9)) continue;
+    railMats.push(place(x, 0.03, AVENUE_Z));
+    city.colliders.push({ minX: x - 1.95, maxX: x + 1.95, minZ: AVENUE_Z - 0.15, maxZ: AVENUE_Z + 0.15, small: true });   // 护栏挡人也挡车
+  }
   for (const im of instanced('st_rail', railMats, grp)) im.castShadow = false;
   const planterMats = [];
   for (let x = -150; x <= 150; x += 15) for (const side of [-1, 1]) {

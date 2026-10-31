@@ -156,6 +156,32 @@ export class Actor {
   duration(name) { return clipFor(this.kind, name, this.full)?.duration || 1; }
 
   // 在角色朝向坐标系里绕某个轴转动一根骨骼（世界空间叠加，和骨骼自身轴向无关）
+  // 世界空间旋转一根骨骼（q 是世界坐标下的旋转）
+  rotateWorld(b, q) {
+    const wq = b.getWorldQuaternion(new THREE.Quaternion()), pq = b.parent.getWorldQuaternion(new THREE.Quaternion());
+    b.quaternion.copy(pq.invert().multiply(q.clone().multiply(wq)));
+    b.updateMatrixWorld(true);
+  }
+
+  // 双骨骼 IK：让手（Left / Right）够到世界坐标 target（滑板车把手）
+  reach(side, target) {
+    const A = this.bones[side + 'Arm'], F = this.bones[side + 'ForeArm'], H = this.bones[side + 'Hand'];
+    if (!A || !F || !H) return;
+    const wp = o => o.getWorldPosition(new THREE.Vector3());
+    let s = wp(A), e = wp(F), h = wp(H);
+    const l1 = s.distanceTo(e), l2 = e.distanceTo(h);
+    const d = THREE.MathUtils.clamp(s.distanceTo(target), Math.abs(l1 - l2) + 1e-3, l1 + l2 - 1e-3);
+    // 先弯肘到合适的角度
+    const es = s.clone().sub(e), eh = h.clone().sub(e);
+    const cur = es.angleTo(eh), want = Math.acos(THREE.MathUtils.clamp((l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2), -1, 1));
+    let n = es.clone().cross(eh);
+    if (n.lengthSq() < 1e-8) n = new THREE.Vector3(1, 0, 0).applyQuaternion(this.root.getWorldQuaternion(new THREE.Quaternion()));
+    this.rotateWorld(F, new THREE.Quaternion().setFromAxisAngle(n.normalize(), want - cur));
+    // 再整条手臂对准目标
+    h = wp(H); s = wp(A);
+    this.rotateWorld(A, new THREE.Quaternion().setFromUnitVectors(h.sub(s).normalize(), target.clone().sub(s).normalize()));
+  }
+
   turnBone(name, axis, angle) {
     const b = this.bones[name]; if (!b) return;
     const q = new THREE.Quaternion().setFromAxisAngle(axis.clone().applyQuaternion(this.root.getWorldQuaternion(new THREE.Quaternion())), angle);
@@ -175,9 +201,11 @@ const X = new THREE.Vector3(1, 0, 0), Z = new THREE.Vector3(0, 0, 1), Yv = new T
 export function scooterPose(a) {
   a.turnBone('LeftUpLeg', Z, -0.12); a.turnBone('RightUpLeg', Z, 0.12);
   a.turnBone('LeftUpLeg', X, -0.22); a.turnBone('RightUpLeg', X, 0.18);
-  a.turnBone('LeftArm', X, -0.9); a.turnBone('RightArm', X, -0.9);
-  a.turnBone('LeftArm', Yv, -0.25); a.turnBone('RightArm', Yv, 0.25);
-  a.turnBone('LeftForeArm', X, -0.35); a.turnBone('RightForeArm', X, -0.35);
+  a.turnBone('Spine1', X, 0.08);   // 身体略前倾
+  // 双手握住车把（v 是滑板车）
+  const v = a.scooter;
+  if (v) { v.body.updateMatrixWorld(true); a.reach('Left', v.body.localToWorld(new THREE.Vector3(0.2, 1.17, 0.52))); a.reach('Right', v.body.localToWorld(new THREE.Vector3(-0.2, 1.17, 0.52))); }
+  else { a.turnBone('LeftArm', X, -0.9); a.turnBone('RightArm', X, -0.9); }
 }
 // 空中收腿
 export function airPose(a) {

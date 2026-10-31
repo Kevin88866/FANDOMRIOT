@@ -21,7 +21,9 @@ export class Player {
     this.lookKind = kind;
     const build = full => {
       if (this.actor) this.root.remove(this.actor.root);
+      const prev = this.actor;
       this.actor = new Actor(kind, { scale: this.game.charScale, full });
+      if (prev) { this.actor.pose = prev.pose; this.actor.scooter = prev.scooter; }
       this.root.add(this.actor.root);
       this.actor.play('idle', 0);
     };
@@ -52,6 +54,7 @@ export class Player {
     this.seq = null; this.vehicle = v; v.driver = this; this.camDist = Math.max(7, v.T.len * 1.5);
     this.root.visible = v.type === 'scooter';
     this.actor.pose = v.type === 'scooter' ? scooterPose : null;
+    this.actor.scooter = v.type === 'scooter' ? v : null;
   }
   exit() {
     const v = this.vehicle; if (!v) return;
@@ -61,7 +64,7 @@ export class Player {
     if (test.distanceTo(p) > 0.05) { p = this.doorPoint(v, -1); city.collide(p, 0.4); }
     this.pos.copy(p); this.pos.y = city.groundY(p.x, p.z);
     v.driver = null; v.speed = 0; this.vehicle = null; this.root.visible = true; this.camDist = 5.5;
-    this.actor.pose = null;
+    this.actor.pose = null; this.actor.scooter = null;
     if (v.type === 'scooter') { this.facing = v.heading; this.root.rotation.set(0, v.heading, 0); return; }
     // 面朝车外，播放下车动作
     const out = Math.atan2(p.x - v.root.position.x, p.z - v.root.position.z);
