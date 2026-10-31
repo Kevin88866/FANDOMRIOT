@@ -373,12 +373,20 @@ Paths are relative to `assets/thirdparty/`.
 | Notification Correct | https://freesound.org/people/TheBuilder15/sounds/415762/ | TheBuilder15 | CC0 | `sfx/freesound_phone_notify/phone_notify_415762.ogg` |
 | Ping.wav | https://freesound.org/people/LilMati/sounds/444918/ | LilMati | CC0 | `sfx/freesound_phone_notify/phone_notify_444918.ogg` |
 | phone short buzz | https://freesound.org/people/richwise/sounds/476836/ | richwise | CC0 | `sfx/freesound_phone_notify/phone_notify_476836.ogg` |
+| creatures-pigeon.wav | https://freesound.org/people/MinigunFiend/sounds/175217/ | MinigunFiend | CC0 | `sfx/freesound_pigeon/pigeon_175217.ogg` |
+| R01-28-Pigeon Coos.wav | https://freesound.org/people/craigsmith/sounds/479589/ | craigsmith | CC0 | `sfx/freesound_pigeon/pigeon_479589.ogg` |
+| pigeon territorial coo.wav | https://freesound.org/people/5ro4/sounds/649390/ | 5ro4 | CC0 | `sfx/freesound_pigeon/pigeon_649390.ogg` |
+| rain_near_smooth.aif | https://freesound.org/people/loopbasedmusic/sounds/157487/ | loopbasedmusic | CC0 | `sfx/freesound_rain/rain_157487.ogg` |
+| intro_sky3.wav | https://freesound.org/people/levelclearer/sounds/238558/ | levelclearer | CC0 | `sfx/freesound_rain/rain_238558.ogg` |
+| Fresh and light snowfall | https://freesound.org/people/florianreichelt/sounds/455929/ | florianreichelt | CC0 | `sfx/freesound_rain/rain_455929.ogg` |
 | Aerosol Can Shake Open Spray.wav | https://freesound.org/people/CapsLok/sounds/181266/ | CapsLok | CC0 | `sfx/freesound_spray_paint/spray_paint_181266.ogg` |
 | Spray Paint Shake Seven.wav | https://freesound.org/people/cbakos/sounds/200377/ | cbakos | CC0 | `sfx/freesound_spray_paint/spray_paint_200377.ogg` |
 | Spray Paint.wav | https://freesound.org/people/sKydran/sounds/240899/ | sKydran | CC0 | `sfx/freesound_spray_paint/spray_paint_240899.ogg` |
 | PassingCar01.wav | https://freesound.org/people/Pingel/sounds/3179/ | Pingel | CC0 | `sfx/freesound_traffic/traffic_3179.ogg` |
 | traffic | https://freesound.org/people/rucisko/sounds/322231/ | rucisko | CC0 | `sfx/freesound_traffic/traffic_322231.ogg` |
 | passing car | https://freesound.org/people/NachtmahrTV/sounds/553259/ | NachtmahrTV | CC0 | `sfx/freesound_traffic/traffic_553259.ogg` |
+| Walking on pavement.wav | https://freesound.org/people/JohnsonBrandEditing/sounds/244310/ | JohnsonBrandEditing | CC0 | `sfx/freesound_wind/wind_244310.ogg` |
+| Autumn wind and dry leaves.wav | https://freesound.org/people/Stek59/sounds/457318/ | Stek59 | CC0 | `sfx/freesound_wind/wind_457318.ogg` |
 | Kenney Impact Sounds | https://kenney.nl/assets/impact-sounds | Kenney | CC0 | `sfx/kenney_impact_sounds` |
 | Kenney Interface Sounds | https://kenney.nl/assets/interface-sounds | Kenney | CC0 | `sfx/kenney_interface_sounds` |
 | Kenney Ui Audio | https://kenney.nl/assets/ui-audio | Kenney | CC0 | `sfx/kenney_ui_audio` |
