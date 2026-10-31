@@ -1,5 +1,309 @@
 [
  {
+  "category": "vehicles",
+  "name": "ambulance (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_ambulance/ambulance.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "delivery (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_delivery/delivery.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "delivery-flat (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_delivery_flat/delivery_flat.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "firetruck (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_firetruck/firetruck.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "garbage-truck (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_garbage_truck/garbage_truck.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "hatchback-sports (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_hatchback_sports/hatchback_sports.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "police (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_police/police.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "sedan (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_sedan/sedan.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "sedan-sports (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_sedan_sports/sedan_sports.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "suv (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_suv/suv.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "suv-luxury (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_suv_luxury/suv_luxury.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "taxi (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_taxi/taxi.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "truck (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_truck/truck.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "truck-flat (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_truck_flat/truck_flat.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "van (Kenney Car Kit)",
+  "url": "https://kenney.nl/assets/car-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "vehicles/kenney_van/van.glb"
+ },
+ {
+  "category": "vehicles",
+  "name": "Cartoony Purple Motorcycle",
+  "url": "https://poly.pizza/m/j20srJUjpB",
+  "author": "AliceCassie",
+  "license": "CC0",
+  "path": "vehicles/polypizza_motorcycle/motorcycle.glb"
+ },
+ {
+  "category": "street",
+  "name": "construction-barrier (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_construction_barrier/construction_barrier.glb"
+ },
+ {
+  "category": "street",
+  "name": "construction-cone (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_construction_cone/construction_cone.glb"
+ },
+ {
+  "category": "street",
+  "name": "construction-fence (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_construction_fence/construction_fence.glb"
+ },
+ {
+  "category": "street",
+  "name": "construction-light (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_construction_light/construction_light.glb"
+ },
+ {
+  "category": "street",
+  "name": "detail-awning (Kenney City Kit Commercial)",
+  "url": "https://kenney.nl/assets/city-kit-commercial",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_detail_awning/detail_awning.glb"
+ },
+ {
+  "category": "street",
+  "name": "detail-awning-wide (Kenney City Kit Commercial)",
+  "url": "https://kenney.nl/assets/city-kit-commercial",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_detail_awning_wide/detail_awning_wide.glb"
+ },
+ {
+  "category": "street",
+  "name": "detail-overhang (Kenney City Kit Commercial)",
+  "url": "https://kenney.nl/assets/city-kit-commercial",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_detail_overhang/detail_overhang.glb"
+ },
+ {
+  "category": "street",
+  "name": "detail-parasol-a (Kenney City Kit Commercial)",
+  "url": "https://kenney.nl/assets/city-kit-commercial",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_detail_parasol_a/detail_parasol_a.glb"
+ },
+ {
+  "category": "street",
+  "name": "detail-parasol-b (Kenney City Kit Commercial)",
+  "url": "https://kenney.nl/assets/city-kit-commercial",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_detail_parasol_b/detail_parasol_b.glb"
+ },
+ {
+  "category": "street",
+  "name": "dumpster (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_dumpster/dumpster.glb"
+ },
+ {
+  "category": "street",
+  "name": "electricity-pole (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_electricity_pole/electricity_pole.glb"
+ },
+ {
+  "category": "street",
+  "name": "light-curved (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_light_curved/light_curved.glb"
+ },
+ {
+  "category": "street",
+  "name": "light-curved-double (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_light_curved_double/light_curved_double.glb"
+ },
+ {
+  "category": "street",
+  "name": "light-square (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_light_square/light_square.glb"
+ },
+ {
+  "category": "street",
+  "name": "road-sign-empty (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_road_sign_empty/road_sign_empty.glb"
+ },
+ {
+  "category": "street",
+  "name": "road-sign-stop (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_road_sign_stop/road_sign_stop.glb"
+ },
+ {
+  "category": "street",
+  "name": "road-sign-street (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_road_sign_street/road_sign_street.glb"
+ },
+ {
+  "category": "street",
+  "name": "road-sign-warning (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_road_sign_warning/road_sign_warning.glb"
+ },
+ {
+  "category": "street",
+  "name": "sign-highway (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_sign_highway/sign_highway.glb"
+ },
+ {
+  "category": "street",
+  "name": "traffic-light (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_traffic_light/traffic_light.glb"
+ },
+ {
+  "category": "street",
+  "name": "traffic-light-hanging (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_traffic_light_hanging/traffic_light_hanging.glb"
+ },
+ {
+  "category": "street",
+  "name": "traffic-light-object-vertical (Kenney City Kit Roads)",
+  "url": "https://kenney.nl/assets/city-kit-roads",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "street/kenney_traffic_light_object_vertical/traffic_light_object_vertical.glb"
+ },
+ {
   "category": "street",
   "name": "Concrete Road Barrier",
   "url": "https://polyhaven.com/a/concrete_road_barrier",
@@ -241,6 +545,190 @@
  },
  {
   "category": "interior",
+  "name": "cardboardBoxClosed (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_cardboardBoxClosed/cardboardBoxClosed.glb"
+ },
+ {
+  "category": "interior",
+  "name": "cardboardBoxOpen (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_cardboardBoxOpen/cardboardBoxOpen.glb"
+ },
+ {
+  "category": "interior",
+  "name": "chairDesk (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_chairDesk/chairDesk.glb"
+ },
+ {
+  "category": "interior",
+  "name": "computerKeyboard (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_computerKeyboard/computerKeyboard.glb"
+ },
+ {
+  "category": "interior",
+  "name": "computerMouse (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_computerMouse/computerMouse.glb"
+ },
+ {
+  "category": "interior",
+  "name": "computerScreen (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_computerScreen/computerScreen.glb"
+ },
+ {
+  "category": "interior",
+  "name": "desk (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_desk/desk.glb"
+ },
+ {
+  "category": "interior",
+  "name": "kitchenBar (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_kitchenBar/kitchenBar.glb"
+ },
+ {
+  "category": "interior",
+  "name": "kitchenBarEnd (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_kitchenBarEnd/kitchenBarEnd.glb"
+ },
+ {
+  "category": "interior",
+  "name": "kitchenCoffeeMachine (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_kitchenCoffeeMachine/kitchenCoffeeMachine.glb"
+ },
+ {
+  "category": "interior",
+  "name": "kitchenFridge (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_kitchenFridge/kitchenFridge.glb"
+ },
+ {
+  "category": "interior",
+  "name": "kitchenFridgeLarge (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_kitchenFridgeLarge/kitchenFridgeLarge.glb"
+ },
+ {
+  "category": "interior",
+  "name": "lampRoundTable (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_lampRoundTable/lampRoundTable.glb"
+ },
+ {
+  "category": "interior",
+  "name": "lampSquareCeiling (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_lampSquareCeiling/lampSquareCeiling.glb"
+ },
+ {
+  "category": "interior",
+  "name": "laptop (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_laptop/laptop.glb"
+ },
+ {
+  "category": "interior",
+  "name": "plantSmall1 (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_plantSmall1/plantSmall1.glb"
+ },
+ {
+  "category": "interior",
+  "name": "pottedPlant (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_pottedPlant/pottedPlant.glb"
+ },
+ {
+  "category": "interior",
+  "name": "speaker (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_speaker/speaker.glb"
+ },
+ {
+  "category": "interior",
+  "name": "stoolBar (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_stoolBar/stoolBar.glb"
+ },
+ {
+  "category": "interior",
+  "name": "stoolBarSquare (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_stoolBarSquare/stoolBarSquare.glb"
+ },
+ {
+  "category": "interior",
+  "name": "tableRound (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_tableRound/tableRound.glb"
+ },
+ {
+  "category": "interior",
+  "name": "televisionModern (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_televisionModern/televisionModern.glb"
+ },
+ {
+  "category": "interior",
+  "name": "trashcan (Kenney Furniture Kit)",
+  "url": "https://kenney.nl/assets/furniture-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "interior/kenney_trashcan/trashcan.glb"
+ },
+ {
+  "category": "interior",
   "name": "Cash Register 01",
   "url": "https://polyhaven.com/a/CashRegister_01",
   "author": "Joe Seabuhr",
@@ -417,6 +905,166 @@
  },
  {
   "category": "props",
+  "name": "bag (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_bag/bag.glb"
+ },
+ {
+  "category": "props",
+  "name": "bottle-ketchup (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_bottle_ketchup/bottle_ketchup.glb"
+ },
+ {
+  "category": "props",
+  "name": "burger (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_burger/burger.glb"
+ },
+ {
+  "category": "props",
+  "name": "cake (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_cake/cake.glb"
+ },
+ {
+  "category": "props",
+  "name": "cake-birthday (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_cake_birthday/cake_birthday.glb"
+ },
+ {
+  "category": "props",
+  "name": "can (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_can/can.glb"
+ },
+ {
+  "category": "props",
+  "name": "candy-bar (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_candy_bar/candy_bar.glb"
+ },
+ {
+  "category": "props",
+  "name": "carton (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_carton/carton.glb"
+ },
+ {
+  "category": "props",
+  "name": "chocolate (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_chocolate/chocolate.glb"
+ },
+ {
+  "category": "props",
+  "name": "cup-coffee (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_cup_coffee/cup_coffee.glb"
+ },
+ {
+  "category": "props",
+  "name": "cupcake (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_cupcake/cupcake.glb"
+ },
+ {
+  "category": "props",
+  "name": "donut (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_donut/donut.glb"
+ },
+ {
+  "category": "props",
+  "name": "egg (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_egg/egg.glb"
+ },
+ {
+  "category": "props",
+  "name": "egg-half (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_egg_half/egg_half.glb"
+ },
+ {
+  "category": "props",
+  "name": "frappe (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_frappe/frappe.glb"
+ },
+ {
+  "category": "props",
+  "name": "fries (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_fries/fries.glb"
+ },
+ {
+  "category": "props",
+  "name": "pizza-box (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_pizza_box/pizza_box.glb"
+ },
+ {
+  "category": "props",
+  "name": "soda-bottle (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_soda_bottle/soda_bottle.glb"
+ },
+ {
+  "category": "props",
+  "name": "soda-can (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_soda_can/soda_can.glb"
+ },
+ {
+  "category": "props",
+  "name": "styrofoam-dinner (Kenney Food Kit)",
+  "url": "https://kenney.nl/assets/food-kit",
+  "author": "Kenney",
+  "license": "CC0",
+  "path": "props/kenney_styrofoam_dinner/styrofoam_dinner.glb"
+ },
+ {
+  "category": "props",
   "name": "Camera 01",
   "url": "https://polyhaven.com/a/Camera_01",
   "author": "Rajil Jose Macatangay",
@@ -576,6 +1224,62 @@
   "path": "props/polyhaven_wooden_crate_01/wooden_crate_01.glb"
  },
  {
+  "category": "props",
+  "name": "Flowers",
+  "url": "https://poly.pizza/m/4JgnDpC3SK",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "props/polypizza_flowers_02/flowers_02.glb"
+ },
+ {
+  "category": "props",
+  "name": "Flowers",
+  "url": "https://poly.pizza/m/NBUxHir6FJ",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "props/polypizza_flowers_bouquet/flowers_bouquet.glb"
+ },
+ {
+  "category": "props",
+  "name": "Present",
+  "url": "https://poly.pizza/m/LVg3ynJDxa",
+  "author": "CreativeTrio",
+  "license": "CC0",
+  "path": "props/polypizza_gift_box/gift_box.glb"
+ },
+ {
+  "category": "props",
+  "name": "Phone",
+  "url": "https://poly.pizza/m/k2kgBepoMU",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "props/polypizza_phone_low/phone_low.glb"
+ },
+ {
+  "category": "props",
+  "name": "Smartphone",
+  "url": "https://poly.pizza/m/4DRZmTs3jq",
+  "author": "smallbigsquare",
+  "license": "CC0",
+  "path": "props/polypizza_smartphone/smartphone.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Calathea Orbifolia 01",
+  "url": "https://polyhaven.com/a/calathea_orbifolia_01",
+  "author": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_calathea_orbifolia_01/calathea_orbifolia_01.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Fern 02",
+  "url": "https://polyhaven.com/a/fern_02",
+  "author": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_fern_02/fern_02.glb"
+ },
+ {
   "category": "plants",
   "name": "Grass Medium 01",
   "url": "https://polyhaven.com/a/grass_medium_01",
@@ -590,6 +1294,30 @@
   "author": "Rico Cilliers",
   "license": "CC0",
   "path": "plants/polyhaven_grass_medium_02/grass_medium_02.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Jacaranda Tree",
+  "url": "https://polyhaven.com/a/jacaranda_tree",
+  "author": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_jacaranda_tree/jacaranda_tree.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Nettle Plant",
+  "url": "https://polyhaven.com/a/nettle_plant",
+  "author": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_nettle_plant/nettle_plant.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Pachira Aquatica 01",
+  "url": "https://polyhaven.com/a/pachira_aquatica_01",
+  "author": "Rob Tuytel, Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_pachira_aquatica_01/pachira_aquatica_01.glb"
  },
  {
   "category": "plants",
@@ -662,6 +1390,110 @@
   "author": "Rico Cilliers",
   "license": "CC0",
   "path": "plants/polyhaven_shrub_04/shrub_04.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Tree Small 02",
+  "url": "https://polyhaven.com/a/tree_small_02",
+  "author": "Rico Cilliers",
+  "license": "CC0",
+  "path": "plants/polyhaven_tree_small_02/tree_small_02.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Autumn Tree",
+  "url": "https://poly.pizza/m/2lRubrT6Na",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "plants/polypizza_autumn_tree/autumn_tree.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Bush with Flowers",
+  "url": "https://poly.pizza/m/U1ymDy8tbY",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "plants/polypizza_bush_flowers/bush_flowers.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Hedge",
+  "url": "https://poly.pizza/m/df8uCl1YpK",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "plants/polypizza_hedge/hedge.glb"
+ },
+ {
+  "category": "plants",
+  "name": "Maple Trees",
+  "url": "https://poly.pizza/m/iGFtQd0PJO",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "plants/polypizza_maple_trees/maple_trees.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Street Rat",
+  "url": "https://polyhaven.com/a/street_rat",
+  "author": "Sean Buckley",
+  "license": "CC0",
+  "path": "animals/polyhaven_street_rat/street_rat.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Bird",
+  "url": "https://poly.pizza/m/gYYC0gYMnw",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "animals/polypizza_bird_small/bird_small.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Cat",
+  "url": "https://poly.pizza/m/qKICY6xla2",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "animals/polypizza_cat/cat.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Cat",
+  "url": "https://poly.pizza/m/2f54vbV0In",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "animals/polypizza_cat_02/cat_02.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Dog",
+  "url": "https://poly.pizza/m/2kUk0QqpCg",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "animals/polypizza_dog/dog.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Pigeon",
+  "url": "https://poly.pizza/m/9NGlBTpDEr",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "animals/polypizza_pigeon/pigeon.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Pug",
+  "url": "https://poly.pizza/m/1gXKv15ik8",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "animals/polypizza_pug/pug.glb"
+ },
+ {
+  "category": "animals",
+  "name": "Shiba Inu",
+  "url": "https://poly.pizza/m/y4wdQpg767",
+  "author": "Quaternius",
+  "license": "CC0",
+  "path": "animals/polypizza_shiba_inu/shiba_inu.glb"
  },
  {
   "category": "textures",
@@ -1294,6 +2126,454 @@
   "author": "Greg Zaal, Rico Cilliers",
   "license": "CC0",
   "path": "hdri/polyhaven_vignaioli_night"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Accident with Squeal and Crash",
+  "url": "https://freesound.org/people/HoBoTrails/sounds/426021/",
+  "author": "HoBoTrails",
+  "license": "CC0",
+  "path": "sfx/freesound_brake/brake_426021.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Braking on gravel (bike)",
+  "url": "https://freesound.org/people/prsvl/sounds/437537/",
+  "author": "prsvl",
+  "license": "CC0",
+  "path": "sfx/freesound_brake/brake_437537.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "AE0091 Volvo 740 GLE handbrake turn 02.flac",
+  "url": "https://freesound.org/people/audible-edge/sounds/76805/",
+  "author": "audible-edge",
+  "license": "CC0",
+  "path": "sfx/freesound_brake/brake_76805.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Vintage Camera Flash Powder and Shutter",
+  "url": "https://freesound.org/people/Werra/sounds/232130/",
+  "author": "Werra",
+  "license": "CC0",
+  "path": "sfx/freesound_camera_shutter/camera_shutter_232130.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Camera shutter and flash combined",
+  "url": "https://freesound.org/people/montclairguy/sounds/353044/",
+  "author": "montclairguy",
+  "license": "CC0",
+  "path": "sfx/freesound_camera_shutter/camera_shutter_353044.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "iPhone Camera Capture.wav",
+  "url": "https://freesound.org/people/pooky1/sounds/431588/",
+  "author": "pooky1",
+  "license": "CC0",
+  "path": "sfx/freesound_camera_shutter/camera_shutter_431588.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "car door close.wav",
+  "url": "https://freesound.org/people/monotraum/sounds/208695/",
+  "author": "monotraum",
+  "license": "CC0",
+  "path": "sfx/freesound_car_door/car_door_208695.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Lock",
+  "url": "https://freesound.org/people/hz37/sounds/396448/",
+  "author": "hz37",
+  "license": "CC0",
+  "path": "sfx/freesound_car_door/car_door_396448.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "car_door_closed.aif",
+  "url": "https://freesound.org/people/Heigh-hoo/sounds/9876/",
+  "author": "Heigh-hoo",
+  "license": "CC0",
+  "path": "sfx/freesound_car_door/car_door_9876.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "1.MUMBAI TRAFFIC.aif",
+  "url": "https://freesound.org/people/rohanpp786/sounds/319360/",
+  "author": "rohanpp786",
+  "license": "CC0",
+  "path": "sfx/freesound_city_ambience/city_ambience_319360.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Shopping Street Ambience",
+  "url": "https://freesound.org/people/florianreichelt/sounds/451734/",
+  "author": "florianreichelt",
+  "license": "CC0",
+  "path": "sfx/freesound_city_ambience/city_ambience_451734.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Paris_traffic.wav",
+  "url": "https://freesound.org/people/lupalenzuela/sounds/512142/",
+  "author": "lupalenzuela",
+  "license": "CC0",
+  "path": "sfx/freesound_city_ambience/city_ambience_512142.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Clank Car Crash Collision",
+  "url": "https://freesound.org/people/qubodup/sounds/151624/",
+  "author": "qubodup",
+  "license": "CC0",
+  "path": "sfx/freesound_crash/crash_151624.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Crash",
+  "url": "https://freesound.org/people/squareal/sounds/237375/",
+  "author": "squareal",
+  "license": "CC0",
+  "path": "sfx/freesound_crash/crash_237375.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Crash (with Glass)",
+  "url": "https://freesound.org/people/magnuswaker/sounds/592388/",
+  "author": "magnuswaker",
+  "license": "CC0",
+  "path": "sfx/freesound_crash/crash_592388.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "boo.wav",
+  "url": "https://freesound.org/people/dr_skitz/sounds/353925/",
+  "author": "dr_skitz",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_boo/crowd_boo_353925.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "boooh.wav",
+  "url": "https://freesound.org/people/valeriebbb96/sounds/403060/",
+  "author": "valeriebbb96",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_boo/crowd_boo_403060.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Small Crowd pre-concert talking party bar walla talking",
+  "url": "https://freesound.org/people/JohnsonBrandEditing/sounds/243373/",
+  "author": "JohnsonBrandEditing",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_chatter/crowd_chatter_243373.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Crowd shock.wav",
+  "url": "https://freesound.org/people/deleted_user_2104797/sounds/324898/",
+  "author": "deleted_user_2104797",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_chatter/crowd_chatter_324898.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Busy Room Ambience / People talking in background #2",
+  "url": "https://freesound.org/people/Breviceps/sounds/465699/",
+  "author": "Breviceps",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_chatter/crowd_chatter_465699.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "RoaringCrowd.wav",
+  "url": "https://freesound.org/people/benfree/sounds/130568/",
+  "author": "benfree",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_cheer/crowd_cheer_130568.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "smallcrowd.wav",
+  "url": "https://freesound.org/people/moxobna/sounds/32260/",
+  "author": "moxobna",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_cheer/crowd_cheer_32260.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Crowd Cheering",
+  "url": "https://freesound.org/people/SoundsExciting/sounds/365132/",
+  "author": "SoundsExciting",
+  "license": "CC0",
+  "path": "sfx/freesound_crowd_cheer/crowd_cheer_365132.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Egg Crack",
+  "url": "https://freesound.org/people/davdud101/sounds/150479/",
+  "author": "davdud101",
+  "license": "CC0",
+  "path": "sfx/freesound_egg_splat/egg_splat_150479.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Jelly Fall From Egg Cup 1.wav",
+  "url": "https://freesound.org/people/lolamadeus/sounds/181913/",
+  "author": "lolamadeus",
+  "license": "CC0",
+  "path": "sfx/freesound_egg_splat/egg_splat_181913.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Motor Loop.wav",
+  "url": "https://freesound.org/people/soundjoao/sounds/325808/",
+  "author": "soundjoao",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_bus/engine_bus_325808.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Bus Motor/Engine Sound Loop",
+  "url": "https://freesound.org/people/qubodup/sounds/54909/",
+  "author": "qubodup",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_bus/engine_bus_54909.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Ford Mustang Engine (1985).wav",
+  "url": "https://freesound.org/people/lmbubec/sounds/119449/",
+  "author": "lmbubec",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_car/engine_car_119449.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "idle_MITSUBISHI_PAJERO_front_engine.wav",
+  "url": "https://freesound.org/people/gladkiy/sounds/332385/",
+  "author": "gladkiy",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_car/engine_car_332385.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Engine: Maserati GranTurismo Switch to Sport Mode and Launch",
+  "url": "https://freesound.org/people/myeclecticself/sounds/585215/",
+  "author": "myeclecticself",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_car/engine_car_585215.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Motorcycle Start Engine.wav",
+  "url": "https://freesound.org/people/spenceomatic/sounds/119774/",
+  "author": "spenceomatic",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_motorbike/engine_motorbike_119774.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Motorcycle SFX.mp3",
+  "url": "https://freesound.org/people/Taniyatsu/sounds/163596/",
+  "author": "Taniyatsu",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_motorbike/engine_motorbike_163596.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Start",
+  "url": "https://freesound.org/people/snakebarney/sounds/138099/",
+  "author": "snakebarney",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_start/engine_start_138099.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Ignition Key - Engine Starting Running Idle 2.wav",
+  "url": "https://freesound.org/people/RutgerMuller/sounds/50898/",
+  "author": "RutgerMuller",
+  "license": "CC0",
+  "path": "sfx/freesound_engine_start/engine_start_50898.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Bang/Explosion Metallic",
+  "url": "https://freesound.org/people/Werra/sounds/244394/",
+  "author": "Werra",
+  "license": "CC0",
+  "path": "sfx/freesound_fireworks/fireworks_244394.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "low mid afar explosion 1.wav",
+  "url": "https://freesound.org/people/Logicogonist/sounds/264031/",
+  "author": "Logicogonist",
+  "license": "CC0",
+  "path": "sfx/freesound_fireworks/fireworks_264031.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Woosh_northern87",
+  "url": "https://freesound.org/people/northern87/sounds/88532/",
+  "author": "northern87",
+  "license": "CC0",
+  "path": "sfx/freesound_fireworks/fireworks_88532.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "concrete footstep 1",
+  "url": "https://freesound.org/people/Yoyodaman234/sounds/166509/",
+  "author": "Yoyodaman234",
+  "license": "CC0",
+  "path": "sfx/freesound_footstep_concrete/footstep_concrete_166509.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "marching-concrete-loop.aif",
+  "url": "https://freesound.org/people/stib/sounds/240732/",
+  "author": "stib",
+  "license": "CC0",
+  "path": "sfx/freesound_footstep_concrete/footstep_concrete_240732.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Hiking Boot Footsteps on Stone",
+  "url": "https://freesound.org/people/Fission9/sounds/521590/",
+  "author": "Fission9",
+  "license": "CC0",
+  "path": "sfx/freesound_footstep_concrete/footstep_concrete_521590.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "0129_Walking on Metal 1.wav",
+  "url": "https://freesound.org/people/hello_flowers/sounds/39473/",
+  "author": "hello_flowers",
+  "license": "CC0",
+  "path": "sfx/freesound_footstep_metal/footstep_metal_39473.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Footsteps Metallic Muffled Louder.wav",
+  "url": "https://freesound.org/people/RutgerMuller/sounds/50724/",
+  "author": "RutgerMuller",
+  "license": "CC0",
+  "path": "sfx/freesound_footstep_metal/footstep_metal_50724.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "puddlewalk.wav",
+  "url": "https://freesound.org/people/j1987/sounds/106395/",
+  "author": "j1987",
+  "license": "CC0",
+  "path": "sfx/freesound_footstep_wet/footstep_wet_106395.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "puddle footsteps.wav",
+  "url": "https://freesound.org/people/patchytherat/sounds/531566/",
+  "author": "patchytherat",
+  "license": "CC0",
+  "path": "sfx/freesound_footstep_wet/footstep_wet_531566.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "car horn.wav",
+  "url": "https://freesound.org/people/keweldog/sounds/182474/",
+  "author": "keweldog",
+  "license": "CC0",
+  "path": "sfx/freesound_horn/horn_182474.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Car Honking",
+  "url": "https://freesound.org/people/MicktheMicGuy/sounds/434878/",
+  "author": "MicktheMicGuy",
+  "license": "CC0",
+  "path": "sfx/freesound_horn/horn_434878.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "05 Horn.wav",
+  "url": "https://freesound.org/people/15HPanska_Ruttner_Jan/sounds/461679/",
+  "author": "15HPanska_Ruttner_Jan",
+  "license": "CC0",
+  "path": "sfx/freesound_horn/horn_461679.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Notification Correct",
+  "url": "https://freesound.org/people/TheBuilder15/sounds/415762/",
+  "author": "TheBuilder15",
+  "license": "CC0",
+  "path": "sfx/freesound_phone_notify/phone_notify_415762.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Ping.wav",
+  "url": "https://freesound.org/people/LilMati/sounds/444918/",
+  "author": "LilMati",
+  "license": "CC0",
+  "path": "sfx/freesound_phone_notify/phone_notify_444918.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "phone short buzz",
+  "url": "https://freesound.org/people/richwise/sounds/476836/",
+  "author": "richwise",
+  "license": "CC0",
+  "path": "sfx/freesound_phone_notify/phone_notify_476836.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Aerosol Can Shake Open Spray.wav",
+  "url": "https://freesound.org/people/CapsLok/sounds/181266/",
+  "author": "CapsLok",
+  "license": "CC0",
+  "path": "sfx/freesound_spray_paint/spray_paint_181266.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Spray Paint Shake Seven.wav",
+  "url": "https://freesound.org/people/cbakos/sounds/200377/",
+  "author": "cbakos",
+  "license": "CC0",
+  "path": "sfx/freesound_spray_paint/spray_paint_200377.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "Spray Paint.wav",
+  "url": "https://freesound.org/people/sKydran/sounds/240899/",
+  "author": "sKydran",
+  "license": "CC0",
+  "path": "sfx/freesound_spray_paint/spray_paint_240899.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "PassingCar01.wav",
+  "url": "https://freesound.org/people/Pingel/sounds/3179/",
+  "author": "Pingel",
+  "license": "CC0",
+  "path": "sfx/freesound_traffic/traffic_3179.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "traffic",
+  "url": "https://freesound.org/people/rucisko/sounds/322231/",
+  "author": "rucisko",
+  "license": "CC0",
+  "path": "sfx/freesound_traffic/traffic_322231.ogg"
+ },
+ {
+  "category": "sfx",
+  "name": "passing car",
+  "url": "https://freesound.org/people/NachtmahrTV/sounds/553259/",
+  "author": "NachtmahrTV",
+  "license": "CC0",
+  "path": "sfx/freesound_traffic/traffic_553259.ogg"
  },
  {
   "category": "sfx",

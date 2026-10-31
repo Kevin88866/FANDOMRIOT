@@ -1,8 +1,8 @@
 """Poly Haven (CC0) fetcher: textures, HDRIs and models.
 
-python -I polyhaven.py tex <category> <id>...
-python -I polyhaven.py hdri <id>...
-python -I polyhaven.py model <category> <max_tris> <id>...
+python polyhaven.py tex <category> <id>...
+python polyhaven.py hdri <id>...
+python polyhaven.py model <category> <max_tris> <id>[@max_tex]...
 """
 import json, sys, time
 from pathlib import Path
@@ -71,7 +71,8 @@ if __name__ == '__main__':
             elif kind == 'hdri':
                 hdri(aid)
             else:
-                out = model(cat, aid, max_tris)
+                aid, _, tx = aid.partition('@')
+                out = model(cat, aid, max_tris, int(tx or 1024))
                 print(f'  {aid}: {mb(out):.1f} MB')
             print('ok', aid, flush=True)
         except Exception as e:

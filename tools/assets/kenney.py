@@ -1,10 +1,11 @@
 """Kenney (CC0) pack fetcher: downloads a pack zip and extracts the files matching glob patterns.
 
 python kenney.py <category> <pack-slug> <glob> [<glob>...]
+python kenney.py models <category> <pack-slug> <model>...   GLB (+external colormap) -> self-contained .glb each
 """
 import fnmatch, http.cookiejar, io, json, sys, urllib.request, zipfile
 from pathlib import PurePosixPath
-from lib import UA, STAGING, asset_dir, add_credit
+from lib import UA, STAGING, asset_dir, add_credit, blender_convert
 
 
 def opener():
@@ -43,5 +44,26 @@ def extract(cat, slug, globs):
     print('ok', slug, n, 'files')
 
 
+def models(cat, slug, names):
+    z = pack_zip(slug)
+    stage = STAGING / 'kenney' / slug
+    if not stage.exists():
+        z.extractall(stage)
+    glbs = {p.stem: p for p in stage.rglob('*.glb')}
+    failed = []
+    for n in names:
+        try:
+            out = blender_convert(glbs[n], asset_dir(cat, 'kenney', n.replace('-', '_')) / f"{n.replace('-', '_')}.glb")
+            add_credit(cat, f'{n} (Kenney {slug.replace("-", " ").title()})', f'https://kenney.nl/assets/{slug}',
+                       'Kenney', 'CC0', out)
+            print('ok', n, flush=True)
+        except Exception as e:
+            failed.append(n); print('FAIL', n, repr(e)[:300], flush=True)
+    print('failed:', failed)
+
+
 if __name__ == '__main__':
-    extract(sys.argv[1], sys.argv[2], sys.argv[3:])
+    if sys.argv[1] == 'models':
+        models(sys.argv[2], sys.argv[3], sys.argv[4:])
+    else:
+        extract(sys.argv[1], sys.argv[2], sys.argv[3:])
