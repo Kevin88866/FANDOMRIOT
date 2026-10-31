@@ -34,7 +34,7 @@ const norm = o => { if (o.name) o.name = o.name.replace(/^mixamorig\d*:?/, 'mixa
 function prepareChar(g) {
   g.scene.traverse(o => {
     norm(o);
-    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; const m = o.material; if (m) { m.envMapIntensity = 0.5; m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, 0.78);   // FBX 转出来的材质太亮太滑，像塑料 if (m.transparent && m.map) { m.alphaTest = 0.4; m.transparent = false; m.depthWrite = true; } } }
+    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; const m = o.material; if (m) { m.envMapIntensity = 0.5; m.metalness = 0; m.roughness = Math.max(m.roughness ?? 1, 0.78); /* FBX 转出来的材质太亮太滑，像塑料 */ if (m.transparent && m.map) { m.alphaTest = 0.4; m.transparent = false; m.depthWrite = true; } } }
   });
   g.scene.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(g.scene), h = box.max.y - box.min.y;
