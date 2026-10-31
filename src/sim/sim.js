@@ -180,7 +180,7 @@ export function noteInfluence(s, name, label, kind, dm) {
 
 // ---------- 发帖曝光 ----------
 // 返回 {views, fans, money, viral, flop, backlash, parts}
-export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }) {
+export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0, captionK = 1 }) {
   const P = PLATFORMS.find(x => x.id === platform), T = TONES.find(x => x.id === tone);
   const item = ev ? ITEMS.find(i => i.id === ev.item) : null;
   const p = ev ? s.players[ev.target] : null;
@@ -206,6 +206,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   parts.trend = p && s.trendTopic === p.name ? 1.8 : (p && s.trending[0] === p.name ? 1.4 : 1);
   parts.limit = s.heat >= B.heatLimit ? 0.5 : 1;
   parts.club = 1 + Math.min(0.5, (s.club || 0) / 2000);   // 粉丝团帮你转发
+  parts.caption = captionK;                                  // 自己写的文案
   // 名场面：选手亲眼看到你的道具 / 记者入镜 / 拍到选手本人 / 堵门
   parts.moment = (photo.reaction ? 1.8 : 1) * (photo.press ? 1.4 : 1) * (photo.star && !photo.reaction ? 1.15 : 1) * (ev?.blockDoor ? 1.3 : 1);
   // 运气
@@ -220,7 +221,7 @@ export function evaluatePost(s, { photo, ev, platform, tone, extraPlatform = 0 }
   parts.luck = luck;
   // 粉丝带来的基础触达是次线性的，避免滚雪球式指数增长
   const base = parts.impact * B.viewsPerImpact + B.fanReach * Math.pow(s.fans, B.fanReachExp);
-  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * parts.moment * parts.club * luck;
+  let views = base * parts.quality * parts.topic * parts.match * parts.fresh * parts.platform * parts.trend * parts.limit * parts.moment * parts.club * parts.caption * luck;
   views = Math.round(views);
   // 涨粉：观点越被认同涨得越多；反噬会掉粉
   let fans = Math.round(views * B.fanConv * Math.min(1.6, parts.match) / (1 + s.fans / B.fanSoftCap));

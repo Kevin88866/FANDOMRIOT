@@ -1,5 +1,6 @@
 import { TEAMS, ITEMS, PLATFORMS, TONES, SKILLS, VEHICLES, LEAGUE, SLOGANS, BALANCE as B } from '../content/data.js';
 import * as Sim from '../sim/sim.js';
+import { scoreCaption } from '../sim/caption.js';
 import { Screens } from './screens.js';
 import { Menus } from './menus.js';
 import { deleteSlot } from '../engine/saves.js';
@@ -398,10 +399,14 @@ export class UI {
     const results = this.posts.map(x => {
       const photo = photos[x.i], ev = g.day.events.find(e => e.id === photo.eventId) || null;
       const key = ev?.id || 'none'; const extra = seen[key] || 0; seen[key] = extra + 1;
-      const r = Sim.evaluatePost(s, { photo, ev, platform: x.platform, tone: x.tone, extraPlatform: extra });
+      const text = (x.text ?? '').trim();
+      const cap = scoreCaption(text, { platform: x.platform, tone: x.tone, ev, s, history: s.capHistory || [] });
+      const r = Sim.evaluatePost(s, { photo, ev, platform: x.platform, tone: x.tone, extraPlatform: extra, captionK: cap.k });
       Sim.commitPost(s, r);
+      if (cap.heat) s.heat = Math.min(100, s.heat + cap.heat);
+      s.capHistory = [...(s.capHistory || []), text].slice(-5);
       if (r.viral) s.seasonViral = (s.seasonViral || 0) + 1;
-      return { ...r, photo, platform: x.platform, tone: x.tone, ev };
+      return { ...r, photo, platform: x.platform, tone: x.tone, ev, text, cap };
     });
     this.posts = [];
     if (results.length) { this.achieve('first_post'); this.g.tutorial?.event('posted'); }

@@ -2,6 +2,7 @@
 import { TEAMS, PLATFORMS, TONES, LEAGUE, COMMENTS, BALANCE as B } from '../content/data.js';
 import { STORIES, ACHIEVEMENTS, achLoad } from '../content/story.js';
 import * as Sim from '../sim/sim.js';
+import { LIMITS, scoreCaption } from '../sim/caption.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -94,6 +95,20 @@ export const Screens = {
     return tone === 'mock' ? `#${t}OUT 这就是职业选手？${txt} 😅` : tone === 'emo' ? `看了比赛真的心累……${txt} #${t}` : `${t} 最近的数据大家有目共睹，${txt} #LCK`;
   },
 
+  // 发帖文案：快捷标签 + 实时字数和预估加成
+  tagChips(ev) {
+    const s = this.s, out = [];
+    if (ev) { out.push('#' + ev.target); const tm = TEAMS.find(t => t.players.some(p => p[0] === ev.target)); if (tm) out.push('#' + tm.name.replace(/\s/g, '')); }
+    const tr = s.trendTopic || s.trending?.[0]; if (tr && !out.includes('#' + tr)) out.push('#' + tr);
+    out.push('#LCK');
+    return out.slice(0, 4);
+  },
+  capHint(x, ev) {
+    const r = scoreCaption(x.text, { platform: x.platform, tone: x.tone, ev, s: this.s, history: this.s.capHistory || [] });
+    const lim = LIMITS[x.platform];
+    return `<span class="${r.len > lim ? 'neg' : ''}">${r.len}/${lim}</span> · 文案 <b class="${r.k >= 1 ? 'pos' : 'neg'}">×${r.k.toFixed(2)}</b>${r.notes.length ? ` · ${esc(r.notes.slice(0, 2).map(n => n.t).join('，'))}` : ''}`;
+  },
+
   postingView() {
     const s = this.s, g = this.g, photos = g.day.photos;
     const roll = photos.length ? photos.map((p, i) => {
@@ -109,7 +124,9 @@ export const Screens = {
         <div class="tabs">${PLATFORMS.map(pl => `<button class="ptab ${pl.id === x.platform ? 'on' : ''}" data-pl="${k}:${pl.id}" ${s.banned[pl.id] ? 'disabled' : ''} style="--pc:${PLAT_STYLE[pl.id].bg}">${pl.name}${s.banned[pl.id] ? ' 封号中' : ''}</button>`).join('')}<button class="rm" data-rm="${k}">✕</button></div>
         <div class="tones">${TONES.map(t => `<button class="tone ${t.id === x.tone ? 'on' : ''}" data-tn="${k}:${t.id}">${t.name}</button>`).join('')}<span class="dim">${esc(P.desc)}</span></div>
         <div class="preview" style="--pc:${st.bg}"><div class="ph"><span class="av sm" style="background:#ff2d55">我</span><b>${esc(handle)}</b><span class="badge">${st.badge}</span></div>
-          <div class="cap">${esc(this.caption(ph, ev, x.tone))}</div><img src="${ph.img}"></div></div>`;
+          <textarea class="capin" data-tx="${k}" rows="3" maxlength="400" placeholder="写点什么……">${esc(x.text)}</textarea>
+          <div class="capbar">${this.tagChips(ev).map(t => `<button class="tagc" data-tg="${k}:${esc(t)}">${esc(t)}</button>`).join('')}<span class="cnt" id="cnt${k}">${this.capHint(x, ev)}</span></div>
+          <img src="${ph.img}"></div></div>`;
     }).join('');
     return `<div class="sns">
       <div class="roll"><div class="hd"><b>📷 今日相册</b><span class="dim">点选最多 3 张 · 同一件事发到多个平台热度会打折</span></div><div class="grid">${roll}</div></div>
@@ -131,12 +148,27 @@ export const Screens = {
       else if (this.posts.length < 3) {
         const pl = PLATFORMS.find(p => !s.banned[p.id]); if (!pl) return this.toast('所有平台都把你封了', 'bad');
         const ev = g.day.events.find(e => e.id === photos[i].eventId);
-        this.posts.push({ i, platform: pl.id, tone: ev?.kind === 'support' ? 'emo' : 'mock' });
+        const tone = ev?.kind === 'support' ? 'emo' : 'mock';
+        this.posts.push({ i, platform: pl.id, tone, text: this.caption(photos[i], ev, tone), edited: false });
       }
       this.posting();
     });
     this.on('[data-pl]', 'click', (e, el) => { const [k, id] = el.dataset.pl.split(':'); this.posts[+k].platform = id; this.posting(); });
-    this.on('[data-tn]', 'click', (e, el) => { const [k, id] = el.dataset.tn.split(':'); this.posts[+k].tone = id; this.posting(); });
+    this.on('[data-tn]', 'click', (e, el) => {
+      const [k, id] = el.dataset.tn.split(':'), x = this.posts[+k]; x.tone = id;
+      if (!x.edited) { const ph = photos[x.i]; x.text = this.caption(ph, g.day.events.find(e => e.id === ph.eventId) || null, id); }   // 没改过文案就跟着换
+      this.posting();
+    });
+    const evOf = x => g.day.events.find(e => e.id === photos[x.i].eventId) || null;
+    this.modal.querySelectorAll('[data-tx]').forEach(el => {
+      el.addEventListener('input', () => { const k = +el.dataset.tx, x = this.posts[k]; x.text = el.value; x.edited = true; const c = document.getElementById('cnt' + k); if (c) c.innerHTML = this.capHint(x, evOf(x)); });
+      for (const t of ['keydown', 'keyup']) el.addEventListener(t, e => e.stopPropagation());   // 打字时不触发游戏和菜单快捷键
+    });
+    this.on('[data-tg]', 'click', (e, el) => {
+      const at = el.dataset.tg.indexOf(':'), k = +el.dataset.tg.slice(0, at), tag = el.dataset.tg.slice(at + 1), x = this.posts[k];
+      if (!x.text.includes(tag)) { x.text = (x.text.trim() + ' ' + tag).trim(); x.edited = true; }
+      this.posting();
+    });
     this.on('[data-rm]', 'click', (e, el) => { this.posts.splice(+el.dataset.rm, 1); this.posting(); });
     $('go').onclick = () => this.publish();
     $('skip').onclick = () => { this.posts = []; this.weekSummary([]); };
@@ -150,6 +182,8 @@ export const Screens = {
     if (r.photo.reaction) out.push(pick(COMMENTS.reaction));
     if (r.photo.press) out.push(pick(COMMENTS.press));
     const main = !ev ? COMMENTS.generic : ev.kind === 'support' ? COMMENTS.support : r.backlash ? COMMENTS.attack_backlash : COMMENTS.attack_agree;
+    const tag = r.cap?.tags?.[0];
+    if (tag && out.length < 2) out.push(r.cap.k >= 1 ? `${tag} 这个标签我先转了` : `${tag}？这写的啥啊`);
     while (out.length < 3) { const c = pick(main); if (!out.includes(c)) out.push(c); }
     return out.slice(0, 3).map((c, i) => ({ c, user: pick(['LOL老哥', '直播间常客', '中单信徒', '吃瓜群众', 'lck_fan', '整天看比赛', '电竞少女', '老粉']) + (100 + Math.random() * 900 | 0), likes: Math.round(r.views * (0.002 + Math.random() * 0.006) / (i + 1)) }));
   },
@@ -159,10 +193,11 @@ export const Screens = {
     const html = results.map((r, k) => {
       const st = PLAT_STYLE[r.platform], P = PLATFORMS.find(p => p.id === r.platform);
       const badge = r.viral ? '<span class="ob viral">🔥 爆款 · 上热搜</span>' : r.flop ? '<span class="ob flop">石沉大海</span>' : r.backlash ? '<span class="ob bad">评论区翻车</span>' : r.photo.reaction ? '<span class="ob viral">名场面</span>' : '';
-      const chips = [['照片', r.parts.quality], ['话题', r.parts.topic], ['情绪', r.parts.match], ['新鲜', r.parts.fresh], ['平台', r.parts.platform], ['名场面', r.parts.moment], ['运气', r.parts.luck]].filter(([, v]) => v !== undefined && Math.abs(v - 1) > 0.01);
+      const chips = [['文案', r.parts.caption], ['照片', r.parts.quality], ['话题', r.parts.topic], ['情绪', r.parts.match], ['新鲜', r.parts.fresh], ['平台', r.parts.platform], ['名场面', r.parts.moment], ['运气', r.parts.luck]].filter(([, v]) => v !== undefined && Math.abs(v - 1) > 0.01);
       return `<div class="fc" style="--pc:${st.bg};animation-delay:${k * 0.15}s">
         <div class="ph"><span class="av sm" style="background:#ff2d55">我</span><b>${esc(handle)}</b><span class="badge">${st.badge} ${P.name}</span>${badge}</div>
-        <div class="cap">${esc(this.caption(r.photo, r.ev, r.tone))}</div>
+        <div class="cap">${esc(r.text ?? this.caption(r.photo, r.ev, r.tone))}</div>
+        ${r.cap?.notes?.length ? `<div class="capnotes">${r.cap.notes.map(n => `<i class="${n.v >= 0 ? 'up' : 'down'}">${n.v >= 0 ? '+' : ''}${Math.round(n.v * 100)}% ${esc(n.t)}</i>`).join('')}</div>` : ''}
         <img src="${r.photo.img}">
         <div class="counters"><span>👁 <b id="v${k}">0</b></span><span>♥ <b id="l${k}">0</b></span><span>🔁 <b id="r${k}">0</b></span><span>💬 <b id="c${k}">0</b></span></div>
         <canvas class="chart" id="ch${k}" width="600" height="120"></canvas>
