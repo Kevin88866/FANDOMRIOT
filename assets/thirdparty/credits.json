@@ -1,5 +1,821 @@
 [
  {
+  "category": "characters",
+  "name": "Brian",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_brian/brian.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Claire",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_claire/claire.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Elizabeth",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_elizabeth/elizabeth.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Jody",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_jody/jody.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Josh",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_josh/josh.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Kate",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_kate/kate.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Kaya",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_kaya/kaya.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Leonard",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_leonard/leonard.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Louise",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_louise/louise.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Megan",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_megan/megan.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Michelle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_michelle/michelle.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Olivia",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_olivia/olivia.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Racer",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_racer/racer.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Remy",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_remy/remy.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Shannon",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_shannon/shannon.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Sophie",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_sophie/sophie.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Sporty Granny",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_sporty_granny/sporty_granny.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Swat Guy",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_swat_guy/swat_guy.glb"
+ },
+ {
+  "category": "characters",
+  "name": "The Boss",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_the_boss/the_boss.glb"
+ },
+ {
+  "category": "characters",
+  "name": "Timmy",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "characters/mixamo_timmy/timmy.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Angry - Standing Angrily",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_angry/angry.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Angry Gesture - Angrily Pumping Fists Forward",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_angry_fist_pump/angry_fist_pump.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Angry Gesture - Angry Forward Gesture",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_angry_gesture/angry_gesture.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Angry Point - Quickly Pointing Angrily Forward",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_angry_point/angry_point.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Beckoning - Waving Someone Over While Seated",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_beckoning/beckoning.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Box Idle - Carrying A Box",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_carry_box/carry_box.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Cheering - Male Cheering With Two Fists Pump",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_cheering/cheering.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Cheering - Male Cheering Head Banging",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_cheering_headbang/cheering_headbang.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Cheering While Sitting - Cheering While Sitting With Low Enthusiasm",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_cheering_sitting/cheering_sitting.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Clapping - Clap While Standing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_clapping/clapping.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Clapping - Clap While Seated",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_clapping_seated/clapping_seated.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Hip Hop Dancing - Female Hip Hop 'Running Man' Dancing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_dance_hiphop_running_man/dance_hiphop_running_man.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Hip Hop Dancing - Hip Hop Dancing Shimmy",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_dance_hiphop_shimmy/dance_hiphop_shimmy.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Hip Hop Dancing - Hip Hop Dancing Side To Side",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_dance_hiphop_side/dance_hiphop_side.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Salsa Dancing - Female Salsa Dancing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_dance_salsa/dance_salsa.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Hip Hop Dancing - Timid Dancing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_dance_timid/dance_timid.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Silly Dancing - Silly Dancing The Twist",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_dance_twist/dance_twist.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Driving - Male Driving A Car",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_driving/driving.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Entering Car - Entering Into The Driverside Of A Car",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_enter_car/enter_car.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Exiting Car - Exiting Out Of The Driverside Of A Car",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_exit_car/exit_car.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Falling - Falling In The Air Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_falling_idle/falling_idle.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Falling Down - Knocked Over And Falling To The Ground",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_falling_knocked_over/falling_knocked_over.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Falling To Landing - Landing From Falling Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_falling_to_landing/falling_to_landing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Fist Pump - Pumping A Fist",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_fist_pump/fist_pump.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Fist Pump - High Enthusiasm Fist Pump",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_fist_pump_big/fist_pump_big.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Hard Landing - Mid-Air Falling To A Hard Landing Game Blend",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_hard_landing/hard_landing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Hit By Car - Getting Hit By A Car While Tired",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_hit_by_car/hit_by_car.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Holding Idle - Holding An Object Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_holding_idle/holding_idle.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Honking Horn - Hitting Steering Wheel In Driving Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_honking/honking.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Breathing Idle - Breathing Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_idle_breathing/idle_breathing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Idle - Standing Short Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_idle_short/idle_short.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Idle - Standing Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_idle_standing/idle_standing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Idle - Weight Shift Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_idle_weight_shift/idle_weight_shift.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Jump - Jumping In Place",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_jump_in_place/jump_in_place.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Landing - Landing From Jump",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_landing/landing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Looking Around - Idle Stand Looking Around",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_look_around/look_around.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Nervously Look Around - Nervously Looking Around Left To Right -  Loop",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_look_around_nervous/look_around_nervous.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Talking Phone Pacing - Male Talking On The Cell Phone While Pacing Back And Forth",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_phone_pacing/phone_pacing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Talking On Phone - Female Standing Talking On Phone",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_phone_talk_female/phone_talk_female.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Talking On A Cell Phone - Male Standing While Talking On A Cell Phone",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_phone_talk_male/phone_talk_male.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Picking Up Object - Picking Up An Object With One Hand",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_pick_up/pick_up.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Throw Object - Picking Up Object And Throwing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_pickup_and_throw/pickup_and_throw.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Pointing - Pointing With Arm Bent",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_pointing/pointing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Pointing Forward - Looking Down Then Pointing Forward",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_pointing_forward/pointing_forward.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Pushing - Pushing A Heavy Object",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_push_heavy/push_heavy.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Pushing - Pushing An Object Forward",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_push_object/push_object.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Running - Running While Carrying Someone",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_run_carry/run_carry.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Running - Running With Intention",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_run_intention/run_intention.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Running - Running Leaning Back Or Forth",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_run_lean/run_lean.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Running Jump - Jumping From A Sprint",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_running_jump/running_jump.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Unarmed Jump Running - Running Jump And Landing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_running_jump_landing/running_jump_landing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Sad Idle - Sad Idle Variation 1",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_sad_idle/sad_idle.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Sad Idle - Standing In A Sad Disposition",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_sad_standing/sad_standing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Annoyed Head Shake - Shaking Head No Annoyed",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_shake_head_annoyed/shake_head_annoyed.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Shaking Head No - Shaking Head No Dismissively",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_shake_head_dismissive/shake_head_dismissive.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Sitting - Little Girl Sitting On A Bench Swinging Her Legs",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_sit_bench_girl/sit_bench_girl.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Sitting Idle - Sitting With Breathing Idle",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_sit_breathing/sit_breathing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Sitting Idle - Sitting Still In A Chair",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_sit_chair_idle/sit_chair_idle.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Sitting - Sitting Down Arms Outside Armrests",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_sit_down/sit_down.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Sitting Talking - Sitting And Talking To Another Person",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_sit_talking/sit_talking.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Stand Up - Standing Up From Seated Position",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_stand_up_from_seat/stand_up_from_seat.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Texting While Standing - Texting On A Smart Phone While Standing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_texting/texting.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Texting - Standing Texting On Phone",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_texting_standing/texting_standing.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Throwing - Throwing And Object",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_throw/throw.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Standing Thumbs Up - Giving Thumbs Up While Standing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_thumbs_up/thumbs_up.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Typing - Sitting At A Computer And Typing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_typing_computer/typing_computer.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Victory - Celebrating After A Win",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_victory/victory.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Walking - Female Sexy Walk",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_01/walk_01.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Walking - Feminine Walk Forward",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_02/walk_02.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Walking - Male Injured Walk",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_03/walk_03.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Walking - Walking With A Swagger",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_04/walk_04.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Holding Walk - Holding An Object While Walking",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_holding/walk_holding.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Walking With Shopping Bag - Male Walking With Shopping Bag",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_shopping_bag/walk_shopping_bag.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Start Walking - Walking From Standing",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_start/walk_start.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Walking - Walking With A Swagger",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_swagger/walk_swagger.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Walking While Texting - Male Walking While Texting On A Smartphone",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_texting/walk_texting.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Texting And Walking - Female Walking And Texting On Phone",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_walk_texting_female/walk_texting_female.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Waving - Waving",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_wave/wave.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Waving - Waving With Both Hands",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_wave_both_hands/wave_both_hands.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Waving - Emotional Waving Forward",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_wave_emotional/wave_emotional.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Yelling - Yelling In Anger",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_yelling/yelling.glb"
+ },
+ {
+  "category": "anims",
+  "name": "Yelling Out - Stepping Forward And Yelling Out",
+  "url": "https://www.mixamo.com/",
+  "author": "Adobe Mixamo",
+  "license": "Mixamo (Adobe) royalty-free; no raw redistribution",
+  "path": "anims/mixamo_yelling_step/yelling_step.glb"
+ },
+ {
   "category": "vehicles",
   "name": "ambulance (Kenney Car Kit)",
   "url": "https://kenney.nl/assets/car-kit",

@@ -2,7 +2,7 @@
 
 blender -b --factory-startup -P convert_glb.py -- SRC DEST MAX_TEX MAX_TRIS [flags...]
 flags: anim (armature + animation only, mesh dropped), noanim, name=<action name>,
-       scale=<float>, nosmooth
+       scale=<float>, jpg (re-encode PNGs without real transparency as JPEG)
 """
 import bpy, sys, os, tempfile
 from pathlib import Path
@@ -58,6 +58,9 @@ for i, img in enumerate(bpy.data.images):
         img.scale(max(1, int(w * k)), max(1, int(h * k)))
     name = Path(img.filepath or img.name).suffix.lower()
     png = name == '.png' or img.file_format == 'PNG'
+    if png and 'jpg' in flags:
+        px = img.pixels[:]
+        png = img.channels == 4 and min(px[3::4]) < 0.99
     out = tmp / f'img{i}.{"png" if png else "jpg"}'
     img.filepath_raw = str(out)
     img.file_format = 'PNG' if png else 'JPEG'

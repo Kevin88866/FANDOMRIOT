@@ -3,6 +3,118 @@
 Only CC0 assets, Mixamo assets (Adobe, royalty-free, no raw redistribution) and OFL fonts are used.
 Paths are relative to `assets/thirdparty/`.
 
+## characters
+
+| Name | URL | Author | License | Path |
+|---|---|---|---|---|
+| Brian | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_brian/brian.glb` |
+| Claire | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_claire/claire.glb` |
+| Elizabeth | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_elizabeth/elizabeth.glb` |
+| Jody | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_jody/jody.glb` |
+| Josh | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_josh/josh.glb` |
+| Kate | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_kate/kate.glb` |
+| Kaya | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_kaya/kaya.glb` |
+| Leonard | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_leonard/leonard.glb` |
+| Louise | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_louise/louise.glb` |
+| Megan | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_megan/megan.glb` |
+| Michelle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_michelle/michelle.glb` |
+| Olivia | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_olivia/olivia.glb` |
+| Racer | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_racer/racer.glb` |
+| Remy | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_remy/remy.glb` |
+| Shannon | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_shannon/shannon.glb` |
+| Sophie | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_sophie/sophie.glb` |
+| Sporty Granny | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_sporty_granny/sporty_granny.glb` |
+| Swat Guy | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_swat_guy/swat_guy.glb` |
+| The Boss | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_the_boss/the_boss.glb` |
+| Timmy | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `characters/mixamo_timmy/timmy.glb` |
+
+## anims
+
+| Name | URL | Author | License | Path |
+|---|---|---|---|---|
+| Angry - Standing Angrily | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_angry/angry.glb` |
+| Angry Gesture - Angrily Pumping Fists Forward | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_angry_fist_pump/angry_fist_pump.glb` |
+| Angry Gesture - Angry Forward Gesture | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_angry_gesture/angry_gesture.glb` |
+| Angry Point - Quickly Pointing Angrily Forward | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_angry_point/angry_point.glb` |
+| Beckoning - Waving Someone Over While Seated | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_beckoning/beckoning.glb` |
+| Box Idle - Carrying A Box | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_carry_box/carry_box.glb` |
+| Cheering - Male Cheering With Two Fists Pump | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_cheering/cheering.glb` |
+| Cheering - Male Cheering Head Banging | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_cheering_headbang/cheering_headbang.glb` |
+| Cheering While Sitting - Cheering While Sitting With Low Enthusiasm | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_cheering_sitting/cheering_sitting.glb` |
+| Clapping - Clap While Standing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_clapping/clapping.glb` |
+| Clapping - Clap While Seated | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_clapping_seated/clapping_seated.glb` |
+| Hip Hop Dancing - Female Hip Hop 'Running Man' Dancing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_dance_hiphop_running_man/dance_hiphop_running_man.glb` |
+| Hip Hop Dancing - Hip Hop Dancing Shimmy | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_dance_hiphop_shimmy/dance_hiphop_shimmy.glb` |
+| Hip Hop Dancing - Hip Hop Dancing Side To Side | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_dance_hiphop_side/dance_hiphop_side.glb` |
+| Salsa Dancing - Female Salsa Dancing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_dance_salsa/dance_salsa.glb` |
+| Hip Hop Dancing - Timid Dancing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_dance_timid/dance_timid.glb` |
+| Silly Dancing - Silly Dancing The Twist | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_dance_twist/dance_twist.glb` |
+| Driving - Male Driving A Car | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_driving/driving.glb` |
+| Entering Car - Entering Into The Driverside Of A Car | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_enter_car/enter_car.glb` |
+| Exiting Car - Exiting Out Of The Driverside Of A Car | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_exit_car/exit_car.glb` |
+| Falling - Falling In The Air Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_falling_idle/falling_idle.glb` |
+| Falling Down - Knocked Over And Falling To The Ground | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_falling_knocked_over/falling_knocked_over.glb` |
+| Falling To Landing - Landing From Falling Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_falling_to_landing/falling_to_landing.glb` |
+| Fist Pump - Pumping A Fist | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_fist_pump/fist_pump.glb` |
+| Fist Pump - High Enthusiasm Fist Pump | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_fist_pump_big/fist_pump_big.glb` |
+| Hard Landing - Mid-Air Falling To A Hard Landing Game Blend | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_hard_landing/hard_landing.glb` |
+| Hit By Car - Getting Hit By A Car While Tired | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_hit_by_car/hit_by_car.glb` |
+| Holding Idle - Holding An Object Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_holding_idle/holding_idle.glb` |
+| Honking Horn - Hitting Steering Wheel In Driving Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_honking/honking.glb` |
+| Breathing Idle - Breathing Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_idle_breathing/idle_breathing.glb` |
+| Idle - Standing Short Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_idle_short/idle_short.glb` |
+| Idle - Standing Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_idle_standing/idle_standing.glb` |
+| Idle - Weight Shift Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_idle_weight_shift/idle_weight_shift.glb` |
+| Jump - Jumping In Place | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_jump_in_place/jump_in_place.glb` |
+| Landing - Landing From Jump | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_landing/landing.glb` |
+| Looking Around - Idle Stand Looking Around | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_look_around/look_around.glb` |
+| Nervously Look Around - Nervously Looking Around Left To Right -  Loop | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_look_around_nervous/look_around_nervous.glb` |
+| Talking Phone Pacing - Male Talking On The Cell Phone While Pacing Back And Forth | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_phone_pacing/phone_pacing.glb` |
+| Talking On Phone - Female Standing Talking On Phone | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_phone_talk_female/phone_talk_female.glb` |
+| Talking On A Cell Phone - Male Standing While Talking On A Cell Phone | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_phone_talk_male/phone_talk_male.glb` |
+| Picking Up Object - Picking Up An Object With One Hand | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_pick_up/pick_up.glb` |
+| Throw Object - Picking Up Object And Throwing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_pickup_and_throw/pickup_and_throw.glb` |
+| Pointing - Pointing With Arm Bent | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_pointing/pointing.glb` |
+| Pointing Forward - Looking Down Then Pointing Forward | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_pointing_forward/pointing_forward.glb` |
+| Pushing - Pushing A Heavy Object | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_push_heavy/push_heavy.glb` |
+| Pushing - Pushing An Object Forward | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_push_object/push_object.glb` |
+| Running - Running While Carrying Someone | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_run_carry/run_carry.glb` |
+| Running - Running With Intention | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_run_intention/run_intention.glb` |
+| Running - Running Leaning Back Or Forth | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_run_lean/run_lean.glb` |
+| Running Jump - Jumping From A Sprint | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_running_jump/running_jump.glb` |
+| Unarmed Jump Running - Running Jump And Landing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_running_jump_landing/running_jump_landing.glb` |
+| Sad Idle - Sad Idle Variation 1 | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_sad_idle/sad_idle.glb` |
+| Sad Idle - Standing In A Sad Disposition | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_sad_standing/sad_standing.glb` |
+| Annoyed Head Shake - Shaking Head No Annoyed | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_shake_head_annoyed/shake_head_annoyed.glb` |
+| Shaking Head No - Shaking Head No Dismissively | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_shake_head_dismissive/shake_head_dismissive.glb` |
+| Sitting - Little Girl Sitting On A Bench Swinging Her Legs | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_sit_bench_girl/sit_bench_girl.glb` |
+| Sitting Idle - Sitting With Breathing Idle | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_sit_breathing/sit_breathing.glb` |
+| Sitting Idle - Sitting Still In A Chair | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_sit_chair_idle/sit_chair_idle.glb` |
+| Sitting - Sitting Down Arms Outside Armrests | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_sit_down/sit_down.glb` |
+| Sitting Talking - Sitting And Talking To Another Person | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_sit_talking/sit_talking.glb` |
+| Stand Up - Standing Up From Seated Position | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_stand_up_from_seat/stand_up_from_seat.glb` |
+| Texting While Standing - Texting On A Smart Phone While Standing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_texting/texting.glb` |
+| Texting - Standing Texting On Phone | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_texting_standing/texting_standing.glb` |
+| Throwing - Throwing And Object | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_throw/throw.glb` |
+| Standing Thumbs Up - Giving Thumbs Up While Standing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_thumbs_up/thumbs_up.glb` |
+| Typing - Sitting At A Computer And Typing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_typing_computer/typing_computer.glb` |
+| Victory - Celebrating After A Win | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_victory/victory.glb` |
+| Walking - Female Sexy Walk | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_01/walk_01.glb` |
+| Walking - Feminine Walk Forward | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_02/walk_02.glb` |
+| Walking - Male Injured Walk | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_03/walk_03.glb` |
+| Walking - Walking With A Swagger | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_04/walk_04.glb` |
+| Holding Walk - Holding An Object While Walking | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_holding/walk_holding.glb` |
+| Walking With Shopping Bag - Male Walking With Shopping Bag | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_shopping_bag/walk_shopping_bag.glb` |
+| Start Walking - Walking From Standing | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_start/walk_start.glb` |
+| Walking - Walking With A Swagger | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_swagger/walk_swagger.glb` |
+| Walking While Texting - Male Walking While Texting On A Smartphone | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_texting/walk_texting.glb` |
+| Texting And Walking - Female Walking And Texting On Phone | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_walk_texting_female/walk_texting_female.glb` |
+| Waving - Waving | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_wave/wave.glb` |
+| Waving - Waving With Both Hands | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_wave_both_hands/wave_both_hands.glb` |
+| Waving - Emotional Waving Forward | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_wave_emotional/wave_emotional.glb` |
+| Yelling - Yelling In Anger | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_yelling/yelling.glb` |
+| Yelling Out - Stepping Forward And Yelling Out | https://www.mixamo.com/ | Adobe Mixamo | Mixamo (Adobe) royalty-free; no raw redistribution | `anims/mixamo_yelling_step/yelling_step.glb` |
+
 ## vehicles
 
 | Name | URL | Author | License | Path |

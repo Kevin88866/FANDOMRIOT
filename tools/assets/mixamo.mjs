@@ -17,11 +17,15 @@ const { chromium } = createRequire(path.resolve(here, '../../../_tools/package.j
 const API = 'https://www.mixamo.com/api/v1';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const browser = await chromium.connectOverCDP('http://127.0.0.1:9333');
-const page = browser.contexts()[0].pages().find((p) => p.url().includes('mixamo.com'));
-if (!page) throw new Error('no mixamo tab open');
-const token = await page.evaluate(() => localStorage.getItem('access_token'));
-if (!token) throw new Error('no access_token in localStorage - not logged in?');
+// Token comes from MIXAMO_TOKEN (read from any logged-in Mixamo tab), else from the CDP browser (browser.mjs).
+let token = process.env.MIXAMO_TOKEN;
+if (!token) {
+  const browser = await chromium.connectOverCDP('http://127.0.0.1:9333');
+  const page = browser.contexts()[0].pages().find((p) => p.url().includes('mixamo.com'));
+  if (!page) throw new Error('no mixamo tab open');
+  token = await page.evaluate(() => localStorage.getItem('access_token'));
+}
+if (!token) throw new Error('no access_token - not logged in?');
 const H = { Authorization: `Bearer ${token}`, 'X-Api-Key': 'mixamo2', 'X-Requested-With': 'XMLHttpRequest',
   'Content-Type': 'application/json', Accept: 'application/json' };
 
