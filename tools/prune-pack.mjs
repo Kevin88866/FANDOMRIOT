@@ -14,7 +14,8 @@ const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDi
 for (const f of walk(path.join(app, 'src')).filter(f => f.endsWith('.js'))) {
   const s = fs.readFileSync(f, 'utf8');
   for (const m of s.matchAll(/assets\/thirdparty\/[\w./-]+\.(ogg|mp3|wav|hdr|exr|jpg|png|glb|ttf|otf|woff2?)/g)) keep.add(m[0]);
-  for (const m of s.matchAll(/pbrMat\('([\w-]+)\/([\w-]+)'/g)) keepDirs.push(`assets/thirdparty/textures/${m[1]}/`);
+  // 贴图目录：任何写成 'polyhaven_xxx/前缀' 或 'ambientcg_xxx/前缀' 的字符串（pbrMat 的参数、材质列表里的条目）
+  for (const m of s.matchAll(/'((?:polyhaven|ambientcg)_[\w-]+)\/[\w-]+'/g)) keepDirs.push(`assets/thirdparty/textures/${m[1]}/`);
 }
 // 用到的 Blender 模型：MODEL_LIST + 人物
 const list = fs.readFileSync(path.join(app, 'src/engine/assets.js'), 'utf8').match(/MODEL_LIST = \[([\s\S]*?)\]/)[1];
