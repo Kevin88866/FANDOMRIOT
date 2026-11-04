@@ -73,6 +73,17 @@ def maple(k):
     return keep
 
 
+def plant(name, out, height, limit):
+    objs = load(name)
+    finish(objs, out, height, limit)
+
+
 if __name__ == '__main__':
-    for k, h in ((0, 7.0), (2, 8.0), (4, 6.5)):
-        finish(maple(k), f'tr_maple{k}', h)
+    only = sys.argv[1:]
+    for k, h in ((0, 7.0), (1, 7.5), (2, 8.0), (3, 6.8), (4, 6.5)):
+        if not only or f'tr_maple{k}' in only:
+            finish(maple(k), f'tr_maple{k}', h)
+    for name, out, h, lim in (('polyhaven_shrub_03', 'pl_shrub', 1.1, 1800), ('polyhaven_shrub_04', 'pl_shrub2', 1.3, 1800),
+                              ('polypizza_hedge', 'pl_hedge', 1.0, 1200), ('polypizza_bush_flowers', 'pl_flowers', 0.8, 1500)):
+        if not only or out in only:
+            plant(name, out, h, lim)

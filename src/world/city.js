@@ -153,8 +153,8 @@ export class City {
     const far = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshStandardMaterial({ color: 0x1d1f24, roughness: 1 }));
     far.rotation.x = -Math.PI / 2; far.position.y = -0.05; this.group.add(far);
     // 汉江：南边的江面（光滑、反射城市灯光）+ 江边护栏
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(2000, 520), new THREE.MeshStandardMaterial({ color: 0x0b1a26, roughness: 0.08, metalness: 0.6, envMapIntensity: 1.2 }));
-    water.material.userData.envMul = 2.5;
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(2000, 520), new THREE.MeshStandardMaterial({ color: 0x0a1822, roughness: 0.12, metalness: 0.3 }));
+    water.material.userData.envMul = 0.7;
     water.rotation.x = -Math.PI / 2; water.position.set(0, 0.03, HALF + 6 + 260); this.group.add(water);
     const bank = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 40, 0.8, 4), new THREE.MeshStandardMaterial({ color: 0x6d6a66, roughness: 0.9 }));
     bank.position.set(0, -0.2, HALF + 4); this.group.add(bank);
@@ -170,15 +170,7 @@ export class City {
     const g = new THREE.BoxGeometry(w, CURB, d), uv = g.attributes.uv, pos = g.attributes.position;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + cx) * 0.25, (pos.getZ(i) + cz) * 0.25);
     g.translate(cx, CURB / 2, cz); this.addStatic(this.grassMat, faces(g, [2]), false); this.addStatic(this.curbMat || this.swMat, faces(g, [0, 1, 4, 5]), false);
-    // 十字步道
-    for (const [pw, pd] of [[w, 3.2], [3.2, d]]) { const p = new THREE.BoxGeometry(pw, 0.04, pd); const u = p.attributes.uv, ps = p.attributes.position; for (let i = 0; i < u.count; i++) u.setXY(i, (ps.getX(i) + cx) * 0.4, (ps.getZ(i) + cz) * 0.4); p.translate(cx, CURB + 0.02, cz); this.addStatic(this.swMat, p, false); }
-    const r = this.rnd;
-    for (let i = 0; i < 16; i++) {   // 树沿四周和对角
-      const a = r() * Math.PI * 2, rr = 8 + r() * (Math.min(w, d) / 2 - 10);
-      const x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr;
-      if (Math.abs(x - cx) < 3 || Math.abs(z - cz) < 3) continue;
-      this.tree(x, z);
-    }
+    this.parkDressing(cx, cz, w, d, main);
     if (main) {
       // 中央广场（铺装 + 舞台），注册成"使用道具"的地点
       const pl = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 0.06, 40), this.swMat); pl.position.set(cx, CURB + 0.03, cz); pl.receiveShadow = true; this.group.add(pl);
@@ -574,7 +566,10 @@ export class City {
     this.buckets = null;
     // Blender 细节模块（实例化）
     const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser', 'bd_stair', 'bd_tank', ...SHOP_KINDS]);   // 楼顶小件从街上看不到影子   // 小件不投影，省一遍阴影绘制
-    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'), name.startsWith('shop_') ? { near: 28 } : { cell: 120, maxDist: 150, shadowDist: 60 })) { if (NOSHADOW.has(name)) im.castShadow = false; if (name.startsWith('shop_')) registerNight(im, this); }
+    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'), name.startsWith('shop_') ? { near: 28 } : { cell: 120, maxDist: 150, shadowDist: 60 })) {
+      if (NOSHADOW.has(name)) { im.castShadow = false; im.userData.shadowDist = 0; } if (name.startsWith('shop_')) registerNight(im, this);
+      if (name.startsWith('pl_') && im.material.name.startsWith('leaf')) for (let i = 0; i < im.count; i++) { const v = 0.8 + this.rnd() * 0.3; im.setColorAt(i, new THREE.Color(0.32 * v, 0.55 * v, 0.24 * v)); }   // 绿篱 / 花丛叶子染绿
+    }
     // 窗户构件：每种窗型一个几何体（窗框 + 玻璃两组），按 120 米区块实例化；夜里每扇窗亮不亮由实例颜色决定
     if (this.winInst) {
       const frameMat = new THREE.MeshStandardMaterial({ color: 0xd9dcdf, roughness: 0.5, metalness: 0.1 });
@@ -705,7 +700,7 @@ export class City {
     }
   }
 
-  tree(x, z) {
+  tree(x, z, park = false) {
     if (!this.treeGeo) {
       const trunk = new THREE.CylinderGeometry(0.12, 0.18, 3, 6); trunk.translate(0, 1.5, 0);
       this.trunkGeo = trunk;
@@ -716,25 +711,29 @@ export class City {
       this.leafMat = new THREE.MeshStandardMaterial({ color: 0x3f6b35, roughness: 0.85, flatShading: true });
       this.treeList = [];
     }
-    this.treeList.push([x, z]);
+    this.treeList.push([x, z, park]);
   }
 
   finalizeTrees() {
     const maple = hasModel('tr_maple0');
     if (maple || hasModel('tr_ginkgo')) {   // 行道树：写实叶片卡片树（三种树形），叶色逐棵变化（首尔秋天：红、橙、银杏黄、还没变色的绿）
-      const kinds = maple ? ['tr_maple0', 'tr_maple2', 'tr_maple4'] : ['tr_ginkgo', 'tr_zelkova', 'tr_round'], lists = kinds.map(() => []);
+      const kinds = maple ? ['tr_maple0', 'tr_maple2', 'tr_maple3', 'tr_maple4'] : ['tr_ginkgo', 'tr_zelkova', 'tr_round'], lists = kinds.map(() => []);
       const AUTUMN = [[1.0, 0.36, 0.2], [1.0, 0.58, 0.24], [1.0, 0.84, 0.3], [1.0, 0.8, 0.28], [0.5, 0.68, 0.3], [0.62, 0.7, 0.3]];
       const r = mulberry(31), up = new THREE.Vector3(0, 1, 0);
-      this.treeList.forEach(([x, z]) => {
-        const k = r() < 0.5 ? 0 : r() < 0.6 ? 1 : 2, s = 0.85 + r() * 0.3;
-        lists[k].push(new THREE.Matrix4().compose(new THREE.Vector3(x, CURB, z), new THREE.Quaternion().setFromAxisAngle(up, r() * 6.28), new THREE.Vector3(s, s, s)));
+      const GREEN = [[0.45, 0.66, 0.3], [0.38, 0.6, 0.28], [0.52, 0.7, 0.32], [0.6, 0.72, 0.3], [1.0, 0.62, 0.25], [1.0, 0.84, 0.3]];   // 公园：绿色为主，夹几棵红黄
+      const parkLists = kinds.map(() => []);
+      const n = kinds.length;
+      this.treeList.forEach(([x, z, park]) => {
+        const k = (r() * n) | 0, s = 0.85 + r() * 0.3;
+        (park ? parkLists : lists)[k].push(new THREE.Matrix4().compose(new THREE.Vector3(x, CURB, z), new THREE.Quaternion().setFromAxisAngle(up, r() * 6.28), new THREE.Vector3(s, s, s)));
         this.colliders.push({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.3, maxZ: z + 0.3, small: true });
       });
-      kinds.forEach((name, k) => {
-        for (const im of instanced(name, lists[k], this.group, null, { cell: 120, maxDist: 240, shadowDist: 80 })) {
+      for (const [L, PAL] of [[lists, AUTUMN], [parkLists, GREEN]]) kinds.forEach((name, k) => {
+        if (!L[k].length) return;
+        for (const im of instanced(name, L[k], this.group, null, { cell: 120, maxDist: 240, shadowDist: 80 })) {
           if (!im.material.name.startsWith('leaf')) continue;
           for (let i = 0; i < im.count; i++) {
-            if (maple) { const c = AUTUMN[r() * AUTUMN.length | 0], v = 0.85 + r() * 0.3; im.setColorAt(i, new THREE.Color(c[0] * v, c[1] * v, c[2] * v)); }
+            if (maple) { const c = PAL[r() * PAL.length | 0], v = 0.85 + r() * 0.3; im.setColorAt(i, new THREE.Color(c[0] * v, c[1] * v, c[2] * v)); }
             else im.setColorAt(i, new THREE.Color(0.82 + r() * 0.3, 0.85 + r() * 0.25, 0.7 + r() * 0.3));
           }
         }
@@ -859,6 +858,81 @@ export class City {
     });
   }
 
+  // 公园布置：缓坡草丘、弯曲步道、绿篱和花坛、混种的树（以绿为主）、凉亭、喷泉、长椅
+  parkDressing(cx, cz, w, d, main, small = false) {
+    const r = this.rnd, up = new THREE.Vector3(0, 1, 0), one = new THREE.Vector3(1, 1, 1);
+    const inst = (name, x, z, ry = 0, sc = 1) => (this.inst[name] ||= []).push(new THREE.Matrix4().compose(new THREE.Vector3(x, CURB, z), new THREE.Quaternion().setFromAxisAngle(up, ry), new THREE.Vector3(sc, sc, sc)));
+    const pathMat = this.parkPath ||= pbrMat('polyhaven_square_brick_paving/square_brick_paving', 1, { color: 0xd8cfc2 });
+    // 环形步道 + 两条弯曲小路（沿曲线铺带状网格）
+    const ribbon = (pts, width) => {
+      const curve = new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z))), N = 48, pos = [], idx = [], uv = [], nrm = [];
+      for (let i = 0; i <= N; i++) {
+        const t = i / N, p = curve.getPoint(t), tg = curve.getTangent(t), nx = -tg.z, nz = tg.x;
+        for (const sgn of [-1, 1]) { pos.push(p.x + nx * width / 2 * sgn, CURB + 0.035, p.z + nz * width / 2 * sgn); uv.push((p.x + nx * sgn) * 0.4, (p.z + nz * sgn) * 0.4); nrm.push(0, 1, 0); }
+        if (i < N) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+      }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+      this.addStatic(pathMat, g, false);
+    };
+    const R = Math.min(w, d) * 0.36;
+    if (!small) {
+      const ring = []; for (let i = 0; i <= 16; i++) { const a = i / 16 * Math.PI * 2; ring.push([cx + Math.cos(a) * R, cz + Math.sin(a) * R * 0.85]); }
+      ribbon(ring, 2.6);
+      ribbon([[cx - w / 2 + 1, cz - d / 2 + 4], [cx - R * 0.6, cz - R * 0.2], [cx - R * 0.95, cz + R * 0.1]], 2);
+      ribbon([[cx + w / 2 - 1, cz + d / 2 - 5], [cx + R * 0.5, cz + R * 0.55], [cx + R * 0.9, cz + R * 0.3]], 2);
+    } else ribbon([[cx - w / 2 + 1, cz + 2], [cx - w / 6, cz - 2.5], [cx + w / 6, cz + 2.5], [cx + w / 2 - 1, cz - 1]], 2.2);
+    // 缓坡草丘
+    for (let i = 0; i < (small ? 1 : 3); i++) {
+      const a = r() * Math.PI * 2, rr = R * (0.45 + r() * 0.3), m = new THREE.SphereGeometry(1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2);
+      const sx = 4 + r() * 4; m.scale(sx, 0.9 + r() * 0.8, sx * (0.6 + r() * 0.4)); m.rotateY(r() * 3); m.translate(cx + Math.cos(a) * rr, CURB - 0.1, cz + Math.sin(a) * rr * 0.85);
+      worldUV(m, 0.25); this.addStatic(this.grassMat, m, false);
+    }
+    // 树：沿环路外侧和草丘，绿色为主
+    const nT = small ? 6 : 22;
+    for (let i = 0; i < nT; i++) {
+      const a = i / nT * Math.PI * 2 + r() * 0.2, rr = small ? 0 : R + 3 + r() * (Math.min(w, d) / 2 - R - 5);
+      const x = small ? cx - w / 2 + 3 + i * (w - 6) / (nT - 1) : cx + Math.cos(a) * rr, z = small ? cz + (i % 2 ? 5.5 : -5.5) : cz + Math.sin(a) * rr * 0.85;
+      this.tree(x, z, true);
+    }
+    // 绿篱和花坛
+    for (let i = 0; i < (small ? 6 : 14); i++) {
+      const a = r() * Math.PI * 2, x = small ? cx - w / 2 + 4 + r() * (w - 8) : cx + Math.cos(a) * (R + 1.8), z = small ? cz + (r() < 0.5 ? 3.5 : -3.5) : cz + Math.sin(a) * (R + 1.8) * 0.85;
+      inst(r() < 0.5 ? 'pl_hedge' : 'pl_flowers', x, z, small ? 0 : -a + Math.PI / 2, 0.9 + r() * 0.4);
+    }
+    // 长椅沿路
+    for (let i = 0; i < (small ? 4 : 8); i++) { const a = (i + 0.5) / 8 * Math.PI * 2; small ? inst('st_bench', cx - w / 3 + i * (w / 5), cz - 1.8, 0) : inst('st_bench', cx + Math.cos(a) * (R - 2), cz + Math.sin(a) * (R - 2) * 0.85, -a - Math.PI / 2); }
+    if (small) return;
+    const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.75, ...o });
+    const addG = (mat, geo, x, y, z) => { geo.translate(x, y, z); this.addStatic(mat, geo); };
+    // 韩式凉亭（정자）：红柱、绿色檐、上翘的四坡顶
+    const px = cx + R * 0.55, pz = cz - R * 0.5;
+    const red = this.redMat ||= M(0x8e2a22, { roughness: 0.6 }), grn = this.dancheong ||= M(0x2f6b55, { roughness: 0.6 }), tile = this.roofTile ||= M(0x3a3d42, { roughness: 0.8 });
+    addG(this.swMat, new THREE.BoxGeometry(5.6, 0.5, 5.6), px, CURB + 0.25, pz);
+    for (const [a, b] of [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]]) addG(red, new THREE.CylinderGeometry(0.14, 0.16, 2.8, 10), px + a, CURB + 1.9, pz + b);
+    addG(grn, new THREE.BoxGeometry(5.2, 0.3, 5.2), px, CURB + 3.4, pz);
+    const roof = new THREE.ConeGeometry(4.9, 1.8, 4, 1, false, Math.PI / 4); roof.scale(1, 1, 1); addG(tile, roof, px, CURB + 4.45, pz);
+    addG(tile, new THREE.BoxGeometry(6.6, 0.12, 6.6), px, CURB + 3.6, pz);
+    this.addCollider(px, pz, 5.6, 5.6);
+    // 喷泉水池
+    const fx = cx - R * 0.5, fz = cz + R * 0.45, stone = this.stoneMat ||= M(0xb5b1aa, { roughness: 0.85 });
+    addG(stone, new THREE.CylinderGeometry(3.4, 3.6, 0.6, 32, 1, true), fx, CURB + 0.3, fz);
+    addG(stone, new THREE.TorusGeometry(3.5, 0.18, 6, 32).rotateX(Math.PI / 2), fx, CURB + 0.6, fz);
+    const water = this.fountainWater ||= new THREE.MeshStandardMaterial({ color: 0x1c3a4a, roughness: 0.05, metalness: 0.4 });
+    addG(water, new THREE.CircleGeometry(3.4, 32).rotateX(-Math.PI / 2), fx, CURB + 0.45, fz);
+    addG(stone, new THREE.CylinderGeometry(0.35, 0.6, 1.6, 12), fx, CURB + 1.1, fz);
+    this.addCollider(fx, fz, 6.8, 6.8);
+    // 江边自行车道（红色）+ 健身器材（汉江公园特色）
+    const bike = this.bikeMat ||= M(0x8a3a32, { roughness: 0.9 });
+    addG(bike, new THREE.BoxGeometry(w, 0.03, 2.6), cx, CURB + 0.03, cz + d / 2 - 2.2);
+    addG(M(0xf2f2f2, { emissive: 0x222222 }), new THREE.BoxGeometry(w, 0.035, 0.12), cx, CURB + 0.045, cz + d / 2 - 2.2);
+    const steel = this.fitMat ||= M(0x2f7fc1, { roughness: 0.4, metalness: 0.5 });
+    for (let i = 0; i < 4; i++) {
+      const x = cx - w / 2 + 6 + i * 3.2, z = cz + d / 2 - 6;
+      addG(steel, new THREE.CylinderGeometry(0.07, 0.07, 2.2, 8), x - 0.7, CURB + 1.1, z); addG(steel, new THREE.CylinderGeometry(0.07, 0.07, 2.2, 8), x + 0.7, CURB + 1.1, z);
+      addG(steel, new THREE.CylinderGeometry(0.05, 0.05, 1.4, 8).rotateZ(Math.PI / 2), x, CURB + 2.1 - i * 0.3, z);
+    }
+  }
+
   // ---------- 点缀地点（没有玩法，只为让城市更像首尔） ----------
   // 街区中间空出来的一块：口袋公园 / 小区游乐场 / 路面停车场 / 工地
   filler(kind, s) {
@@ -870,9 +944,7 @@ export class City {
     if (kind === 'pocket') {
       if (!this.grassMat) this.grassMat = pbrMat('polyhaven_leafy_grass/leafy_grass', 1, { color: 0x9fb48a });
       add(this.grassMat, worldUV(new THREE.BoxGeometry(w, 0.05, d), 0.25), cx, CURB + 0.025, cz);
-      add(this.swMat, worldUV(new THREE.BoxGeometry(w, 0.06, 2.4), 0.4), cx, CURB + 0.03, cz);
-      for (let i = 0; i < 6; i++) this.tree(cx - w / 2 + 3 + i * (w - 6) / 5, cz + (i % 2 ? 5 : -5));
-      for (const x of [-8, 0, 8]) { inst('st_bench', cx + x, cz + 1.6, 0); inst('st_bench', cx + x + 3, cz - 1.6, Math.PI); }
+      this.parkDressing(cx, cz, w, d, false, true);
     } else if (kind === 'playground') {
       add(M(0x2f8f5b), new THREE.BoxGeometry(w * 0.7, 0.05, d), cx, CURB + 0.025, cz);   // 塑胶地面
       const red = M(0xd23a2a, { roughness: 0.5 }), yel = M(0xf2c12e, { roughness: 0.5 }), blu = M(0x2d6fd6, { roughness: 0.5 }), steel = M(0x9aa0a6, { metalness: 0.7, roughness: 0.35 });

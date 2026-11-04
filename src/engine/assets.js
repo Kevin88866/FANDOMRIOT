@@ -12,7 +12,7 @@ export const MODEL_LIST = [
   'bd_ac', 'bd_vsign', 'bd_tank', 'bd_stair', 'bd_condenser', 'bd_dish', 'bd_antenna',
   'lm_t0', 'lm_hwl', 'lm_arena',
   'shop_conv', 'shop_cafe', 'shop_chicken', 'shop_pcbang', 'shop_phone',
-  'tr_maple0', 'tr_maple2', 'tr_maple4', 'acc_cap', 'acc_beanie', 'acc_backpack', 'acc_crossbag', 'acc_hair', 'acc_hair_long',
+  'tr_maple0', 'tr_maple2', 'tr_maple3', 'tr_maple4', 'pl_hedge', 'pl_flowers', 'acc_cap', 'acc_beanie', 'acc_backpack', 'acc_crossbag', 'acc_hair', 'acc_hair_long',
 ];
 const store = {};
 const EMIT = { emit_head: 1.5, emit_tail: 1.4, emit_amber: 1.4, emit_warm: 1.2 };
