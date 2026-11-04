@@ -32,6 +32,31 @@ function pbrMat(base, repeat, { color = 0xffffff, normalScale = 1 } = {}) {
   return new THREE.MeshStandardMaterial({ color, map: load('diff', true), normalMap: load('nor_gl'), roughnessMap: load('rough'), roughness: 1, metalness: 0, normalScale: new THREE.Vector2(normalScale, normalScale) });
 }
 
+// 窗户构件几何体（+Z 朝外，原点在窗中心、墙面上）。两组：0 = 窗框 / 窗台 / 栏杆，1 = 玻璃
+function windowGeo(kind) {
+  const B = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
+  const P = (w, h, x, y, z) => new THREE.PlaneGeometry(w, h).translate(x, y, z);
+  const strip = g => { const n = g.index ? g.toNonIndexed() : g; for (const k of Object.keys(n.attributes)) if (!['position', 'normal', 'uv'].includes(k)) n.deleteAttribute(k); return n; };
+  let frame = [], glass = [];
+  if (kind === 'balcony') {   // 公寓封闭阳台：凸出墙面 0.9 米，下半实墙板、上半玻璃
+    const W = 3.3, D = 0.9;
+    frame.push(B(W, 0.16, D, 0, -1.5, D / 2), B(W, 0.12, D, 0, 1.35, D / 2), B(W, 1.0, 0.08, 0, -0.92, D), B(0.08, 2.8, D, -W / 2, -0.1, D / 2), B(0.08, 2.8, D, W / 2, -0.1, D / 2), B(0.06, 1.7, 0.06, 0, 0.47, D));
+    glass.push(P(W - 0.1, 1.7, 0, 0.47, D + 0.01));
+  } else if (kind === 'office') {   // 写字楼幕墙单元：整面玻璃 + 细窗框 + 层间横梁
+    const W = 1.66, H = 3.1;
+    frame.push(B(0.06, H, 0.1, -W / 2, 0, 0.05), B(W, 0.32, 0.12, 0, -H / 2 + 0.16, 0.06), B(W, 0.05, 0.08, 0, 0.35, 0.05));
+    glass.push(P(W - 0.04, H - 0.34, 0, 0.17, 0.03));
+  } else {
+    const W = kind === 'grille' ? 1.3 : 1.9, H = kind === 'grille' ? 1.05 : 1.35, t = 0.07;
+    frame.push(B(W + t * 2, t, 0.1, 0, H / 2 + t / 2, 0.05), B(W + t * 2, t, 0.1, 0, -H / 2 - t / 2, 0.05), B(t, H, 0.1, -W / 2 - t / 2, 0, 0.05), B(t, H, 0.1, W / 2 + t / 2, 0, 0.05),
+      B(0.05, H, 0.06, 0, 0, 0.06), B(W + 0.3, 0.06, 0.2, 0, -H / 2 - 0.1, 0.1));   // 推拉窗中梃 + 窗台
+    if (kind === 'grille') for (let i = 0; i < 6; i++) frame.push(B(0.025, H + 0.1, 0.025, -W / 2 + (i + 0.5) * W / 6, 0, 0.16));   // 防盗网
+    glass.push(P(W, H, 0, 0, 0.02));
+  }
+  const fg = mergeGeometries(frame.map(strip)), gg = mergeGeometries(glass.map(strip));
+  return mergeGeometries([fg, gg], true);
+}
+
 // 世界坐标 UV（侧面按 x 或 z、顶面按 xz），scale = 每米多少格
 function worldUV(g, scale) {
   const uv = g.attributes.uv, pos = g.attributes.position, nrm = g.attributes.normal;
@@ -278,28 +303,41 @@ export class City {
     g0.translate(L.x - off0[0] * REC / 2, GROUND / 2 + CURB, L.z - off0[1] * REC / 2);
     this.addStatic(baseMat, worldUV(g0, 0.4));
     if (L.apt) { /* 公寓楼一楼是架空层，不开店 */ } else if (shops) this.shopModules(L, r, GROUND, baseMat); else this.storefront(L, r, GROUND);
-    // 楼身（高楼有一定概率做成"裙楼 + 塔楼"）。侧面 UV 按整数格贴楼面贴图，所有同款楼共用一个材质
-    const tower = !billboard && !L.apt && floors >= 9 && r() < 0.55;
+    // 楼身：真实材质墙面（抹灰 / 砖 / 面砖 / 混凝土）+ 立体窗户构件；按楼型变化体量
+    const arch = L.apt ? 'apt' : billboard ? 'office' : (L.zone === 'ave' && floors >= 9) ? 'office' : (floors <= 5 && r() < 0.45) ? 'villa' : 'shop';
+    const tower = arch === 'office' && !billboard && floors >= 9 && r() < 0.55;
     const podiumFloors = tower ? 2 + (r() * 2 | 0) : floors;
-    const mat = this.sharedFacade(L.apt ? [1, 2, 5][style % 3] : style, seed);
-    const body = (w, d, y0, y1, m) => {
-      const hh = y1 - y0, g = new THREE.BoxGeometry(w, hh, d), uv = g.attributes.uv;
-      const rx = [Math.max(1, Math.round(d / FACADE_TILE.w)), Math.max(1, Math.round(w / FACADE_TILE.w))], ry = hh / FACADE_TILE.h;
-      for (let i = 0; i < 24; i++) { const f = i >> 2; if (f === 2 || f === 3) continue; uv.setXY(i, uv.getX(i) * rx[f < 2 ? 0 : 1], uv.getY(i) * ry); }
-      g.translate(L.x, CURB + y0 + hh / 2, L.z);
+    const wall = this.wallMat(arch, r);
+    const body = (cx, cz, w, d, y0, y1, m, winKind) => {
+      const hh = y1 - y0, g = new THREE.BoxGeometry(w, hh, d);
+      g.translate(cx, CURB + y0 + hh / 2, cz); worldUV(g, 0.33);
       this.addStatic(m, faces(g, [0, 1, 4, 5]));
       this.addStatic(roofMat, faces(g, [2, 3]));
+      if (winKind) this.windowsFor({ ...L, x: cx, z: cz, w, d }, r, y0, y1, winKind, arch);
     };
-    body(L.w, L.d, GROUND, GROUND + podiumFloors * FLOOR, mat);
-    let topW = L.w, topD = L.d;
+    const winKind = { apt: 'balcony', office: 'office', villa: 'grille', shop: 'slider' }[arch];
+    // 退台：商住楼顶上 1–2 层往里缩，留出屋顶平台（韩国常见的"옥탑"）
+    const setback = arch === 'shop' && floors >= 4 && r() < 0.5 ? 1 + (r() < 0.4 ? 1 : 0) : 0;
+    const off = { S: [0, -1], N: [0, 1], W: [-1, 0], E: [1, 0] }[L.facing], inset = 1.8;
+    const lowTop = GROUND + (podiumFloors - setback) * FLOOR;
+    body(L.x, L.z, L.w, L.d, GROUND, lowTop, wall, winKind);
+    let topW = L.w, topD = L.d, topX = L.x, topZ = L.z;
+    if (setback) {
+      topW = L.w - Math.abs(off[0]) * inset; topD = L.d - Math.abs(off[1]) * inset; topX = L.x - off[0] * inset / 2; topZ = L.z - off[1] * inset / 2;
+      body(topX, topZ, topW, topD, lowTop, h, wall, winKind);
+      this.parapet(L.x, L.z, L.w, L.d, lowTop);
+    }
     if (tower) {
       topW = Math.max(6, L.w - 2.4); topD = Math.max(6, L.d - 2.4);
-      const tm = this.sharedFacade(r() < 0.5 ? 3 : 0, seed + 1);
-      body(topW, topD, GROUND + podiumFloors * FLOOR, h, tm);
+      body(L.x, L.z, topW, topD, GROUND + podiumFloors * FLOOR, h, this.wallMat('office', r), 'office');
       this.parapet(L.x, L.z, L.w, L.d, GROUND + podiumFloors * FLOOR);
     }
+    // 多户住宅：彩色金属坡屋顶
+    if (arch === 'villa' && r() < 0.6) this.gableRoof(L, h, r);
+    // 商住楼正面的竖向装饰条
+    if (arch === 'shop' && r() < 0.3) this.finStrips(L, r, GROUND, lowTop);
     this.addCollider(L.x, L.z, L.w, L.d);
-    this.parapet(L.x, L.z, topW, topD, h);
+    this.parapet(topX, topZ, topW, topD, h);
     this.rooftop(L, r, h, topW, topD, floors);
     this.facadeDetails(L, r, style, GROUND, FLOOR, tower ? podiumFloors : floors, tower ? floors - podiumFloors : 0, topW, topD);
     if (L.apt) { this.aptMarks(L, r, h); return; }
@@ -307,6 +345,67 @@ export class City {
     this.shopSign(L, r);
     if (!tower && floors <= 9) this.floorSigns(L, r, GROUND, FLOOR, Math.min(floors, 6));
     if (billboard) { this.billboardScreen(L, h); this.arenaFront(L, h); }
+  }
+
+  // 墙面材质：按楼型挑真实贴图 + 色调（所有楼共用十几个材质，按材质合并绘制）
+  wallMat(arch, r) {
+    const W = this.wallMats ||= {};
+    const pick = { shop: [['polyhaven_plastered_wall_04/plastered_wall_04', 0xfaf6ee], ['polyhaven_plastered_wall_04/plastered_wall_04', 0xeee8dc], ['polyhaven_concrete_tile_facade/concrete_tile_facade', 0xe6e1d8], ['polyhaven_rectangular_facade_tiles/rectangular_facade_tiles', 0xece7df], ['polyhaven_painted_brick/painted_brick', 0xe2dacd], ['polyhaven_brushed_concrete/brushed_concrete', 0xd6d3cd]],
+      villa: [['polyhaven_brick_wall_10/brick_wall_10', 0xe6bca4], ['polyhaven_brick_wall_10/brick_wall_10', 0xd8a68e], ['polyhaven_painted_brick/painted_brick', 0xc98b72]],
+      office: [['polyhaven_brushed_concrete/brushed_concrete', 0xa9aeb5], ['polyhaven_concrete_tile_facade/concrete_tile_facade', 0xb8bec6], ['polyhaven_rectangular_facade_tiles/rectangular_facade_tiles', 0x9aa1aa]],
+      apt: [['polyhaven_plastered_wall_04/plastered_wall_04', 0xfffcf4], ['polyhaven_plastered_wall_04/plastered_wall_04', 0xfaf4e6]] }[arch];
+    const [base, col] = pick[(r() * pick.length) | 0], k = base + col;
+    if (!W[k]) {
+      const m = W[k] = pbrMat(base, 1, { color: col, normalScale: 0.8 });
+      // 城市里的墙面有大量反射光（路面、对面楼、招牌），用一点固定的自发光模拟，不然黄昏时整面墙是黑的
+      m.color.multiplyScalar(1.9);   // Poly Haven 的抹灰 / 面砖贴图本身偏暗，经过 ACES 色调映射后更暗
+      m.emissive = new THREE.Color(col).multiplyScalar(0.28); m.emissiveMap = m.map; m.emissiveIntensity = 1;
+      m.userData.envMul = 1.5;
+    }
+    return W[k];
+  }
+
+  // 窗户构件：铝合金推拉窗 / 带防盗网的小窗 / 写字楼幕墙单元 / 公寓封闭阳台。实例化，按区块合并
+  windowsFor(L, r, y0, y1, kind, arch) {
+    const FLOOR = 3.2, F = this.facadeFrame(L, L.w, L.d), back = this.facadeFrame({ ...L, facing: { S: 'N', N: 'S', W: 'E', E: 'W' }[L.facing] }, L.w, L.d);
+    const bay = { slider: 3.2, grille: 2.6, office: 1.7, balcony: 3.6 }[kind];
+    const lit = this.rnd;   // 夜里哪些窗亮
+    const list = (this.winInst ||= {})[kind] ||= [];
+    for (const [Fr, sideK] of [[F, 1], [back, arch === 'apt' || arch === 'office' ? 1 : 0.6]]) {
+      const n = Math.max(1, Math.floor((Fr.along - 1.2) / bay)), x0 = -(n - 1) * bay / 2;
+      for (let f = 0; y0 + f * FLOOR + 2.6 <= y1 + 0.01; f++) {
+        if (sideK < 1 && r() > sideK) continue;
+        for (let i = 0; i < n; i++) {
+          if (kind !== 'office' && r() < 0.08) continue;   // 偶尔留一格实墙，不那么规整
+          const m = new THREE.Matrix4().compose(Fr.at(x0 + i * bay, CURB + y0 + f * FLOOR + 1.55, 0.02), Fr.q, new THREE.Vector3(1, 1, 1));
+          const on = lit() < (arch === 'office' ? 0.45 : 0.32), warm = lit() < 0.75;
+          list.push([m, on ? (warm ? [0.95, 0.72, 0.45] : [0.62, 0.72, 0.85]) : [0.05, 0.055, 0.065]]);
+        }
+      }
+    }
+  }
+
+  // 彩色金属坡屋顶（빌라 楼顶常见的蓝 / 绿 / 红色铁皮屋顶）
+  gableRoof(L, h, r) {
+    const cols = [0x3d6e8f, 0x3f7a52, 0x8a3b32, 0x555b63], c = cols[(r() * cols.length) | 0];
+    const m = (this.roofCols ||= {})[c] ||= new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, metalness: 0.35 });
+    const alongX = L.w >= L.d, len = (alongX ? L.w : L.d) - 0.6, span = (alongX ? L.d : L.w) - 0.6, rise = Math.min(2.4, span * 0.28);
+    const shape = new THREE.Shape([new THREE.Vector2(-span / 2, 0), new THREE.Vector2(span / 2, 0), new THREE.Vector2(0, rise)]);
+    const g = new THREE.ExtrudeGeometry(shape, { depth: len, bevelEnabled: false });
+    g.translate(0, 0, -len / 2); if (alongX) g.rotateY(Math.PI / 2);
+    g.translate(L.x, CURB + h + 0.9, L.z);
+    this.addStatic(m, g);
+  }
+
+  // 正面竖向装饰条（金属板）
+  finStrips(L, r, y0, y1) {
+    const F = this.facadeFrame(L, L.w, L.d), m = this.finMat ||= new THREE.MeshStandardMaterial({ color: 0x6f747c, roughness: 0.45, metalness: 0.5 });
+    const n = 2 + (r() * 3 | 0);
+    for (let i = 0; i < n; i++) {
+      const g = new THREE.BoxGeometry(0.28, y1 - y0, 0.35); g.applyQuaternion(F.q);
+      const c = F.at((i - (n - 1) / 2) * (F.along / n), CURB + (y0 + y1) / 2, 0.16); g.translate(c.x, c.y, c.z);
+      this.addStatic(m, g);
+    }
   }
 
   // 女儿墙（楼顶一圈矮墙），合并进一个大网格减少绘制次数
@@ -476,6 +575,30 @@ export class City {
     // Blender 细节模块（实例化）
     const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser', 'bd_stair', 'bd_tank', ...SHOP_KINDS]);   // 楼顶小件从街上看不到影子   // 小件不投影，省一遍阴影绘制
     for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'), name.startsWith('shop_') ? { near: 28 } : { cell: 120, maxDist: 150, shadowDist: 60 })) { if (NOSHADOW.has(name)) im.castShadow = false; if (name.startsWith('shop_')) registerNight(im, this); }
+    // 窗户构件：每种窗型一个几何体（窗框 + 玻璃两组），按 120 米区块实例化；夜里每扇窗亮不亮由实例颜色决定
+    if (this.winInst) {
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0xd9dcdf, roughness: 0.5, metalness: 0.1 });
+      frameMat.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>', ''); };   // 窗框不吃实例颜色
+      frameMat.customProgramCacheKey = () => 'winframe';
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0x2a3644, roughness: 0.16, metalness: 0, emissive: 0xffffff, emissiveIntensity: 0.05 });
+      glassMat.userData.envMul = 1.1; this.winGlass = glassMat;   // 亮度在 updateNight 里单独控制：白天几乎不亮，夜里适中
+      glassMat.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n#if defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )\n totalEmissiveRadiance *= vColor;\n#endif'); };
+      glassMat.customProgramCacheKey = () => 'winglass';
+      const darkFrame = new THREE.MeshStandardMaterial({ color: 0x3a3f46, roughness: 0.45, metalness: 0.3 });
+      darkFrame.onBeforeCompile = frameMat.onBeforeCompile; darkFrame.customProgramCacheKey = () => 'winframe2';
+      for (const [kind, list] of Object.entries(this.winInst)) {
+        const geo = windowGeo(kind), mats = [kind === 'office' ? darkFrame : frameMat, glassMat];
+        const cells = new Map(), p = new THREE.Vector3();
+        for (const it of list) { p.setFromMatrixPosition(it[0]); const k = Math.floor(p.x / 120) + ',' + Math.floor(p.z / 120); if (!cells.has(k)) cells.set(k, []); cells.get(k).push(it); }
+        for (const l of cells.values()) {
+          const im = new THREE.InstancedMesh(geo, mats, l.length), c = new THREE.Color();
+          l.forEach(([m, col], i) => { im.setMatrixAt(i, m); im.setColorAt(i, c.setRGB(col[0], col[1], col[2])); });
+          im.computeBoundingSphere(); im.castShadow = false; im.receiveShadow = true;
+          registerCull(im, { maxDist: 380 }); this.group.add(im);
+        }
+      }
+      this.winInst = null;
+    }
     // 店面远景卡片：4 种贴图 × 区块，近处隐藏（由内景接手），远处显示
     if (this.shopFar) {
       const geo = new THREE.PlaneGeometry(5.9, 3.35); geo.translate(0, 1.68, 0);
@@ -987,6 +1110,7 @@ export class City {
     if (this.poolMat) this.poolMat.opacity = n * 0.9;
     for (const o of this.nightOnly || []) o.visible = n > 0.25;
     if (this.bulbMat) this.bulbMat.emissiveIntensity = 0.5 + n * 3;
+    if (this.winGlass) this.winGlass.emissiveIntensity = 0.02 + n * 0.3;
   }
 
   // 圆与 AABB 碰撞推出

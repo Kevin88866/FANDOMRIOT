@@ -171,7 +171,7 @@ export class Renderer {
     this.sun.color.setHSL(THREE.MathUtils.lerp(0.07, 0.6, dusk), THREE.MathUtils.lerp(0.8, 0.35, dusk), THREE.MathUtils.lerp(0.68, 0.78, dusk));
     this.lightDir = dusk < 0.85 ? sunDir : new THREE.Vector3(-0.42, 0.78, -0.46).normalize();
     this.moonish = t;
-    this.hemi.intensity = THREE.MathUtils.lerp(0.4, 0.26, t);
+    this.hemi.intensity = THREE.MathUtils.lerp(0.95, 0.5, t);   // 城市里墙面靠天光照亮（以前太暗，楼面像黑块）
     this.hemi.color.setHSL(0.62, 0.6, THREE.MathUtils.lerp(0.75, 0.35, t));
     this.r.toneMappingExposure = THREE.MathUtils.lerp(0.75, 1.08, t) * (settings.brightness || 1);
     this.scene.fog.color.setHSL(THREE.MathUtils.lerp(0.95, 0.66, t), 0.25, THREE.MathUtils.lerp(0.45, 0.06, t));
@@ -179,7 +179,7 @@ export class Renderer {
     const useNight = t > 0.55 && this.envNight;
     const newEnv = THREE.MathUtils.lerp(0.8, 0.38, t) * ((this.envScale || [1, 1])[useNight ? 1 : 0]);
     if (Math.abs((this.envIntensity ?? 0) - newEnv) > 0.01) { this.envIntensity = newEnv; this.applyEnvIntensity(); }
-    if (this.bloom) this.bloom.strength = THREE.MathUtils.lerp(0.35, 0.75, t);
+    if (this.bloom) this.bloom.strength = THREE.MathUtils.lerp(0.3, 0.5, t);
     this.night = t;
     if (this.dome) { const k = THREE.MathUtils.smoothstep(t, 0.35, 0.9); this.dome.material.uniforms.k.value = k; this.stars.material.uniforms.k.value = k; this.moon.material.opacity = k; }
     const env = useNight ? this.envNight : this.envDusk;
