@@ -11,7 +11,7 @@ export class Traffic {
     this.g = game; this.cars = [];
     for (let i = 0; i < n; i++) {
       const kind = i % 6 === 0 ? 'bus' : i % 3 === 0 ? 'taxi' : 'sedan';
-      const v = new Vehicle(kind, { color: kind === 'sedan' ? COLORS[i % COLORS.length] : undefined });
+      const v = new Vehicle(kind, { color: kind === 'sedan' ? COLORS[i % COLORS.length] : undefined }).merge();
       v.ai = true; v.npc = true; v.traffic = true;
       v.aiSpeed = kind === 'bus' ? 8 : 9 + Math.random() * 4;
       // 随机放在某个路口，选一个方向出发

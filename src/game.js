@@ -257,7 +257,7 @@ export class Game {
     requestAnimationFrame(t => this.loop(t));
     if (settings.fpsCap > 0 && now - (this.lastDraw || 0) < 1000 / settings.fpsCap - 1.5) return;
     this.lastDraw = now; this.tA = performance.now();
-    const raw = (now - this.last) / 1000, dt = Math.min(0.05, raw); this.last = now;
+    const raw = Math.max(0, (now - this.last) / 1000), dt = Math.min(0.05, raw); this.last = now;   // 第一帧的时间戳可能比启动时刻早，别让 dt 变成负数
     this.pollPad(dt, now);
     if (this.state && this.mode !== 'menu') this.state.playTime = (this.state.playTime || 0) + Math.min(raw, 1);
     this.tutorial.update(dt);
@@ -273,7 +273,7 @@ export class Game {
     } });
     this.safe('crowd', () => this.crowd.update(dt));
     wind.value = now * 0.001;
-    if ((this.cullT = (this.cullT || 0) + dt) > 0.2) { this.cullT = 0; updateCull(this.camera.position, settings.viewDist || 1); for (const v of this.vehicles) if (v.traffic) v.root.visible = v.root.position.distanceTo(this.camera.position) < 170 * (settings.viewDist || 1); }
+    if ((this.cullT = (this.cullT || 0) + raw) > 0.2) { this.cullT = 0; updateCull(this.camera.position, settings.viewDist || 1); for (const v of this.vehicles) { const d = v.root.position.distanceTo(this.camera.position); if (v.traffic) v.root.visible = d < 170 * (settings.viewDist || 1); const cs = d < 45; if (v.castsShadow !== cs) { v.castsShadow = cs; v.root.traverse(o => { if (o.isMesh) o.castShadow = cs; }); } } }
     this.safe('traffic', () => { this.traffic.update(dt); this.bumpTraffic(); });
     this.safe('details', () => this.details?.update(this.time));
     this.safe('props', () => this.props.update(dt, this.time));

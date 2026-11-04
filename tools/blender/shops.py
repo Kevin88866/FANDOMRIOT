@@ -234,4 +234,4 @@ ALL = {'shop_conv': conv, 'shop_cafe': cafe, 'shop_chicken': chicken, 'shop_pcba
 if __name__ == '__main__':
     names = [a for a in sys.argv[1:] if a in ALL] or list(ALL)
     for n in names:
-        build(n, ALL[n], max_len=4.0)
+        build(n, ALL[n], max_len=4.0, post=merge_same_image)

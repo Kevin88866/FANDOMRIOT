@@ -146,14 +146,14 @@ export function buildStreetDetails(game) {
         const t = k / 10;
         seg.push(new THREE.Vector3(x0 + (x1 - x0) * t + (alongX ? 0 : o), CURB + oy - Math.sin(t * Math.PI) * 0.7, z0 + (z1 - z0) * t + (alongX ? -o : 0)));
       }
-      poleLines.push(new THREE.Line(new THREE.BufferGeometry().setFromPoints(seg), wireMat));
+      for (let k = 0; k < seg.length - 1; k++) poleLines.push(seg[k], seg[k + 1]);   // 全部电线合成一个 LineSegments（以前每根一次绘制）
     }
     pts.forEach(([x, z]) => city.colliders.push({ minX: x - 0.25, maxX: x + 0.25, minZ: z - 0.25, maxZ: z + 0.25, small: true }));
   };
   for (const x of [-90, 90, -150, 150]) { const pts = []; for (let z = -(HALF - 25); z <= HALF - 25; z += 22) if (!ROADS.some(rz => Math.abs(z - rz) < roadWidth('z', rz) / 2 + 3)) pts.push([x + 8.2, z]); poleRow(pts, false); }
   for (const z of [-90, 90, -150]) { const pts = []; for (let x = -(HALF - 25); x <= HALF - 25; x += 22) if (!ROADS.some(rx => Math.abs(x - rx) < 10)) pts.push([x, z - 8.2]); poleRow(pts, true); }
   instanced('st_pole', poleMats, grp);
-  for (const l of poleLines) grp.add(l);
+  if (poleLines.length) grp.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(poleLines), wireMat));
 
   // ---------- 路边停车（小路，合并成静态网格；车灯不亮） ----------
   const parked = [];
@@ -166,7 +166,7 @@ export function buildStreetDetails(game) {
     const along = -140 + r() * 280;
     if (ROADS.some(rr => Math.abs(along - rr) < 14)) continue;
     const kind = r() < 0.2 ? 'taxi' : r() < 0.15 ? 'van' : 'sedan';
-    const v = new Vehicle(kind, { color: kind === 'sedan' ? cols[i % cols.length] : undefined });
+    const v = new Vehicle(kind, { color: kind === 'sedan' ? cols[i % cols.length] : undefined }).merge();
     v.root.traverse(o => { if (!o.isMesh) return; const n = o.material.name || ''; if (n === 'emit_head' || n === 'emit_amber') o.material = offHead; else if (n === 'emit_tail') o.material = offTail; });
     const side = r() < 0.5 ? -1 : 1;
     if (vertical) { v.root.position.set(road + side * 5.6, 0, along); v.root.rotation.y = side > 0 ? 0 : Math.PI; }

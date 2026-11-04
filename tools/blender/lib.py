@@ -498,7 +498,42 @@ def preview(name, res=(560, 360), samples=40, elev=18, azims=(-38, 145), dist_k=
         bpy.data.objects.remove(o, do_unlink=True)
 
 
-def build(name, fn, ao=True, prev=True, merge=True, max_len=0.45, **kw):
+def merge_same_image():
+    """同一张贴图的材质合成一个（Kenney 家具都用同一张 colormap），减少导出的图元 / 游戏里的绘制次数。"""
+    canon = {}
+    for o in bpy.context.scene.objects:
+        if o.type != 'MESH':
+            continue
+        for slot in o.material_slots:
+            m = slot.material
+            if not m or not m.use_nodes:
+                continue
+            if not any(n.type == 'TEX_IMAGE' and n.image for n in m.node_tree.nodes):
+                continue
+            import re
+            key = re.sub(r'\.\d+$', '', m.name)   # 同一个模型导入多次：chair_01 / chair_01.001 / … 是同一套贴图
+            canon.setdefault(key, m)
+            slot.material = canon[key]
+    # 同一个网格里重复的材质槽合并
+    for o in bpy.context.scene.objects:
+        if o.type != 'MESH':
+            continue
+        me = o.data
+        first = {}
+        for i, m in enumerate(me.materials):
+            if m and m.name not in first:
+                first[m.name] = i
+        for p in me.polygons:
+            m = me.materials[p.material_index]
+            if m:
+                p.material_index = first[m.name]
+        used = {p.material_index for p in me.polygons}
+        for i in reversed(range(len(me.materials))):
+            if i not in used:
+                me.materials.pop(index=i)
+
+
+def build(name, fn, ao=True, prev=True, merge=True, max_len=0.45, post=None, **kw):
     """标准流程：清场 → 建模 → 烘焙 AO → 导出 → 预览。"""
     t = time.time()
     print(f'[{name}]')
@@ -508,6 +543,8 @@ def build(name, fn, ao=True, prev=True, merge=True, max_len=0.45, **kw):
         optimize(max_len)
     if ao:
         bake_ao()
+    if post:
+        post()
     export(name, vertex_colors=ao)
     if prev:
         preview(name)

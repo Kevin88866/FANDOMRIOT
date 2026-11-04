@@ -46,6 +46,8 @@ function prepare(root) {
     if (TEXT_SURFACE.test(o.name) || m.name.startsWith('facade')) flipV(o.geometry);
     if (EMIT[m.name] !== undefined) m.emissiveIntensity = EMIT[m.name];
     if (m.name === 'glass') { m.envMapIntensity = 1.4; }
+    // 透射材质（glTF 玻璃）会让 three 把所有不透明物体额外再画一遍（透射预通道），绘制次数直接翻倍 → 换成普通半透明
+    if (m.transmission > 0) { m.transmission = 0; m.transparent = true; m.opacity = Math.min(m.opacity, 0.35); m.depthWrite = false; m.needsUpdate = true; }
     if (m.name.startsWith('leaf_')) leafMaterial(m);
     if (m.name.startsWith('glass_clear')) { m.transparent = true; m.opacity = 0.16; m.depthWrite = false; m.roughness = 0.03; m.metalness = 0; m.envMapIntensity = 1.6; o.renderOrder = 2; }
     if (m.name.startsWith('emit_shop') || m.name.startsWith('emit_cold') || m.name.startsWith('emit_screen') || m.name.startsWith('emit_rgb')) m.emissiveIntensity = 1.4;
@@ -129,11 +131,24 @@ export function named(obj, prefix) {
 
 // 大量重复的静态物体（路灯、电线杆、护栏、花坛、店铺内景、树）：每个部件一个 InstancedMesh。
 // opts.cell：按网格切块（每块单独做视锥剔除）；opts.maxDist：超过这个距离整块隐藏（见 updateCull）
-const cullList = [];
+const cullList = [], nearList = [];
 export function instanced(name, matrices, parent, skip, opts = {}) {
   const src = store[name];
   if (!src || !matrices.length) return [];
   src.updateMatrixWorld(true);
+  // opts.near：全城一个 InstancedMesh，每次剔除时只把相机附近（near 米内）的实例填进去（店铺内景用）
+  if (opts.near) {
+    src.updateMatrixWorld(true);
+    const pos = matrices.map(m => new THREE.Vector3().setFromMatrixPosition(m)), out = [];
+    src.traverse(o => {
+      if (!o.isMesh || (skip && skip(o))) return;
+      const im = new THREE.InstancedMesh(o.geometry.clone().applyMatrix4(o.matrixWorld), o.material, Math.min(matrices.length, 64));
+      im.count = 0; im.frustumCulled = false; im.castShadow = false; im.receiveShadow = true; im.name = o.name; im.userData.src = name;
+      im.userData.near = { dist: opts.near, matrices, pos };
+      nearList.push(im); parent.add(im); out.push(im);
+    });
+    return out;
+  }
   const groups = new Map(), p = new THREE.Vector3();
   for (const m of matrices) {
     p.setFromMatrixPosition(m);
@@ -149,18 +164,36 @@ export function instanced(name, matrices, parent, skip, opts = {}) {
       list.forEach((m, i) => im.setMatrixAt(i, m));
       im.computeBoundingSphere();
       im.castShadow = true; im.receiveShadow = true; im.name = o.name; im.userData.src = name;
-      if (opts.maxDist) { im.userData.maxDist = opts.maxDist; cullList.push(im); }
+      if (opts.maxDist) { im.userData.maxDist = opts.maxDist; im.userData.shadowDist = opts.shadowDist; cullList.push(im); }
       parent.add(im); out.push(im);
     }
   });
   return out;
 }
 
+// 按距离区间逐个实例筛选（min ≤ 距离 < max），每次剔除时重新填充
+export function registerRange(im, matrices, min, max) {
+  im.userData.near = { dist: max, min, matrices, pos: matrices.map(m => new THREE.Vector3().setFromMatrixPosition(m)) };
+  im.count = 0; im.frustumCulled = false; nearList.push(im);
+}
+
+// 自己建的实例块也可以登记进距离剔除；minDist：近处反而隐藏（远景替身用）
+export function registerCull(im, { maxDist = 200, minDist = 0, shadowDist = 0 } = {}) {
+  Object.assign(im.userData, { maxDist, minDist, shadowDist }); cullList.push(im);
+}
+
 // 每隔几帧按相机距离隐藏远处的实例块（远景细节靠雾和楼体本身）
 export function updateCull(camPos, k = 1) {
+  for (const im of nearList) {
+    const { dist, min = 0, matrices, pos } = im.userData.near; let n = 0;
+    for (let i = 0; i < pos.length && n < im.instanceMatrix.count; i++) { const d = pos[i].distanceTo(camPos); if (d < dist && d >= min) im.setMatrixAt(n++, matrices[i]); }
+    im.count = n; im.visible = n > 0; im.instanceMatrix.needsUpdate = true;
+  }
   for (const im of cullList) {
     const bs = im.boundingSphere; if (!bs) continue;
-    im.visible = camPos.distanceTo(bs.center) - bs.radius < im.userData.maxDist * k;
+    const d = camPos.distanceTo(bs.center) - bs.radius;
+    im.visible = d < im.userData.maxDist * k && (!im.userData.minDist || camPos.distanceTo(bs.center) > im.userData.minDist);
+    if (im.userData.shadowDist) im.castShadow = d < im.userData.shadowDist;   // 远处的块不投影
   }
 }
 

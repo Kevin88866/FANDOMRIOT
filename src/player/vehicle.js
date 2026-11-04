@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { textTex } from '../engine/textures.js';
 import { model, recolor } from '../engine/assets.js';
 
@@ -159,6 +160,42 @@ export class Vehicle {
     for (const s of [-1, 1]) { const tl = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.06), m.tail); tl.position.set(s * 1.0, 0.75, -L / 2); this.body.add(tl); }
     this.addWheels([[-1.05, L / 2 - 1.3], [1.05, L / 2 - 1.3], [-1.05, -L / 2 + 1.4], [1.05, -L / 2 + 1.4], [-1.05, -L / 2 + 2.5], [1.05, -L / 2 + 2.5]], 0.5, 0.4);
     if (opts.text) this.setText(opts.text, opts.textColor, opts.sub);
+  }
+
+  // 合批：把车身和轮子的所有网格按材质合并（车流、停着的车用；轮子不再转）。
+  // 每辆车从 10 多次绘制降到 4–6 次。几何体按车型缓存，所有同型车共用；材质用这辆车自己的（车漆颜色不同）。
+  merge() {
+    if (this.merged) return this;
+    this.body.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(this.body.matrixWorld).invert();
+    const keep = o => /^(screen_|sign_)/.test(o.name);
+    const byMat = new Map(), victims = [];
+    this.body.traverse(o => {
+      if (!o.isMesh || keep(o) || o.isSkinnedMesh) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material]; if (mats.length > 1) return;
+      const key = o.material.name + '|' + o.material.uuid;
+      if (!byMat.has(key)) byMat.set(key, { mat: o.material, list: [] });
+      byMat.get(key).list.push(o); victims.push(o);
+    });
+    const cache = (Vehicle.mergeCache ||= new Map()), ck = this.type + ':' + [...byMat.values()].map(e => e.mat.name + 'x' + e.list.length).join(',');
+    let geos = cache.get(ck);
+    if (!geos) {
+      geos = [...byMat.values()].map(e => {
+        const parts = e.list.map(o => { const g = o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)); for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(k)) g.deleteAttribute(k); return g.index ? g.toNonIndexed() : g; });
+        const names = new Set(parts.flatMap(g => Object.keys(g.attributes)));
+        for (const g of parts) for (const n of names) if (!g.attributes[n]) { const c = n === 'color' ? 4 : n === 'uv' ? 2 : 3; g.setAttribute(n, new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * c).fill(1), c)); }
+        return mergeGeometries(parts);
+      });
+      cache.set(ck, geos);
+    }
+    if (geos.some(g => !g)) return this;   // 属性对不上就放弃合并
+    for (const o of victims) o.parent?.remove(o);
+    [...byMat.values()].forEach((e, i) => { const m = new THREE.Mesh(geos[i], e.mat); m.castShadow = true; m.receiveShadow = true; this.body.add(m); });
+    // 清掉空的组（轮子节点等）
+    const empties = []; this.body.traverse(o => { if (o !== this.body && !o.isMesh && !o.isLight && o.children.length === 0) empties.push(o); });
+    for (const o of empties) o.parent?.remove(o);
+    this.wheels = []; this.merged = true;
+    return this;
   }
 
   // LED 屏文字（走马灯在 update 里滚动）

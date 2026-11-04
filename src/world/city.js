@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS, vsignAtlas, SignAtlas } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
-import { hasModel, instanced, partGeos, model, registerNight } from '../engine/assets.js';
+import { hasModel, instanced, partGeos, model, registerNight, registerCull, registerRange } from '../engine/assets.js';
 
 // 首尔街区：8x8 路网（7x7 个街区），中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
 // 南边（+z）是汉江公园和江面。
@@ -432,6 +432,8 @@ export class City {
       const kind = SHOP_KINDS[(r() * SHOP_KINDS.length) | 0];
       const u = start + P + i * (MW + P) + MW / 2;
       (this.inst[kind] ||= []).push(new THREE.Matrix4().compose(F.at(u, CURB, -D / 2 - 0.12), F.q, one));
+      // 远处用一张发光的店面卡片代替整套内景（30 米外看不出区别，绘制次数少很多）
+      ((this.shopFar ||= [[], [], [], []])[(r() * 4) | 0]).push(new THREE.Matrix4().compose(F.at(u, CURB + 0.15, -0.2), F.q, one));
     }
   }
 
@@ -455,13 +457,38 @@ export class City {
     if (this.parapetGeos?.length) { const m = new THREE.Mesh(mergeGeometries(this.parapetGeos), this.roofMat); m.castShadow = m.receiveShadow = true; this.group.add(m); }
     if (this.roofGeos?.length) { const m = new THREE.Mesh(mergeGeometries(this.roofGeos.map(g => g.index ? g.toNonIndexed() : g)), new THREE.MeshStandardMaterial({ color: 0x8a8d93, roughness: 0.7, metalness: 0.2 })); m.castShadow = m.receiveShadow = true; this.group.add(m); }
     this.parapetGeos = this.roofGeos = null;
-    for (const [mat, e] of this.buckets || []) {
-      const m = new THREE.Mesh(mergeGeometries(e.geos), mat); m.castShadow = e.cast; m.receiveShadow = true; this.group.add(m);
+    // 外观相同的材质（很多地方各自 new 了一份同色材质）合并成一个，每种只画一次
+    const sig = m => [m.type, m.color?.getHex(), m.emissive?.getHex(), m.emissiveIntensity, m.roughness, m.metalness, m.map?.uuid, m.emissiveMap?.uuid, m.normalMap?.uuid,
+      m.transparent, m.opacity, m.side, m.vertexColors, m.toneMapped, m.depthWrite, !!m.userData.night, m.userData.envMul].join('|');
+    const geoSig = g => (g.index ? 'i' : 'n') + Object.keys(g.attributes).sort().join(',');
+    const merged = new Map();
+    for (const [mat, e] of this.buckets || []) for (const geo of e.geos) {
+      const k = sig(mat) + '#' + geoSig(geo);
+      if (!merged.has(k)) merged.set(k, { mat, geos: [], cast: false });
+      const m = merged.get(k); m.geos.push(geo); m.cast ||= e.cast;
     }
+    for (const e of merged.values()) {
+      const geo = mergeGeometries(e.geos); if (!geo) continue;
+      const m = new THREE.Mesh(geo, e.mat); m.castShadow = e.cast; m.receiveShadow = true; this.group.add(m);
+    }
+    this.staticBuckets = merged.size;
     this.buckets = null;
     // Blender 细节模块（实例化）
-    const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser', ...SHOP_KINDS]);   // 小件不投影，省一遍阴影绘制
-    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'), name.startsWith('shop_') ? { cell: 120, maxDist: 85 } : { cell: 180, maxDist: 300 })) { if (NOSHADOW.has(name)) im.castShadow = false; if (name.startsWith('shop_')) registerNight(im, this); }
+    const NOSHADOW = new Set(['bd_ac', 'bd_vsign', 'bd_dish', 'bd_antenna', 'bd_condenser', 'bd_stair', 'bd_tank', ...SHOP_KINDS]);   // 楼顶小件从街上看不到影子   // 小件不投影，省一遍阴影绘制
+    for (const [name, mats] of Object.entries(this.inst)) for (const im of instanced(name, mats, this.group, o => o.name.startsWith('sign_v'), name.startsWith('shop_') ? { near: 28 } : { cell: 120, maxDist: 150, shadowDist: 60 })) { if (NOSHADOW.has(name)) im.castShadow = false; if (name.startsWith('shop_')) registerNight(im, this); }
+    // 店面远景卡片：4 种贴图 × 区块，近处隐藏（由内景接手），远处显示
+    if (this.shopFar) {
+      const geo = new THREE.PlaneGeometry(5.9, 3.35); geo.translate(0, 1.68, 0);
+      this.shopFar.forEach((list, vi) => {
+        if (!list.length) return;
+        const t = storefront(vi * 3 + 1);
+        const mat = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.3, metalness: 0 });
+        mat.userData.night = true; this.nightMats.push(mat);
+        const im = new THREE.InstancedMesh(geo, mat, list.length);
+        im.castShadow = false; im.receiveShadow = false; registerRange(im, list, 28, 170); this.group.add(im);
+      });
+      this.shopFar = null;
+    }
     if (this.ledges.length) {
       const lg = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), this.ledges.length);
       this.ledges.forEach(([m, c], i) => { lg.setMatrixAt(i, m); lg.setColorAt(i, c); });
@@ -581,7 +608,7 @@ export class City {
         this.colliders.push({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.3, maxZ: z + 0.3, small: true });
       });
       kinds.forEach((name, k) => {
-        for (const im of instanced(name, lists[k], this.group, null, { cell: 120, maxDist: 340 })) {
+        for (const im of instanced(name, lists[k], this.group, null, { cell: 120, maxDist: 240, shadowDist: 80 })) {
           if (!im.material.name.startsWith('leaf')) continue;
           for (let i = 0; i < im.count; i++) {
             if (maple) { const c = AUTUMN[r() * AUTUMN.length | 0], v = 0.85 + r() * 0.3; im.setColorAt(i, new THREE.Color(c[0] * v, c[1] * v, c[2] * v)); }
@@ -698,6 +725,17 @@ export class City {
     this.addStatic(this.aptAtlas, bg, false);
   }
 
+  // 把一个静态物体的所有网格按世界坐标烘焙进合并网格（同材质的合成一次绘制）
+  bakeStatic(obj, cast = true) {
+    obj.updateMatrixWorld(true);
+    obj.traverse(o => {
+      if (!o.isMesh || Array.isArray(o.material)) return;
+      const g = o.geometry.clone().applyMatrix4(o.matrixWorld);
+      for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(k)) g.deleteAttribute(k);
+      this.addStatic(o.material, g, cast);
+    });
+  }
+
   // ---------- 点缀地点（没有玩法，只为让城市更像首尔） ----------
   // 街区中间空出来的一块：口袋公园 / 小区游乐场 / 路面停车场 / 工地
   filler(kind, s) {
@@ -734,7 +772,7 @@ export class City {
         const name = types[(this.rnd() * types.length) | 0], zz = i % 2 ? 1 : -1;
         const m = model(name); if (!m) continue;
         m.position.set(cx - w / 2 + 2 + ((i >> 1) + 0.5) * (w - 4) / 4 + (zz > 0 ? 1 : -1), CURB, cz + zz * 4.5); m.rotation.y = zz > 0 ? 0 : Math.PI;
-        m.traverse(o => { if (o.isMesh) { o.castShadow = false; } }); this.group.add(m);
+        this.bakeStatic(m, false);
         this.colliders.push({ minX: m.position.x - 1, maxX: m.position.x + 1, minZ: m.position.z - 2.3, maxZ: m.position.z + 2.3, small: true });
       }
       const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshStandardMaterial({ map: textTex('P', { w: 128, h: 128, bg: '#1546c4', fg: '#ffffff', size: 0.8 }), emissive: 0x222244 }));
@@ -770,7 +808,7 @@ export class City {
       const t = textTex(`2  ${names[i]}역  ${i + 1}번 출구`, { w: 512, h: 96, bg: '#0b5f2e', fg: '#ffffff', size: 0.55 });
       const sign = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.55, 0.08), new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.2 }));
       sign.position.set(0, 3.5, 2.9 * -side); g.add(sign); sign.material.userData.night = true; this.nightMats.push(sign.material);
-      g.position.set(x, CURB, z); this.group.add(g);
+      g.position.set(x, CURB, z); this.bakeStatic(g, true);
       this.colliders.push({ minX: x - 1.7, maxX: x + 1.7, minZ: z - 3, maxZ: z + 3, small: true });
       this.subways.push(new THREE.Vector3(x, CURB, z - side * 4));
     });
@@ -924,12 +962,12 @@ export class City {
     for (let i = 0; i < 70; i++) {
       const a = (i / 70) * Math.PI * 2, d = (Math.sin(a) > 0.3 ? 420 : 290) + r() * 120, h = 20 + r() * 90;   // 南边隔着汉江
       const w = 15 + r() * 25;
-      const f = facade(r() * 6 | 0, i + 500);
-      const m = new THREE.MeshStandardMaterial({ map: f.map, emissiveMap: f.emissive, emissive: 0xffffff, emissiveIntensity: 1, roughness: 0.6 });
-      m.userData.night = true; this.nightMats.push(m);
-      f.map.repeat.set(2, 3); f.emissive.repeat.set(2, 3);
-      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), m);
-      b.position.set(Math.cos(a) * d, h / 2, Math.sin(a) * d); this.group.add(b);
+      // 远景楼：6 种立面共用 6 个材质，几何体合并（以前每栋一个材质，70 次绘制）
+      const st = r() * 6 | 0, mats = (this.farMats ||= []);
+      if (!mats[st]) { const f = facade(st, 500 + st); const m = mats[st] = new THREE.MeshStandardMaterial({ map: f.map, emissiveMap: f.emissive, emissive: 0xffffff, emissiveIntensity: 1, roughness: 0.8, metalness: 0 }); f.map.wrapS = f.map.wrapT = f.emissive.wrapS = f.emissive.wrapT = THREE.RepeatWrapping; m.userData.night = true; this.nightMats.push(m); }
+      const b = new THREE.BoxGeometry(w, h, w), uv = b.attributes.uv;
+      for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) * 2, uv.getY(k) * 3);
+      b.translate(Math.cos(a) * d, h / 2, Math.sin(a) * d); this.addStatic(mats[st], b, false);
     }
     // 南山塔剪影
     const tower = new THREE.Group();

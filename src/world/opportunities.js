@@ -124,7 +124,7 @@ export class Opportunities {
       const hq = city.hq[e.hqId], team = TEAMS.find(t => t.id === e.hqId);
       // 保姆车先到，停在路边
       const vanPos = new THREE.Vector3(hq.cx + 7, 0, hq.face + hq.dir * 18.6);
-      e.van = new Vehicle('van', { color: 0x16181d }); e.van.ai = false; e.van.npc = true;
+      e.van = new Vehicle('van', { color: 0x16181d }).merge(); e.van.ai = false; e.van.npc = true;
       e.van.root.position.copy(vanPos); e.van.heading = hq.dir < 0 ? -Math.PI / 2 : Math.PI / 2; e.van.root.rotation.y = e.van.heading;
       g.addVehicle(e.van);
       e.phase = 'waiting';
