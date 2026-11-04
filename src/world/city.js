@@ -610,7 +610,8 @@ export class City {
     const pts = [];
     for (const v of ROADS) {
       const off = roadWidth('z', v) / 2 + 0.6;
-      for (let x = -HALF + 15; x < HALF; x += 24) if (!ROADS.some(r => Math.abs(x - r) < 10)) { pts.push([x, v - off, Math.PI / 2]); pts.push([x + 12, v + off, -Math.PI / 2]); }
+      const free = x => !ROADS.some(r => Math.abs(x - r) < 10) && Math.abs(x) < HALF - 4;   // 两侧的灯各自检查，别立在十字路口里
+      for (let x = -HALF + 15; x < HALF; x += 24) { if (free(x)) pts.push([x, v - off, Math.PI / 2]); if (free(x + 12)) pts.push([x + 12, v + off, -Math.PI / 2]); }
     }
     const n = pts.length, m = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
     const useModel = hasModel('st_lamp');
@@ -796,7 +797,7 @@ export class City {
     const glass = new THREE.MeshStandardMaterial({ color: 0x0d0f14, metalness: 0.9, roughness: 0.25, emissive: 0x161c26 });
     glass.userData.envMul = 1.6;
     const towerMat = this.facadeMat([3, 0, 4][id.length % 3], 70 + id.charCodeAt(0), W, H);
-    towerMat.userData.envMul = 1.4;
+    towerMat.userData.envMul = 0.9;
     const tower = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), towerMat);
     tower.position.set(cx, H / 2 + CURB, bzc); tower.castShadow = tower.receiveShadow = true; this.group.add(tower);
     this.addCollider(cx, bzc, W, D);
@@ -873,9 +874,10 @@ export class City {
     const pl = new THREE.Mesh(new THREE.BoxGeometry(34, 0.08, 14), new THREE.MeshStandardMaterial({ color: 0x5d5f66, roughness: 0.35, metalness: 0.1 }));
     pl.position.set(h.cx, CURB + 0.04, h.faceZ + dir * 7); pl.receiveShadow = true; this.group.add(pl);
     // 广场射灯照亮正面
-    const spot = new THREE.SpotLight(h.team.color, 25, 40, 0.7, 0.6, 1.5);
-    spot.position.set(h.cx, 0.5, h.faceZ + dir * 12); spot.target.position.set(h.cx, 18, h.faceZ); this.group.add(spot, spot.target);
-    const pt = new THREE.PointLight(0xffe2b8, 9, 26, 1.6); pt.position.set(h.cx, 6, h.faceZ + dir * 8); this.group.add(pt);
+    // 墙根射灯：贴着墙往上打亮立面，光锥不扫门前地面（花圈摆在那里，以前被照得像闪光弹）
+    const spot = new THREE.SpotLight(h.team.color, 18, 34, 0.42, 0.5, 1.5);
+    spot.position.set(h.cx, 0.4, h.faceZ + dir * 1.2); spot.target.position.set(h.cx, 24, h.faceZ + dir * 0.2); this.group.add(spot, spot.target);
+    const pt = new THREE.PointLight(0xffe2b8, 4, 22, 1.8); pt.position.set(h.cx, 7, h.faceZ + dir * 9); this.group.add(pt);
     this.points['hq_' + id] = { pos: plaza.clone(), r: 9, label: `${h.team.name} 总部`, kind: 'hq', id };
   }
 

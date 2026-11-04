@@ -133,7 +133,12 @@ export class Props {
     this.list = []; this.subjects = [];
   }
 
-  place(obj) { this.scene.add(obj); this.list.push(obj); obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); return obj; }
+  place(obj) {
+    this.scene.add(obj); this.list.push(obj);
+    const k = this.game.renderer?.envIntensity ?? 1;   // 立刻用当前环境光强度（夜里很低）
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; const m = o.material; if (m && m.envMapIntensity !== undefined && !m.userData.fixedEnv) m.envMapIntensity = k * (m.userData.envMul ?? 1); } });
+    return obj;
+  }
 
   // 花圈（근조화환）：黑白，竖条丝带写字
   wreath(pos, faceRy, text, kind = 'attack') {
@@ -144,7 +149,7 @@ export class Props {
     if (glb) {   // Blender 花圈：真实花朵 + 三脚架，丝带贴字
       glb.traverse(o => {
         if (o.isMesh && !o.name.startsWith('ribbon') && !o.material.userData.dimmed) {   // 白花反照率压到 0.72，灯下不过曝
-          const m = o.material; m.userData.dimmed = true; m.color.multiplyScalar(0.72); m.roughness = Math.max(m.roughness, 0.85); m.envMapIntensity = 0.5;
+          const m = o.material; m.userData.dimmed = true; m.color.multiplyScalar(0.62); m.roughness = Math.max(m.roughness, 0.92); m.metalness = 0; m.userData.envMul = 0.6;
         }
         if (o.isMesh && o.name === 'ribbon_L') o.material = new THREE.MeshStandardMaterial({ map: t1, roughness: 0.8 });
         else if (o.isMesh && o.name === 'ribbon_R') o.material = new THREE.MeshStandardMaterial({ map: t2, roughness: 0.8 });

@@ -219,6 +219,8 @@ export class Renderer {
   render() {
     if (this.skyGroup) { this.skyGroup.position.copy(this.camera.position); this.stars.material.uniforms.t.value = performance.now() / 1000; }
     this.grade.uniforms.time.value = (performance.now() % 10000) / 1000;
+    // 运行中新加进场景的物体（道具、车、路人）也要用当前的环境光强度，否则夜里会亮得像发光（每秒校正一次）
+    if ((this.frameN || 0) % 45 === 0) this.applyEnvIntensity();
     // 阴影隔帧更新（静态城市占了阴影的大头，30 次/秒肉眼看不出区别）
     this.frameN = (this.frameN || 0) + 1;
     this.r.shadowMap.autoUpdate = false;

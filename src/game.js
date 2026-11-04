@@ -69,7 +69,7 @@ export class Game {
     this.startTips();
     step(0.05, '加载天空…');
     // 城市实景 HDR（Poly Haven，CC0）：黄昏是城市中心的落日，夜里是现代楼群夜景；下载素材不在时退回旧的
-    await this.renderer.loadEnv('assets/thirdparty/hdri/polyhaven_sunset_jhbcentral/sunset_jhbcentral_1k.hdr', 'assets/thirdparty/hdri/polyhaven_modern_buildings_night/modern_buildings_night_1k.hdr', [0.7, 0.13])
+    await this.renderer.loadEnv('assets/thirdparty/hdri/polyhaven_sunset_jhbcentral/sunset_jhbcentral_1k.hdr', 'assets/thirdparty/hdri/polyhaven_modern_buildings_night/modern_buildings_night_1k.hdr', [0.7, 0.08])
       .catch(() => this.renderer.loadEnv('assets/hdr/venice_sunset_1k.hdr', 'assets/hdr/night.exr'));
     step(0.15, '加载模型…');
     await loadModels(MODEL_LIST, p => step(0.15 + p * 0.15, '加载模型…'));

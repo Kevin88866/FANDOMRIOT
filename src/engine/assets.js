@@ -28,7 +28,7 @@ export async function loadModels(list = MODEL_LIST, onProgress) {
       if (name.startsWith('shop_')) shopGlow(g.scene);
       if (name.startsWith('lm_')) g.scene.traverse(o => {   // 地标大堂玻璃：夜里不至于黑成一个洞
         const m = o.isMesh && o.material;
-        if (m && m.name.startsWith('glass')) { m.userData.envMul = 2.2; m.emissive.setHex(0x1a2230); m.roughness = Math.max(m.roughness, 0.3); }
+        if (m && m.name.startsWith('glass')) { m.userData.envMul = 0.9; m.emissive.setHex(0x1a2230); m.roughness = Math.max(m.roughness, 0.35); }
       });
       store[name] = g.scene;
     } catch (e) {

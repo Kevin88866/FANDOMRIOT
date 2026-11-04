@@ -98,11 +98,11 @@ export function facade(style = 0, seed = 1) {
       grad.addColorStop(0, `rgb(${gr + 38},${gg + 46},${gb + 58})`); grad.addColorStop(0.55, `rgb(${gr},${gg},${gb})`); grad.addColorStop(1, `rgb(${gr - 10},${gg - 10},${gb - 8})`);
       g.fillStyle = grad; g.fillRect(x0, y0, ww, wh);
       hg.fillStyle = 'rgb(70,70,70)'; hg.fillRect(x0, y0, ww, wh);
-      og.fillStyle = 'rgb(255,22,150)'; og.fillRect(x0, y0, ww, wh);
+      og.fillStyle = 'rgb(255,95,25)'; og.fillRect(x0, y0, ww, wh);   // 玻璃：粗糙度 0.37、几乎不是金属（以前 0.09 / 0.59，整面楼像镜子）
       const mull = S.curtain ? 3 : S.ribbon ? 6 : 2;
       g.strokeStyle = S.frame; g.lineWidth = 3; g.strokeRect(x0, y0, ww, wh);
       hg.strokeStyle = 'rgb(235,235,235)'; hg.lineWidth = 3; hg.strokeRect(x0, y0, ww, wh);
-      og.strokeStyle = 'rgb(255,90,200)'; og.lineWidth = 3; og.strokeRect(x0, y0, ww, wh);
+      og.strokeStyle = 'rgb(255,150,60)'; og.lineWidth = 3; og.strokeRect(x0, y0, ww, wh);
       for (let m = 1; m < mull; m++) { const mx = x0 + ww * m / mull; g.fillStyle = S.frame; g.fillRect(mx - 1, y0, 2, wh); hg.fillStyle = 'rgb(230,230,230)'; hg.fillRect(mx - 1, y0, 2, wh); }
       if (!S.curtain && !S.ribbon) { g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x0 - 3, y0 + wh, ww + 6, 4); hg.fillStyle = 'rgb(255,255,255)'; hg.fillRect(x0 - 3, y0 + wh, ww + 6, 4); }
       if (S.balcony) { g.fillStyle = 'rgba(240,238,230,.9)'; g.fillRect(x0 - 6, y0 + wh * 0.62, ww + 12, wh * 0.38); g.fillStyle = 'rgba(0,0,0,.08)'; for (let k = 0; k < 6; k++) g.fillRect(x0 - 6 + k * (ww + 12) / 6, y0 + wh * 0.62, 2, wh * 0.38); hg.fillStyle = 'rgb(225,225,225)'; hg.fillRect(x0 - 6, y0 + wh * 0.62, ww + 12, wh * 0.38); }
