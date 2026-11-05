@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS, vsignAtlas, SignAtlas } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
 import { hasModel, instanced, partGeos, model, registerNight, registerCull, registerRange } from '../engine/assets.js';
+import { CurveRoad, stripGeo } from './curve.js';
 
 // 首尔街区：8x8 路网（7x7 个街区），中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
 // 南边（+z）是汉江公园和江面。
@@ -129,9 +130,11 @@ export class City {
   addCollider(cx, cz, w, d) { this.colliders.push({ minX: cx - w / 2, maxX: cx + w / 2, minZ: cz - d / 2, maxZ: cz + d / 2 }); }
 
   build() {
+    this.curveSetup();
     this.ground();
     this.roadMarkings();
     for (let bx = -3; bx <= 3; bx++) for (let bz = -3; bz <= 3; bz++) this.block(bx * BLOCK, bz * BLOCK);
+    this.curveBuild();
     this.streetLamps();
     for (const [id, b] of Object.entries(this.hqBlocks)) this.buildHQ(id, b.s, b.front);
     for (const f of this.fillers || []) this.filler(f.kind, f.s);
@@ -144,7 +147,7 @@ export class City {
   ground() {
     // 路面：Poly Haven 的磨损沥青（颜色 + 法线 + 粗糙度），每 5 米一格
     const size = HALF * 2 + 40, rep = size / 5;
-    const roadMat = pbrMat('polyhaven_worn_asphalt/worn_asphalt', rep, { color: 0x9a9a9a, normalScale: 0.8 }) || new THREE.MeshStandardMaterial({ map: asphalt().map, roughness: 0.82, color: 0xb8b8b8 });
+    const roadMat = this.roadMat = pbrMat('polyhaven_worn_asphalt/worn_asphalt', rep, { color: 0x9a9a9a, normalScale: 0.8 }) || new THREE.MeshStandardMaterial({ map: asphalt().map, roughness: 0.82, color: 0xb8b8b8 });
     if (!roadMat.normalMap) roadMat.map.repeat.set(36, 36);
     const g = new THREE.Mesh(new THREE.PlaneGeometry(HALF * 2 + 40, HALF * 2 + 40), roadMat);
     g.rotation.x = -Math.PI / 2; g.receiveShadow = true;
@@ -219,7 +222,7 @@ export class City {
     if (['pocket', 'playground', 'parking', 'construction'].includes(special)) { (this.fillers ||= []).push({ kind: special, s }); this.fillerRing(s, false, 0, null, true); return; }
     if (!special && (Math.abs(cx) === 180 || Math.abs(cz) === 180)) {
       const W2 = s.xMax - s.xMin - 10;
-      for (const [z, facing] of [[s.zMin + 9, 'S'], [s.zMax - 9, 'N']]) this.building({ x: (s.xMin + s.xMax) / 2, z, w: W2, d: 11, facing, apt: true }, r);
+      for (const [z, facing] of [[s.zMin + 9, 'S'], [s.zMax - 9, 'N']]) { const L = { x: (s.xMin + s.xMax) / 2, z, w: W2, d: 11, facing, apt: true }; if (!this.curveHit(L)) this.building(L, r); }
       for (let i = 0; i < 5; i++) this.tree(s.xMin + 5 + i * (W2 / 4), (s.zMin + s.zMax) / 2 + (i % 2 ? 3 : -3));
       return;
     }
@@ -254,6 +257,7 @@ export class City {
       }
     }
     for (const L of lots) {
+      if (this.curveHit(L)) continue;   // 被斜穿的弯路占了
       if (Math.abs(L.z - AVENUE_Z) < 30) L.zone = 'ave';
       if (special && L.facing === 'S' && Math.abs(L.x - (s.xMin + s.xMax) / 2) < 9) { L.special = special; }
       if (hq) { // HQ 街区：两侧楼放低
@@ -701,6 +705,7 @@ export class City {
   }
 
   tree(x, z, park = false) {
+    if (this.curve && !this.curveTreeOK && this.curve.dist(x, z) < this.curve.hw + 3.4) return;   // 别种在弯路上
     if (!this.treeGeo) {
       const trunk = new THREE.CylinderGeometry(0.12, 0.18, 3, 6); trunk.translate(0, 1.5, 0);
       this.trunkGeo = trunk;
@@ -759,9 +764,10 @@ export class City {
     const pts = [];
     for (const v of ROADS) {
       const off = roadWidth('z', v) / 2 + 0.6;
-      const free = x => !ROADS.some(r => Math.abs(x - r) < 10) && Math.abs(x) < HALF - 4;   // 两侧的灯各自检查，别立在十字路口里
+      const free = x => !ROADS.some(r => Math.abs(x - r) < 10) && Math.abs(x) < HALF - 4 && !(this.curve && this.curve.dist(x, v) < this.curve.hw + 14);   // 两侧的灯各自检查，别立在十字路口里
       for (let x = -HALF + 15; x < HALF; x += 24) { if (free(x)) pts.push([x, v - off, Math.PI / 2]); if (free(x + 12)) pts.push([x + 12, v + off, -Math.PI / 2]); }
     }
+    for (const pl of this.curveLamps || []) pts.push(pl);
     const n = pts.length, m = new THREE.Matrix4(), q = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
     const useModel = hasModel('st_lamp');
     const poles = new THREE.InstancedMesh(pole, new THREE.MeshStandardMaterial({ color: 0x2c2f35, metalness: 0.6, roughness: 0.5 }), n);
@@ -931,6 +937,106 @@ export class City {
       addG(steel, new THREE.CylinderGeometry(0.07, 0.07, 2.2, 8), x - 0.7, CURB + 1.1, z); addG(steel, new THREE.CylinderGeometry(0.07, 0.07, 2.2, 8), x + 0.7, CURB + 1.1, z);
       addG(steel, new THREE.CylinderGeometry(0.05, 0.05, 1.4, 8).rotateZ(Math.PI / 2), x, CURB + 2.1 - i * 0.3, z);
     }
+  }
+
+  // ---------- 斜穿全城的弯曲大道 ----------
+  // 从东北到西南穿过一串普通街区（不碰总部、功能地点和公园），控制点左右起伏成 S 形
+  curveSetup() {
+    const isRoad = (x, z) => ROADS.some(R => Math.abs(x - R) < 7) || ROADS.some(R => Math.abs(z - R) < roadWidth('z', R) / 2);
+    const base = [[228, -168], [180, -120], [120, -60], [60, 0], [0, 60], [-60, 120], [-120, 180], [-168, 228]];
+    const wob = [0, 9, -7, 11, -9, 8, -5, 0];   // 沿 (1,1)/√2 方向的偏移
+    const pts = base.map(([x, z], i) => [x + wob[i] * 0.7071, z + wob[i] * 0.7071]);
+    this.curve = new CurveRoad(pts, 6, isRoad, CURB);
+    this.curveRoad = isRoad;
+    // 路灯：沿两侧人行道每 26 米一盏（交给 streetLamps 一起实例化）
+    const S = this.curve.samples; this.curveLamps = [];
+    for (let i = 8; i < S.length; i += 17) for (const side of [-1, 1]) {
+      const p = S[i], x = p.x + p.nx * side * (this.curve.hw + 2.2), z = p.z + p.nz * side * (this.curve.hw + 2.2);
+      if (isRoad(x, z) || Math.abs(x) > HALF - 4 || Math.abs(z) > HALF - 4) continue;
+      this.curveLamps.push([x, z, Math.atan2(-p.nx * side, -p.nz * side) - Math.PI / 2]);
+    }
+  }
+
+  // 地块和弯路走廊有没有重叠（矩形内 5×5 个点都离路足够远才算不重叠）
+  curveHit(L) {
+    if (!this.curve) return false;
+    const lim = this.curve.hw + 3.6;
+    for (let a = 0; a <= 4; a++) for (let b = 0; b <= 4; b++) {
+      const x = L.x - L.w / 2 + L.w * a / 4, z = L.z - L.d / 2 + L.d * b / 4;
+      if (this.curve.dist(x, z) < lim) return true;
+    }
+    return false;
+  }
+
+  curveBuild() {
+    const C = this.curve, S = C.samples, hw = C.hw;
+    // 路面（街区里抬到人行道高度，过路口时降下来）、中间双黄线、车道虚线
+    this.curveAsphalt ||= pbrMat('polyhaven_worn_asphalt/worn_asphalt', 1, { color: 0x9a9a9a, normalScale: 0.8 });
+    this.addStatic(this.curveAsphalt, stripGeo(C, -hw, hw, p => p.h + 0.025, () => true, 0.2), false);
+    const yellow = this.curveYellow ||= new THREE.MeshStandardMaterial({ color: 0xe8b400, roughness: 0.6, emissive: 0x332400 });
+    const white = this.curveWhite ||= new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.6, emissive: 0x222222 });
+    for (const o of [-0.22, 0.12]) this.addStatic(yellow, stripGeo(C, o, o + 0.1, p => p.h + 0.04), false);
+    for (const o of [-hw / 2, hw / 2]) this.addStatic(white, stripGeo(C, o - 0.06, o + 0.06, p => p.h + 0.04, i => (Math.floor(S[i].s / 3) % 2) === 0), false);
+    // 两侧人行道（只在街区里铺；路口处断开）+ 路沿
+    const side = i => !S[i].road;
+    for (const sg of [-1, 1]) {
+      const a = sg * hw, b = sg * (hw + 3.2);
+      this.addStatic(this.swMat, stripGeo(C, Math.min(a, b), Math.max(a, b), p => Math.max(p.h, CURB) + 0.06, side, 0.4), false);
+      this.addStatic(this.curbMat, stripGeo(C, sg > 0 ? hw : -hw - 0.25, sg > 0 ? hw + 0.25 : -hw, p => Math.max(p.h, CURB) + 0.09, side, 0.4), false);
+    }
+    // 行道树
+    this.curveTreeOK = true;
+    for (let i = 12; i < S.length; i += 9) for (const sg of [-1, 1]) {
+      const p = S[i], x = p.x + p.nx * sg * (hw + 1.6), z = p.z + p.nz * sg * (hw + 1.6);
+      if (!p.road && !this.curveRoad(x, z) && Math.abs(x) < HALF - 3 && Math.abs(z) < HALF - 3) this.tree(x, z);
+    }
+    this.curveTreeOK = false;
+    // 沿弯路的斜楼：楼正面朝着路
+    this.curveLots();
+  }
+
+  curveLots() {
+    const C = this.curve, S = C.samples, r = this.rnd, placed = [];
+    const blockOf = (x, z) => SPECIAL[Math.round(x / BLOCK) * BLOCK + ',' + Math.round(z / BLOCK) * BLOCK];
+    for (let i = 4; i < S.length - 4; i += 8) for (const sg of [-1, 1]) {
+      const p = S[i], w = 9 + r() * 6, d = 12, off = C.hw + 3.4 + d / 2 + 0.2;
+      const cx = p.x + p.nx * sg * off, cz = p.z + p.nz * sg * off, th = Math.atan2(sg * p.nx, sg * p.nz);
+      // 四个角 + 中心：不能落在方格路上、特殊街区里、弯路上，也不能和已经放的楼挤在一起
+      const ca = Math.cos(th), sa = Math.sin(th), pts = [[0, 0], [-w / 2, -d / 2], [w / 2, -d / 2], [-w / 2, d / 2], [w / 2, d / 2], [0, -d / 2], [0, d / 2]].map(([u, v]) => [cx + u * ca + v * sa, cz - u * sa + v * ca]);
+      if (pts.some(([x, z]) => this.curveRoad(x, z) || blockOf(x, z) || Math.abs(x) > HALF - 8 || Math.abs(z) > HALF - 8 || C.dist(x, z) < C.hw + 3.2)) continue;
+      if (placed.some(q => Math.hypot(q[0] - cx, q[1] - cz) < (q[2] + w) / 2 + 0.8)) continue;
+      placed.push([cx, cz, w]);
+      const M = new THREE.Matrix4().compose(new THREE.Vector3(cx, 0, cz), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), th), new THREE.Vector3(1, 1, 1));
+      this.withTransform(M, () => this.building({ x: 0, z: 0, w, d, facing: 'S', zone: 'curve' }, r));
+    }
+  }
+
+  // 在原点按朝南造一栋楼，再把这次新加的所有几何、实例、碰撞体整体变换到 M（旋转 + 平移）
+  withTransform(M, fn) {
+    const snap = { buckets: new Map([...(this.buckets || new Map())].map(([k, e]) => [k, e.geos.length])), inst: Object.fromEntries(Object.entries(this.inst).map(([k, l]) => [k, l.length])),
+      ledges: this.ledges.length, vsigns: this.vsigns.length, win: Object.fromEntries(Object.entries(this.winInst || {}).map(([k, l]) => [k, l.length])),
+      far: (this.shopFar || [[], [], [], []]).map(l => l.length), par: (this.parapetGeos || []).length, roof: (this.roofGeos || []).length, col: this.colliders.length, kids: this.group.children.length };
+    fn();
+    for (const [k, e] of this.buckets || []) for (let i = snap.buckets.get(k) || 0; i < e.geos.length; i++) e.geos[i].applyMatrix4(M);
+    for (const [k, l] of Object.entries(this.inst)) for (let i = snap.inst[k] || 0; i < l.length; i++) l[i].premultiply(M);
+    for (let i = snap.ledges; i < this.ledges.length; i++) this.ledges[i][0].premultiply(M);
+    for (let i = snap.vsigns; i < this.vsigns.length; i++) this.vsigns[i][0].premultiply(M);
+    for (const [k, l] of Object.entries(this.winInst || {})) for (let i = snap.win[k] || 0; i < l.length; i++) l[i][0].premultiply(M);
+    (this.shopFar || []).forEach((l, j) => { for (let i = snap.far[j] || 0; i < l.length; i++) l[i].premultiply(M); });
+    for (let i = snap.par; i < (this.parapetGeos || []).length; i++) this.parapetGeos[i].applyMatrix4(M);
+    for (let i = snap.roof; i < (this.roofGeos || []).length; i++) this.roofGeos[i].applyMatrix4(M);
+    // 碰撞体：旋转后的矩形用一格格小包围盒拼出来（一个大包围盒会鼓出去挡到路上）
+    const fresh = this.colliders.splice(snap.col), v = new THREE.Vector3();
+    for (const c of fresh) {
+      const nx = Math.max(1, Math.ceil((c.maxX - c.minX) / 2.5)), nz = Math.max(1, Math.ceil((c.maxZ - c.minZ) / 2.5));
+      for (let a = 0; a < nx; a++) for (let b = 0; b < nz; b++) {
+        const x0 = c.minX + (c.maxX - c.minX) * a / nx, x1 = c.minX + (c.maxX - c.minX) * (a + 1) / nx, z0 = c.minZ + (c.maxZ - c.minZ) * b / nz, z1 = c.minZ + (c.maxZ - c.minZ) * (b + 1) / nz;
+        const xs = [], zs = [];
+        for (const [x, z] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) { v.set(x, 0, z).applyMatrix4(M); xs.push(v.x); zs.push(v.z); }
+        this.colliders.push({ ...c, minX: Math.min(...xs), maxX: Math.max(...xs), minZ: Math.min(...zs), maxZ: Math.max(...zs), sub: true });
+      }
+    }
+    for (let i = snap.kids; i < this.group.children.length; i++) this.group.children[i].applyMatrix4(M);
   }
 
   // ---------- 点缀地点（没有玩法，只为让城市更像首尔） ----------
@@ -1208,6 +1314,7 @@ export class City {
 
   // 是否在人行道上（决定地面高度）
   groundY(x, z) {
+    if (this.curve) { const y = this.curve.groundY(x, z); if (y !== null) return y; }
     for (const r of ROADS) { if (Math.abs(x - r) < 7) return 0; if (Math.abs(z - r) < roadWidth('z', r) / 2) return 0; }
     return CURB;
   }

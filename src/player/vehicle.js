@@ -204,8 +204,14 @@ export class Vehicle {
     t.wrapS = THREE.RepeatWrapping;
     for (const s of this.screens) { s.material = new THREE.MeshBasicMaterial({ map: t, toneMapped: false, color: new THREE.Color(1.6, 1.6, 1.6) }); }
     this.screenTex = t;
-    this.glow = this.glow || new THREE.PointLight(new THREE.Color(color), 18, 12, 1.5);
-    this.glow.color.set(color); this.glow.position.set(0, 2.5, 0); this.body.add(this.glow);
+    // 地面光晕：贴地的发光贴片（不用 PointLight——场景灯光数量一变，所有材质都要重新编译，卡车一出现就卡几秒）
+    if (!this.glow) {
+      const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+      const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+      this.glow = new THREE.Mesh(new THREE.PlaneGeometry(9, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+      this.glow.position.y = 0.06; this.glow.renderOrder = 1; this.body.add(this.glow);
+    }
+    this.glow.material.color.set(color);
   }
 
   // 轿车 / 出租车 / 面包车 / 皮卡 / 公交：用侧面轮廓挤出车身（引擎盖、挡风玻璃斜面、车顶、后备箱）

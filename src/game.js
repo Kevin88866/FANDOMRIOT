@@ -80,7 +80,18 @@ export class Game {
     this.city = new City(this.scene);
     this.city.finalizeTrees();
     buildStreetDetails(this);
+    // 弯路上的小碰撞体（被缩成 0 的设施留下的）去掉
+    if (this.city.curve) this.city.colliders = this.city.colliders.filter(c => !c.small || this.city.curve.dist((c.minX + c.maxX) / 2, (c.minZ + c.maxZ) / 2) > this.city.curve.hw + 2.4);
     this.traffic = new Traffic(this, 24);
+    // 弯路上的车：靠右行驶，两条车道首尾相接成一个环
+    if (this.city.curve) {
+      const C = this.city.curve, path = [...C.line(-C.hw / 2, 3), ...C.line(C.hw / 2, 3).reverse()];
+      for (let k = 0; k < 4; k++) {
+        const v = new Vehicle(['sedan', 'taxi', 'sedan', 'van'][k], { color: [0x2b4f7a, undefined, 0xd9d9d9, undefined][k] }).merge();
+        v.ai = true; v.npc = true; v.keep = true; v.path = path; v.loop = true; v.aiSpeed = 9; v.pathI = Math.floor(k * path.length / 4);
+        v.root.position.copy(path[v.pathI]); this.addVehicle(v);
+      }
+    }
     this.fx = new FX(this.scene, this);
     this.props = new Props(this);
     step(0.85, '路人出门中…');
@@ -94,7 +105,13 @@ export class Game {
     this.renderer.applyEnvIntensity();
     step(0.95, '编译着色器…');
     this.renderer.setTime(19);
-    this.renderer.r.compile(this.scene, this.camera);
+    // 预编译着色器：每种车（含 LED 卡车 / 咖啡车）放一辆进场景，按距离显示的实例临时都显示出来，一起编译，避免游戏中第一次看到时卡顿
+    const warm = ['sedan', 'taxi', 'van', 'pickup', 'bus', 'scooter'].map(t => new Vehicle(t)).concat([new Vehicle('ledtruck', { text: 'WARM', textColor: '#ff2d2d' }), new Vehicle('coffee', { text: 'WARM', textColor: '#ff7ab0' })]);
+    warm.forEach((v, i) => { v.root.position.set(this.camera.position.x + i * 6, 0, this.camera.position.z + 20); this.scene.add(v.root); });
+    const hidden = []; this.scene.traverse(o => { if (o.isInstancedMesh && (!o.visible || o.count === 0)) { hidden.push([o, o.visible, o.count]); o.visible = true; o.count = Math.max(1, o.count); } });
+    try { await (this.renderer.r.compileAsync ? this.renderer.r.compileAsync(this.scene, this.camera) : this.renderer.r.compile(this.scene, this.camera)); } catch (e) { console.warn(e); }
+    for (const [o, v, c] of hidden) { o.visible = v; o.count = c; }
+    for (const v of warm) this.scene.remove(v.root);
     this.bindInput(); this.watchPointerLock();
     step(1, '完成');
     this.last = performance.now();
@@ -343,7 +360,7 @@ export class Game {
     this.day = { photos: [], events: [], startMin: 18 * 60 };
     this.clockMin = 18 * 60;
     this.props.clearAll(); this.fx.clearDecals();
-    for (const v of this.vehicles.slice()) if (!v.traffic) this.removeVehicle(v);
+    for (const v of this.vehicles.slice()) if (!v.traffic && !v.keep) this.removeVehicle(v);
     this.city.setBillboard(LEAGUE.billboard, '#27e1ff', `WEEK ${s.week}`);
     for (const id in this.city.hq) { const hq = this.city.hq[id]; hq.used = 0; hq.sign.position.copy(hq.signHome); hq.sign.rotation.set(0, hq.faceRy ?? hq.sign.rotation.y, 0); hq.sign.userData.vel = null; hq.sign.visible = true; }
     this.player.vehicle && this.player.exit();

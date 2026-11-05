@@ -128,6 +128,10 @@ export class UI {
       const w = (r === 30 ? 26 : 14) * sc; let [a, b] = P(0, r); x.fillRect(0, b - w / 2, W, w);
       [a, b] = P(r, 0); x.fillRect(a - 7 * sc, 0, 14 * sc, W);
     }
+    if (g.city.curve) {   // 斜穿的弯路
+      const S = g.city.curve.samples; x.strokeStyle = '#2b3040'; x.lineWidth = 12 * sc; x.lineCap = 'round'; x.beginPath();
+      for (let i = 0; i < S.length; i += 3) { const [a, b] = P(S[i].x, S[i].z); i ? x.lineTo(a, b) : x.moveTo(a, b); } x.stroke();
+    }
     const pts = g.city.points, col = { shop: '#ff4f9a', garage: '#27e1ff', home: '#ffd34d', hq: '#ff2d55', print: '#b36bff', cafe: '#ff9f43', metro: '#4cc3ff', pcbang: '#38e08a' };
     // 地点：小地图只画图标；大地图写短名，标签互相避让（放不下就只留图标）
     const SHORT = { shop: '用品店', garage: '车行', home: '家', print: '打印店', cafe: '粉丝咖啡', metro: '地铁广告', pcbang: '网吧' };

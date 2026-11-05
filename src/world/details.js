@@ -9,7 +9,10 @@ import { model, hasModel, instanced, recolor, registerNight } from '../engine/as
 // 模型来自 Blender（assets/models/st_*.glb）。静态物体按材质合并或实例化，控制绘制次数。
 const CURB = 0.18;
 const Y = new THREE.Vector3(0, 1, 0), ONE = new THREE.Vector3(1, 1, 1);
-const place = (x, y, z, ry = 0) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(Y, ry), ONE);
+let CURVE = null;   // 斜穿的弯路：落在上面的街道设施不放（缩成 0）
+const onCurve = (x, z) => CURVE && CURVE.dist(x, z) < CURVE.hw + 2.4;
+const ZERO = new THREE.Vector3(0, 0, 0);
+const place = (x, y, z, ry = 0) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(Y, ry), onCurve(x, z) ? ZERO : ONE);
 
 // 把一堆物体按"材质外观"合并（同外观的材质视为同一个），保留顶点色（Blender 烘焙的 AO）
 function bake(parent, objects) {
@@ -47,10 +50,11 @@ const ROAD_NAMES = ['선릉로', '삼성로', '봉은사로', '테헤란로', '�
 const ADS = ['LCK 2026 · 恶搞版', '삼각김밥 1+1', '편의점 야식', 'FANDOM RIOT', '치킨은 언제나 옳다', '롤 파크 직관 가자'];
 
 export function buildStreetDetails(game) {
+  CURVE = game.city?.curve || null;
   const city = game.city, grp = new THREE.Group(), r = mulberry(77);
   game.scene.add(grp);
   const statics = [];
-  const add = (name, x, y, z, ry = 0) => { const o = model(name); if (!o) return null; o.position.set(x, y, z); o.rotation.y = ry; statics.push(o); return o; };
+  const add = (name, x, y, z, ry = 0) => { if (onCurve(x, z)) return null; const o = model(name); if (!o) return null; o.position.set(x, y, z); o.rotation.y = ry; statics.push(o); return o; };
 
   // ---------- 红绿灯（大路上的每个路口）：灯泡按相位、颜色合并成 6 个网格，循环切换材质 ----------
   const lampOn = {
