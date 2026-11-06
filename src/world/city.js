@@ -1166,6 +1166,13 @@ export class City {
     const lmName = { T0: 'lm_t0', HWL: 'lm_hwl' }[id], lm = lmName && model(lmName);
     if (lm) {
       lm.position.set(cx, CURB, bzc); lm.rotation.y = ry;
+      // 塔身在模型里只有四个侧面、没有底；大堂比塔身缩进一圈，从门口往上看会透过塔身看到天。补一块朝下的底板
+      const soffit = new THREE.Mesh(new THREE.PlaneGeometry(30, 20).rotateX(Math.PI / 2), this.soffitMat ||= new THREE.MeshStandardMaterial({ color: 0x8c8f94, roughness: 0.8 }));
+      soffit.position.y = id === 'T0' ? 7.99 : 5.99; soffit.receiveShadow = true; lm.add(soffit);
+      // 大堂芯筒原来是纯黑的，外面包一层一楼墙面（面砖 / 抹灰）
+      const [cw, cd, cz] = id === 'T0' ? [25.9, 15.9, -1.0] : [26.7, 16.7, -0.8], L0 = soffit.position.y;
+      const core = faces(worldUV(new THREE.BoxGeometry(cw, L0, cd), 0.4), [0, 1, 4, 5]); core.translate(0, L0 / 2, cz);
+      const coreMesh = new THREE.Mesh(core, this.coreMat ||= pbrMat('polyhaven_concrete_tile_facade/concrete_tile_facade', 1, { color: 0xb9b4ac })); coreMesh.receiveShadow = true; lm.add(coreMesh);
       this.dressLandmark(lm, team.color, this.facadeMat(id === 'T0' ? 3 : 0, id === 'T0' ? 77 : 31, FACADE_TILE.w, FACADE_TILE.h));
       this.group.add(lm);
       this.addCollider(cx, bzc, W, D);
