@@ -136,7 +136,7 @@ export class Props {
   place(obj) {
     this.scene.add(obj); this.list.push(obj);
     const k = this.game.renderer?.envIntensity ?? 1;   // 立刻用当前环境光强度（夜里很低）
-    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; const m = o.material; if (m && m.envMapIntensity !== undefined && !m.userData.fixedEnv) m.envMapIntensity = k * (m.userData.envMul ?? 1); } });
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; for (const m of [].concat(o.material)) if (m && m.envMapIntensity !== undefined && !m.userData.fixedEnv) m.envMapIntensity = k * (m.userData.envMul ?? 1); } });
     return obj;
   }
 

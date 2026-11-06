@@ -153,7 +153,8 @@ export class Renderer {
   applyEnvIntensity() {
     // 根据时间调节环境光强度（three r160 无 scene.environmentIntensity，逐材质设置）
     const k = this.envIntensity ?? 1;
-    this.scene.traverse(o => { if (o.material && o.material.envMapIntensity !== undefined && !o.material.userData.fixedEnv) o.material.envMapIntensity = k * (o.material.userData.envMul ?? 1); });
+    const setEnv = m => { if (m && m.envMapIntensity !== undefined && !m.userData.fixedEnv) m.envMapIntensity = k * (m.userData.envMul ?? 1); };
+    this.scene.traverse(o => { if (Array.isArray(o.material)) o.material.forEach(setEnv); else setEnv(o.material); });
   }
 
   // 游戏内时间（小时，可带小数）。18 点黄昏 → 20 点后入夜

@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { asphalt, sidewalk, facade, storefront, FACADE_TILE, textTex, logoTex, mulberry, KOREAN_SIGNS, vsignAtlas, SignAtlas } from '../engine/textures.js';
 import { TEAMS, LEAGUE } from '../content/data.js';
 import { hasModel, instanced, partGeos, model, registerNight, registerCull, registerRange } from '../engine/assets.js';
-import { CurveRoad, stripGeo } from './curve.js';
+import { CurveRoad, stripGeo, curbWall } from './curve.js';
 
 // 首尔街区：8x8 路网（7x7 个街区），中间一条宽的大路（z=30），两家战队总部（LEAGUE.hqA / hqB）隔路相对。
 // 南边（+z）是汉江公园和江面。
@@ -208,12 +208,14 @@ export class City {
       this.swMat = pbrMat('polyhaven_rectangular_paving/rectangular_paving', 1, { color: 0xc8c4be }) || new THREE.MeshStandardMaterial({ map: sidewalk(), roughness: 0.9 });
       this.curbMat = new THREE.MeshStandardMaterial({ color: 0x9a9a98, roughness: 0.85 });
     }
+    if (this.curveCutSlab(s)) { /* 弯路穿过：人行道按格子拼，让出路面 */ } else {
     const geo = new THREE.BoxGeometry(w, CURB, d);
     // 世界坐标 UV，避免拉伸
     const uv = geo.attributes.uv, pos = geo.attributes.position;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + mx) * 0.4, (pos.getZ(i) + mz) * 0.4);
     geo.translate(mx, CURB / 2, mz);
     this.addStatic(this.swMat, geo, false);
+    }
 
     const key = `${cx},${cz}`;
     const special = SPECIAL[key];
@@ -698,7 +700,9 @@ export class City {
     }
     const white = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2 });
     const yellow = new THREE.MeshStandardMaterial({ color: 0xf5b800, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2 });
-    for (const [arr, m] of [[geos, white], [yel, yellow], [cross, white]]) {
+    const C = this.curve, clear = g => { if (!C) return true; g.computeBoundingSphere(); const c = g.boundingSphere.center; return C.dist(c.x, c.z) > C.hw + 0.5 + g.boundingSphere.radius; };
+    for (let [arr, m] of [[geos, white], [yel, yellow], [cross, white]]) {
+      arr = arr.filter(clear);
       if (!arr.length) continue;
       const mesh = new THREE.Mesh(mergeGeometries(arr), m); mesh.receiveShadow = true; this.group.add(mesh);
     }
@@ -941,12 +945,42 @@ export class City {
 
   // ---------- 斜穿全城的弯曲大道 ----------
   // 从东北到西南穿过一串普通街区（不碰总部、功能地点和公园），控制点左右起伏成 S 形
+  // 弯路穿过的街区：人行道顶面用 0.5 米小格拼（跳过路面），四周侧面 1 米一段（路口处断开）
+  curveCutSlab(s) {
+    const C = this.curve; if (!C) return false;
+    const lim = C.hw + 0.3, cut = (x, z) => C.dist(x, z) < lim;
+    let hit = false;
+    for (let x = s.xMin; x <= s.xMax && !hit; x += 2) for (let z = s.zMin; z <= s.zMax; z += 2) if (cut(x, z)) { hit = true; break; }
+    if (!hit) return false;
+    const pos = [], uv = [], nrm = [], q = 0.5;
+    const quad = (a, b, c, d, n) => { for (const v of [a, b, c, a, c, d]) { pos.push(...v); uv.push((v[0] + v[1]) * 0.4 * (n[1] ? 0 : 1) + (n[1] ? v[0] * 0.4 : 0), n[1] ? v[2] * 0.4 : v[1] * 0.4); nrm.push(...n); } };
+    for (let z = s.zMin; z < s.zMax - 1e-6; z += q) {
+      const z1 = Math.min(z + q, s.zMax); let run = null;
+      for (let x = s.xMin; x < s.xMax + q / 2; x += q) {
+        const x1 = Math.min(x + q, s.xMax), keep = x < s.xMax - 1e-6 && !cut((x + x1) / 2, (z + z1) / 2);
+        if (keep) { if (run === null) run = x; }
+        else if (run !== null) { quad([run, CURB, z1], [x, CURB, z1], [x, CURB, z], [run, CURB, z], [0, 1, 0]); run = null; }
+      }
+    }
+    // 侧面（只朝外的四面）
+    for (let x = s.xMin; x < s.xMax - 1e-6; x += 1) { const x1 = Math.min(x + 1, s.xMax);
+      if (!cut((x + x1) / 2, s.zMin)) quad([x, 0, s.zMin], [x, CURB, s.zMin], [x1, CURB, s.zMin], [x1, 0, s.zMin], [0, 0, -1]);
+      if (!cut((x + x1) / 2, s.zMax)) quad([x1, 0, s.zMax], [x1, CURB, s.zMax], [x, CURB, s.zMax], [x, 0, s.zMax], [0, 0, 1]); }
+    for (let z = s.zMin; z < s.zMax - 1e-6; z += 1) { const z1 = Math.min(z + 1, s.zMax);
+      if (!cut(s.xMin, (z + z1) / 2)) quad([s.xMin, 0, z1], [s.xMin, CURB, z1], [s.xMin, CURB, z], [s.xMin, 0, z], [-1, 0, 0]);
+      if (!cut(s.xMax, (z + z1) / 2)) quad([s.xMax, 0, z], [s.xMax, CURB, z], [s.xMax, CURB, z1], [s.xMax, 0, z1], [1, 0, 0]); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    this.addStatic(this.swMat, g, false);
+    return true;
+  }
+
   curveSetup() {
     const isRoad = (x, z) => ROADS.some(R => Math.abs(x - R) < 7) || ROADS.some(R => Math.abs(z - R) < roadWidth('z', R) / 2);
     const base = [[228, -168], [180, -120], [120, -60], [60, 0], [0, 60], [-60, 120], [-120, 180], [-168, 228]];
     const wob = [0, 9, -7, 11, -9, 8, -5, 0];   // 沿 (1,1)/√2 方向的偏移
     const pts = base.map(([x, z], i) => [x + wob[i] * 0.7071, z + wob[i] * 0.7071]);
-    this.curve = new CurveRoad(pts, 6, isRoad, CURB);
+    this.curve = new CurveRoad(pts, 6, isRoad, 0);
     this.curveRoad = isRoad;
     // 路灯：沿两侧人行道每 26 米一盏（交给 streetLamps 一起实例化）
     const S = this.curve.samples; this.curveLamps = [];
@@ -970,19 +1004,28 @@ export class City {
 
   curveBuild() {
     const C = this.curve, S = C.samples, hw = C.hw;
-    // 路面（街区里抬到人行道高度，过路口时降下来）、中间双黄线、车道虚线
-    this.curveAsphalt ||= pbrMat('polyhaven_worn_asphalt/worn_asphalt', 1, { color: 0x9a9a9a, normalScale: 0.8 });
-    this.addStatic(this.curveAsphalt, stripGeo(C, -hw, hw, p => p.h + 0.025, () => true, 0.2), false);
-    const yellow = this.curveYellow ||= new THREE.MeshStandardMaterial({ color: 0xe8b400, roughness: 0.6, emissive: 0x332400 });
-    const white = this.curveWhite ||= new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.6, emissive: 0x222222 });
-    for (const o of [-0.22, 0.12]) this.addStatic(yellow, stripGeo(C, o, o + 0.1, p => p.h + 0.04), false);
-    for (const o of [-hw / 2, hw / 2]) this.addStatic(white, stripGeo(C, o - 0.06, o + 0.06, p => p.h + 0.04, i => (Math.floor(S[i].s / 3) % 2) === 0), false);
-    // 两侧人行道（只在街区里铺；路口处断开）+ 路沿
-    const side = i => !S[i].road;
+    // 路面就是整张地面沥青（弯路和方格路同高），这里只画标线和路沿
+    const yellow = this.curveYellow ||= new THREE.MeshStandardMaterial({ color: 0xf5b800, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2 });
+    const white = this.curveWhite ||= new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2 });
+    const edgeRoad = i => { const p = S[i]; return p.road || this.curveRoad(p.x + p.nx * hw, p.z + p.nz * hw) || this.curveRoad(p.x - p.nx * hw, p.z - p.nz * hw); };
+    const near = S.map((_, i) => [-1, 0, 1].some(k => S[i + k] && edgeRoad(i + k)));   // 进路口前 1.5 米停
+    const free = i => !near[i];
+    for (const o of [-0.25, 0.1]) this.addStatic(yellow, stripGeo(C, o, o + 0.15, () => 0.02, free), false);
+    for (const o of [-hw / 2, hw / 2]) this.addStatic(white, stripGeo(C, o - 0.075, o + 0.075, () => 0.02, i => free(i) && (Math.floor(S[i].s / 3) % 2) === 0), false);
+    // 出入路口处：顺着弯路方向的斑马线
+    const zeb = new Set();
+    for (let i = 1; i < S.length; i++) {
+      if (near[i] === near[i - 1]) continue;
+      const j0 = near[i] ? i - 3 : i + 1;   // 在街区一侧
+      for (let k = j0; k < j0 + 2; k++) if (S[k] && S[k + 1] && free(k) && free(k + 1)) zeb.add(k);
+    }
+    for (let o = -hw + 0.5; o < hw - 0.4; o += 1.2) this.addStatic(white, stripGeo(C, o, o + 0.6, () => 0.022, i => zeb.has(i) || zeb.has(i - 1)), false);
+    // 两侧路沿：竖直面（0 → 人行道高）+ 0.6 米路沿石盖住小格的锯齿边
+    const side = i => !S[i].road && !edgeRoad(i);
     for (const sg of [-1, 1]) {
-      const a = sg * hw, b = sg * (hw + 3.2);
-      this.addStatic(this.swMat, stripGeo(C, Math.min(a, b), Math.max(a, b), p => Math.max(p.h, CURB) + 0.06, side, 0.4), false);
-      this.addStatic(this.curbMat, stripGeo(C, sg > 0 ? hw : -hw - 0.25, sg > 0 ? hw + 0.25 : -hw, p => Math.max(p.h, CURB) + 0.09, side, 0.4), false);
+      const a = sg * hw, b = sg * (hw + 0.6);
+      this.addStatic(this.curbMat, stripGeo(C, Math.min(a, b), Math.max(a, b), () => CURB + 0.012, side, 0.4), false);
+      this.addStatic(this.curbMat, curbWall(C, a, sg, CURB + 0.012, side), false);
     }
     // 行道树
     this.curveTreeOK = true;
@@ -1159,14 +1202,33 @@ export class City {
     const glow = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: tc, emissiveIntensity: 2.6 });
     glow.userData.night = true; this.nightMats.push(glow);
     const paints = new Map();
+    // 大堂玻璃：原来近乎纯黑（看上去像墙上一个黑洞），改成浅色玻璃 + 夜里亮灯的大堂 + 竖框
+    const lobbyGlass = this.lobbyGlass ||= (() => { const m = new THREE.MeshStandardMaterial({ color: 0x5d6b78, metalness: 0.1, roughness: 0.12, emissive: 0xffc98a, emissiveIntensity: 0.55 }); m.userData.envMul = 0.7; m.userData.night = true; this.nightMats.push(m); return m; })();
+    const frames = [];
+    obj.updateMatrixWorld(true);
     obj.traverse(o => {
       if (!o.isMesh) return;
       const n = o.material.name || '';
+      if (n === 'glass_lobby') {
+        o.material = lobbyGlass;
+        const bb = new THREE.Box3().setFromObject(o), y0 = bb.min.y, y1 = bb.max.y, hgt = y1 - y0;
+        const bar = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); frames.push(g); };
+        for (const [zf, out] of [[bb.min.z, -0.04], [bb.max.z, 0.04]]) {
+          for (let x = bb.min.x; x <= bb.max.x + 0.01; x += Math.max(1.2, (bb.max.x - bb.min.x) / Math.round((bb.max.x - bb.min.x) / 1.6))) bar(0.12, hgt, 0.12, x, y0 + hgt / 2, zf + out);
+          for (const y of [y0 + 0.06, Math.min(y1 - 0.3, y0 + 2.7), y1 - 0.06]) bar(bb.max.x - bb.min.x, 0.12, 0.12, (bb.min.x + bb.max.x) / 2, y, zf + out);
+        }
+        for (const [xf, out] of [[bb.min.x, -0.04], [bb.max.x, 0.04]]) {
+          for (let z = bb.min.z; z <= bb.max.z + 0.01; z += Math.max(1.2, (bb.max.z - bb.min.z) / Math.max(1, Math.round((bb.max.z - bb.min.z) / 1.6)))) bar(0.12, hgt, 0.12, xf + out, y0 + hgt / 2, z);
+          for (const y of [y0 + 0.06, Math.min(y1 - 0.3, y0 + 2.7), y1 - 0.06]) bar(0.12, 0.12, bb.max.z - bb.min.z, xf + out, y, (bb.min.z + bb.max.z) / 2);
+        }
+        return;
+      }
       if (n.startsWith('facade')) o.material = f;
       else if (n === 'emit_team') o.material = glow;
       else if (n === 'paint') { if (!paints.has(o.material)) { const m = o.material.clone(); m.color.copy(tc); paints.set(o.material, m); } o.material = paints.get(o.material); }
       else if (n.startsWith('emit_') && !o.material.userData.night) { o.material.userData.night = true; this.nightMats.push(o.material); }
     });
+    if (frames.length) { const fm = this.frameMat ||= new THREE.MeshStandardMaterial({ color: 0x2e3238, metalness: 0.6, roughness: 0.4 }); const m = new THREE.Mesh(mergeGeometries(frames), fm); m.castShadow = true; this.group.add(m); }
   }
 
   arenaFront(L, h) {

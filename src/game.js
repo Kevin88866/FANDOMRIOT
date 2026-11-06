@@ -362,7 +362,8 @@ export class Game {
     this.props.clearAll(); this.fx.clearDecals();
     for (const v of this.vehicles.slice()) if (!v.traffic && !v.keep) this.removeVehicle(v);
     this.city.setBillboard(LEAGUE.billboard, '#27e1ff', `WEEK ${s.week}`);
-    for (const id in this.city.hq) { const hq = this.city.hq[id]; hq.used = 0; hq.sign.position.copy(hq.signHome); hq.sign.rotation.set(0, hq.faceRy ?? hq.sign.rotation.y, 0); hq.sign.userData.vel = null; hq.sign.visible = true; }
+    delete this.city.hq.SITE;
+    for (const id in this.city.hq) { const hq = this.city.hq[id]; hq.used = 0; if (!hq.sign) continue; hq.sign.position.copy(hq.signHome); hq.sign.rotation.set(0, hq.faceRy ?? hq.sign.rotation.y, 0); hq.sign.userData.vel = null; hq.sign.visible = true; }
     this.player.vehicle && this.player.exit();
     // 自己的载具停在家门口
     const home = this.city.points.home.pos;

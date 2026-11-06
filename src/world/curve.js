@@ -38,9 +38,8 @@ export class CurveRoad {
   // 地面高度：路面 / 人行道（离弯路太远返回 null，用原来的规则）
   groundY(x, z) {
     const { d, i } = this.nearest(x, z);
-    if (d > this.hw + 3.2) return null;
-    const p = this.samples[i];
-    return d <= this.hw ? p.h + 0.02 : Math.max(p.h, 0.18) + 0.06;
+    if (d > this.hw) return null;
+    return this.samples[i].h + 0.02;
   }
 
   // 沿路的一条偏移线（offset 正 = 左侧）
@@ -62,6 +61,21 @@ export function stripGeo(road, from, to, yOf, keep = () => true, uvScale = 0.25)
       for (const o of [from, to]) { const x = p.x + p.nx * o, z = p.z + p.nz * o; pos.push(x, y, z); uv.push(x * uvScale, z * uvScale); nrm.push(0, 1, 0); }
     }
     idx.push(n, n + 1, n + 2, n + 1, n + 3, n + 2); n += 4;   // 正面朝上
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  return g;
+}
+
+// 路沿竖直面：沿偏移 o 的一条线，从路面（0）立到 top；sg 决定朝向（朝路中间）
+export function curbWall(road, o, sg, top, keep = () => true) {
+  const pos = [], nrm = [], uv = [], idx = [], S = road.samples; let n = 0;
+  for (let i = 0; i < S.length - 1; i++) {
+    if (!keep(i) || !keep(i + 1)) continue;
+    for (const j of [i, i + 1]) { const p = S[j], x = p.x + p.nx * o, z = p.z + p.nz * o;
+      for (const y of [0, top]) { pos.push(x, y, z); nrm.push(-p.nx * sg, 0, -p.nz * sg); uv.push(p.s * 0.4, y * 0.4); } }
+    idx.push(n, n + 2, n + 1, n + 1, n + 2, n + 3, n, n + 1, n + 2, n + 1, n + 3, n + 2);   // 两面都画
+    n += 4;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
